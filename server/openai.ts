@@ -1,13 +1,27 @@
 import OpenAI from "openai";
 import type { Case } from "@shared/schema";
 
-if (!process.env.OPENAI_API_KEY) {
-  throw new Error('Missing required OpenAI API key: OPENAI_API_KEY');
-}
+// OpenAI is optional for development
+const OPENAI_ENABLED = !!process.env.OPENAI_API_KEY;
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const openai = OPENAI_ENABLED ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY }) : null;
 
 export async function analyzeCase(caseData: Case): Promise<any> {
+  if (!OPENAI_ENABLED) {
+    return {
+      caseType: "AI Analysis Unavailable",
+      jurisdiction: "Please configure OpenAI API key",
+      legalFramework: ["Configuration Required"],
+      strengthOfCase: "unknown",
+      riskLevel: "unknown",
+      estimatedTimeframe: "AI analysis not available",
+      keyIssues: ["OpenAI API key required for AI analysis"],
+      recommendedActions: ["Configure OpenAI integration"],
+      legalProtections: ["Manual legal consultation recommended"],
+      successProbability: 0
+    };
+  }
+
   try {
     const prompt = `
 You are an expert legal advisor specializing in Australian construction and trade law. Analyze this case and provide strategic guidance.
@@ -34,7 +48,7 @@ Please analyze this case and provide a JSON response with the following structur
 Focus on Australian trade and construction law, including Security of Payment Acts (SOPA), Building and Construction Industry Payment Acts, and relevant state legislation.
 `;
 
-    const response = await openai.chat.completions.create({
+    const response = await openai!.chat.completions.create({
       model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
       messages: [
         {

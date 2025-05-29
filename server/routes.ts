@@ -11,13 +11,10 @@ import multer from "multer";
 import path from "path";
 import { promises as fs } from "fs";
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
-}
+// Stripe is optional for development
+const STRIPE_ENABLED = !!process.env.STRIPE_SECRET_KEY;
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: "2023-10-16",
-});
+const stripe = STRIPE_ENABLED ? new Stripe(process.env.STRIPE_SECRET_KEY!) : null;
 
 // Configure multer for file uploads
 const upload = multer({
@@ -255,9 +252,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Stripe payment routes
   app.post("/api/create-payment-intent", async (req, res) => {
+    if (!STRIPE_ENABLED) {
+      return res.status(503).json({ message: "Payment processing not configured. Please contact support." });
+    }
     try {
       const { amount = 29900 } = req.body; // Default $299 in cents
-      const paymentIntent = await stripe.paymentIntents.create({
+      const paymentIntent = await stripe!.paymentIntents.create({
         amount: Math.round(amount),
         currency: "aud",
         metadata: {
@@ -271,6 +271,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post('/api/create-subscription', isAuthenticated, async (req: any, res) => {
+    if (!STRIPE_ENABLED) {
+      return res.status(503).json({ message: "Payment processing not configured. Please contact support." });
+    }
     try {
       const userId = req.user.claims.sub;
       let user = await storage.getUser(userId);
@@ -280,10 +283,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       if (user.stripeSubscriptionId) {
-        const subscription = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
+        const subscription = await stripe!.subscriptions.retrieve(user.stripeSubscriptionId);
         return res.json({
           subscriptionId: subscription.id,
-          clientSecret: subscription.latest_invoice?.payment_intent?.client_secret,
+          clientSecret: (subscription.latest_invoice as any)?.payment_intent?.client_secret,
         });
       }
       
@@ -294,7 +297,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let customerId = user.stripeCustomerId;
       
       if (!customerId) {
-        const customer = await stripe.customers.create({
+        const customer = await stripe!.customers.create({
           email: user.email,
           name: `${user.firstName} ${user.lastName}`.trim(),
         });
@@ -302,19 +305,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         user = await storage.updateUserStripeInfo(userId, customerId);
       }
 
-      const subscription = await stripe.subscriptions.create({
+      const subscription = await stripe!.subscriptions.create({
         customer: customerId,
         items: [{
           price_data: {
             currency: 'aud',
-            product_data: {
-              name: 'TradeGuard AI Monthly Support',
-            },
             unit_amount: 4900, // $49 AUD
             recurring: {
               interval: 'month',
             },
-          },
+          } as any,
         }],
         payment_behavior: 'default_incomplete',
         expand: ['latest_invoice.payment_intent'],
@@ -324,7 +324,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json({
         subscriptionId: subscription.id,
-        clientSecret: subscription.latest_invoice?.payment_intent?.client_secret,
+        clientSecret: (subscription.latest_invoice as any)?.payment_intent?.client_secret,
       });
     } catch (error: any) {
       console.error("Subscription error:", error);
