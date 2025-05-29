@@ -1,0 +1,152 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 0 0% 100%;
+  --foreground: 217 25% 29%; /* #37474F */
+  --muted: 200 16% 92%; /* #ECEFF1 */
+  --muted-foreground: 200 12% 55%; /* #78909C */
+  --popover: 0 0% 100%;
+  --popover-foreground: 217 25% 29%;
+  --card: 0 0% 100%;
+  --card-foreground: 217 25% 29%;
+  --border: 200 16% 92%;
+  --input: 200 16% 92%;
+  --primary: 207 83% 55%; /* #1565C0 */
+  --primary-foreground: 208 100% 97%;
+  --secondary: 200 16% 92%;
+  --secondary-foreground: 217 25% 29%;
+  --accent: 36 100% 50%; /* #FF8F00 */
+  --accent-foreground: 0 0% 100%;
+  --destructive: 348 100% 47%; /* #C62828 */
+  --destructive-foreground: 0 0% 100%;
+  --ring: 207 83% 55%;
+  --radius: 0.5rem;
+  
+  /* TradeGuard AI specific colors */
+  --primary-light: 195 90% 54%; /* #0277BD */
+  --success: 122 39% 49%; /* #2E7D32 */
+  --warning: 32 100% 48%; /* #F57C00 */
+  --error: 348 100% 47%; /* #C62828 */
+  --neutral-dark: 217 25% 29%; /* #37474F */
+  --neutral-medium: 200 12% 55%; /* #78909C */
+  --neutral-light: 200 16% 92%; /* #ECEFF1 */
+}
+
+.dark {
+  --background: 217 33% 15%;
+  --foreground: 0 0% 98%;
+  --muted: 217 20% 25%;
+  --muted-foreground: 200 12% 65%;
+  --popover: 217 33% 15%;
+  --popover-foreground: 0 0% 98%;
+  --card: 217 33% 15%;
+  --card-foreground: 0 0% 98%;
+  --border: 217 20% 25%;
+  --input: 217 20% 25%;
+  --primary: 207 83% 55%;
+  --primary-foreground: 208 100% 97%;
+  --secondary: 217 20% 25%;
+  --secondary-foreground: 0 0% 98%;
+  --accent: 36 100% 50%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 348 100% 47%;
+  --destructive-foreground: 0 0% 98%;
+  --ring: 207 83% 55%;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold text-neutral-dark dark:text-foreground;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-3 rounded-lg font-semibold transition-colors;
+  }
+  
+  .btn-accent {
+    @apply bg-accent hover:bg-accent/90 text-accent-foreground px-6 py-3 rounded-lg font-semibold transition-colors;
+  }
+  
+  .gradient-primary {
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-light)));
+  }
+  
+  .gradient-accent {
+    background: linear-gradient(135deg, hsl(var(--accent)), #ff6f00);
+  }
+  
+  .text-neutral-dark {
+    color: hsl(var(--neutral-dark));
+  }
+  
+  .text-neutral-medium {
+    color: hsl(var(--neutral-medium));
+  }
+  
+  .bg-neutral-light {
+    background-color: hsl(var(--neutral-light));
+  }
+  
+  .border-primary {
+    border-color: hsl(var(--primary));
+  }
+  
+  .case-status-active {
+    @apply bg-success/10 text-success border border-success/20 px-3 py-1 rounded-full text-sm font-medium;
+  }
+  
+  .case-status-resolved {
+    @apply bg-neutral-light text-neutral-dark border border-neutral-medium/20 px-3 py-1 rounded-full text-sm font-medium;
+  }
+  
+  .priority-high {
+    @apply text-error bg-error/10 border border-error/20 px-2 py-1 rounded text-xs font-medium;
+  }
+  
+  .priority-medium {
+    @apply text-warning bg-warning/10 border border-warning/20 px-2 py-1 rounded text-xs font-medium;
+  }
+  
+  .priority-low {
+    @apply text-success bg-success/10 border border-success/20 px-2 py-1 rounded text-xs font-medium;
+  }
+}
+
+@layer utilities {
+  .text-success {
+    color: hsl(var(--success));
+  }
+  
+  .text-warning {
+    color: hsl(var(--warning));
+  }
+  
+  .text-error {
+    color: hsl(var(--error));
+  }
+  
+  .bg-success {
+    background-color: hsl(var(--success));
+  }
+  
+  .bg-warning {
+    background-color: hsl(var(--warning));
+  }
+  
+  .bg-error {
+    background-color: hsl(var(--error));
+  }
+}

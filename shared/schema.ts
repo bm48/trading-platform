@@ -1,0 +1,169 @@
+import {
+  pgTable,
+  text,
+  varchar,
+  timestamp,
+  jsonb,
+  index,
+  serial,
+  integer,
+  decimal,
+  boolean,
+} from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
+import { z } from "zod";
+
+// Session storage table for Replit Auth
+export const sessions = pgTable(
+  "sessions",
+  {
+    sid: varchar("sid").primaryKey(),
+    sess: jsonb("sess").notNull(),
+    expire: timestamp("expire").notNull(),
+  },
+  (table) => [index("IDX_session_expire").on(table.expire)],
+);
+
+// User storage table for Replit Auth
+export const users = pgTable("users", {
+  id: varchar("id").primaryKey().notNull(),
+  email: varchar("email").unique(),
+  firstName: varchar("first_name"),
+  lastName: varchar("last_name"),
+  profileImageUrl: varchar("profile_image_url"),
+  stripeCustomerId: varchar("stripe_customer_id"),
+  stripeSubscriptionId: varchar("stripe_subscription_id"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Applications (initial form submissions)
+export const applications = pgTable("applications", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id"),
+  fullName: varchar("full_name").notNull(),
+  phone: varchar("phone").notNull(),
+  email: varchar("email").notNull(),
+  trade: varchar("trade").notNull(),
+  state: varchar("state").notNull(),
+  issueType: varchar("issue_type").notNull(),
+  amount: decimal("amount"),
+  startDate: timestamp("start_date"),
+  description: text("description").notNull(),
+  status: varchar("status").default("pending"), // pending, approved, rejected
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Cases (after payment and detailed processing)
+export const cases = pgTable("cases", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull(),
+  applicationId: integer("application_id"),
+  title: varchar("title").notNull(),
+  caseNumber: varchar("case_number").unique().notNull(),
+  status: varchar("status").default("active"), // active, resolved, on_hold
+  issueType: varchar("issue_type").notNull(),
+  amount: decimal("amount"),
+  description: text("description"),
+  aiAnalysis: jsonb("ai_analysis"),
+  strategyPack: jsonb("strategy_pack"),
+  nextAction: text("next_action"),
+  nextActionDue: timestamp("next_action_due"),
+  progress: integer("progress").default(0), // 0-100
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Documents
+export const documents = pgTable("documents", {
+  id: serial("id").primaryKey(),
+  caseId: integer("case_id"),
+  contractId: integer("contract_id"),
+  userId: varchar("user_id").notNull(),
+  filename: varchar("filename").notNull(),
+  originalName: varchar("original_name").notNull(),
+  fileType: varchar("file_type").notNull(),
+  fileSize: integer("file_size").notNull(),
+  uploadPath: varchar("upload_path").notNull(),
+  tags: jsonb("tags"),
+  category: varchar("category"), // evidence, contract, correspondence, generated
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Timeline events
+export const timelineEvents = pgTable("timeline_events", {
+  id: serial("id").primaryKey(),
+  caseId: integer("case_id"),
+  contractId: integer("contract_id"),
+  userId: varchar("user_id").notNull(),
+  eventType: varchar("event_type").notNull(), // action_completed, document_uploaded, deadline_set
+  title: varchar("title").notNull(),
+  description: text("description"),
+  eventDate: timestamp("event_date").notNull(),
+  isCompleted: boolean("is_completed").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Contracts (for future work prevention)
+export const contracts = pgTable("contracts", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull(),
+  title: varchar("title").notNull(),
+  contractNumber: varchar("contract_number").unique().notNull(),
+  status: varchar("status").default("draft"), // draft, final, signed
+  clientName: varchar("client_name"),
+  projectDescription: text("project_description"),
+  value: decimal("value"),
+  startDate: timestamp("start_date"),
+  endDate: timestamp("end_date"),
+  terms: jsonb("terms"),
+  version: integer("version").default(1),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Schema validation
+export const insertApplicationSchema = createInsertSchema(applications).omit({
+  id: true,
+  userId: true,
+  status: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertCaseSchema = createInsertSchema(cases).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertDocumentSchema = createInsertSchema(documents).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertTimelineEventSchema = createInsertSchema(timelineEvents).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertContractSchema = createInsertSchema(contracts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Types
+export type UpsertUser = typeof users.$inferInsert;
+export type User = typeof users.$inferSelect;
+export type InsertApplication = z.infer<typeof insertApplicationSchema>;
+export type Application = typeof applications.$inferSelect;
+export type InsertCase = z.infer<typeof insertCaseSchema>;
+export type Case = typeof cases.$inferSelect;
+export type InsertDocument = z.infer<typeof insertDocumentSchema>;
+export type Document = typeof documents.$inferSelect;
+export type InsertTimelineEvent = z.infer<typeof insertTimelineEventSchema>;
+export type TimelineEvent = typeof timelineEvents.$inferSelect;
+export type InsertContract = z.infer<typeof insertContractSchema>;
+export type Contract = typeof contracts.$inferSelect;
