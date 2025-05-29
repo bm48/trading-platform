@@ -61,7 +61,7 @@ export default function Landing() {
                 <Button 
                   size="lg" 
                   variant="outline" 
-                  className="text-white border-white hover:bg-white hover:text-primary"
+                  className="text-white border-white bg-white/10 hover:bg-white hover:text-primary backdrop-blur-sm"
                   onClick={() => scrollToElement('how-it-works')}
                 >
                   See How It Works
