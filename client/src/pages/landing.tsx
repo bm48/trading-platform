@@ -3,9 +3,12 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Shield, Check, Clock, Users, DollarSign, FileText, Calendar, Download, ChevronRight, X, Brain, Lock, Mail, Search, Star } from 'lucide-react';
 import ApplicationForm from '@/components/application-form';
+import LoginModal from '@/components/login-modal';
 import { scrollToElement } from '@/lib/utils';
 
 export default function Landing() {
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation */}
@@ -25,22 +28,8 @@ export default function Landing() {
               <Button variant="ghost" onClick={() => scrollToElement('pricing')}>
                 Pricing
               </Button>
-              <Button 
-                onClick={() => {
-                  // Create a new window for Replit authentication
-                  const authWindow = window.open('/api/login', 'replit-auth', 'width=500,height=600,scrollbars=yes,resizable=yes');
-                  
-                  // Check if authentication completed
-                  const checkClosed = setInterval(() => {
-                    if (authWindow?.closed) {
-                      clearInterval(checkClosed);
-                      // Refresh the page to check authentication status
-                      window.location.reload();
-                    }
-                  }, 1000);
-                }}
-              >
-                Login with Replit
+              <Button onClick={() => setShowLoginModal(true)}>
+                Login
               </Button>
             </div>
           </div>
@@ -488,6 +477,11 @@ export default function Landing() {
           </div>
         </div>
       </footer>
+      
+      <LoginModal 
+        isOpen={showLoginModal} 
+        onClose={() => setShowLoginModal(false)} 
+      />
     </div>
   );
 }

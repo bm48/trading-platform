@@ -37,16 +37,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
 
-  // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+  // Simple authentication routes for testing
+  app.post('/api/auth/login', async (req, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const { email, password } = req.body;
+      
+      // For demo purposes, accept any email/password combination
+      // In production, this would validate against a real user database
+      if (!email || !password) {
+        return res.status(400).json({ message: "Email and password required" });
+      }
+
+      // Create or get user
+      const userId = email; // Use email as user ID for demo
+      let user = await storage.getUser(userId);
+      
+      if (!user) {
+        user = await storage.upsertUser({
+          id: userId,
+          email: email,
+          firstName: email.split('@')[0],
+          lastName: 'User',
+        });
+      }
+
+      // Set session
+      (req as any).session.userId = userId;
+      res.json({ user, message: "Login successful" });
+    } catch (error) {
+      console.error("Login error:", error);
+      res.status(500).json({ message: "Login failed" });
+    }
+  });
+
+  app.post('/api/auth/signup', async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      
+      if (!email || !password) {
+        return res.status(400).json({ message: "Email and password required" });
+      }
+
+      // Create new user
+      const userId = email;
+      const user = await storage.upsertUser({
+        id: userId,
+        email: email,
+        firstName: email.split('@')[0],
+        lastName: 'User',
+      });
+
+      // Set session
+      (req as any).session.userId = userId;
+      res.json({ user, message: "Account created successfully" });
+    } catch (error) {
+      console.error("Signup error:", error);
+      res.status(500).json({ message: "Signup failed" });
+    }
+  });
+
+  app.get('/api/auth/user', async (req, res) => {
+    try {
+      const userId = (req as any).session?.userId;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
       const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+
       res.json(user);
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
     }
+  });
+
+  app.post('/api/auth/logout', async (req, res) => {
+    (req as any).session?.destroy();
+    res.json({ message: "Logged out successfully" });
   });
 
   // Application routes
