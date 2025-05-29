@@ -1,7 +1,9 @@
 import nodemailer from 'nodemailer';
 
-// Email configuration
-const transporter = nodemailer.createTransporter({
+// Email configuration - optional for development
+const EMAIL_ENABLED = !!(process.env.SMTP_USER && process.env.SMTP_PASS);
+
+const transporter = EMAIL_ENABLED ? nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'smtp.gmail.com',
   port: parseInt(process.env.SMTP_PORT || '587'),
   secure: false,
@@ -9,9 +11,14 @@ const transporter = nodemailer.createTransporter({
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
   },
-});
+}) : null;
 
 export async function sendWelcomeEmail(email: string, fullName: string): Promise<void> {
+  if (!EMAIL_ENABLED) {
+    console.log(`Email would be sent to ${email} (${fullName}) - Welcome email`);
+    return;
+  }
+  
   try {
     const mailOptions = {
       from: process.env.FROM_EMAIL || 'noreply@tradeguard.ai',
@@ -57,13 +64,18 @@ export async function sendWelcomeEmail(email: string, fullName: string): Promise
       `,
     };
 
-    await transporter.sendMail(mailOptions);
+    await transporter!.sendMail(mailOptions);
   } catch (error) {
     console.error('Error sending welcome email:', error);
   }
 }
 
 export async function sendApprovalEmail(email: string, fullName: string, applicationId: number): Promise<void> {
+  if (!EMAIL_ENABLED) {
+    console.log(`Email would be sent to ${email} (${fullName}) - Approval email for application ${applicationId}`);
+    return;
+  }
+  
   try {
     const approvalLink = `${process.env.BASE_URL || 'http://localhost:5000'}/application/${applicationId}/complete`;
     
@@ -111,13 +123,18 @@ export async function sendApprovalEmail(email: string, fullName: string, applica
       `,
     };
 
-    await transporter.sendMail(mailOptions);
+    await transporter!.sendMail(mailOptions);
   } catch (error) {
     console.error('Error sending approval email:', error);
   }
 }
 
 export async function sendStrategyPackEmail(email: string, fullName: string, caseNumber: string): Promise<void> {
+  if (!EMAIL_ENABLED) {
+    console.log(`Email would be sent to ${email} (${fullName}) - Strategy pack ready for case ${caseNumber}`);
+    return;
+  }
+  
   try {
     const portalLink = `${process.env.BASE_URL || 'http://localhost:5000'}/dashboard`;
     
@@ -165,7 +182,7 @@ export async function sendStrategyPackEmail(email: string, fullName: string, cas
       `,
     };
 
-    await transporter.sendMail(mailOptions);
+    await transporter!.sendMail(mailOptions);
   } catch (error) {
     console.error('Error sending strategy pack email:', error);
   }

@@ -71,6 +71,32 @@ Focus on Australian trade and construction law, including Security of Payment Ac
 }
 
 export async function generateStrategyPack(caseData: Case, analysis: any): Promise<any> {
+  if (!OPENAI_ENABLED) {
+    return {
+      executiveSummary: "AI strategy generation is not available. Please configure your OpenAI API key to access AI-powered strategy generation.",
+      strategyOverview: "Manual strategy development required",
+      stepByStepPlan: [
+        {
+          step: 1,
+          action: "Configure AI Integration",
+          description: "Add OpenAI API key to enable AI-powered strategy generation",
+          timeframe: "Immediate",
+          priority: "high"
+        }
+      ],
+      documentsToGenerate: [],
+      legalOptions: [],
+      timeline: {
+        immediateActions: ["Configure OpenAI API key"],
+        shortTerm: ["Consult with legal professional"],
+        mediumTerm: ["Manual case assessment"],
+        longTerm: ["Consider AI integration"]
+      },
+      riskMitigation: ["Seek professional legal advice"],
+      expectedOutcomes: "AI analysis required for detailed outcomes"
+    };
+  }
+
   try {
     const prompt = `
 Based on the case analysis, generate a comprehensive strategy pack for this Australian tradesperson.
@@ -123,7 +149,7 @@ Generate a JSON response with:
 Focus on practical, actionable advice specific to Australian trade law.
 `;
 
-    const response = await openai.chat.completions.create({
+    const response = await openai!.chat.completions.create({
       model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
       messages: [
         {
@@ -146,6 +172,23 @@ Focus on practical, actionable advice specific to Australian trade law.
 }
 
 export async function generateLegalDocument(documentType: string, caseData: Case, analysis: any): Promise<string> {
+  if (!OPENAI_ENABLED) {
+    return `AI Document Generation Not Available
+
+This ${documentType} document cannot be generated automatically because the OpenAI integration is not configured.
+
+To enable AI-powered document generation:
+1. Configure your OpenAI API key
+2. Restart the application
+3. Generate documents using AI analysis
+
+For immediate assistance, please consult with a legal professional.
+
+Case Reference: ${caseData.caseNumber || 'N/A'}
+Issue Type: ${caseData.issueType}
+Amount: ${caseData.amount ? `$${caseData.amount}` : 'Not specified'}`;
+  }
+
   try {
     const prompt = `
 Generate a ${documentType} document for this Australian trade case.
@@ -162,7 +205,7 @@ Create a professional ${documentType} suitable for Australian construction/trade
 Return only the document content, properly formatted.
 `;
 
-    const response = await openai.chat.completions.create({
+    const response = await openai!.chat.completions.create({
       model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
       messages: [
         {
