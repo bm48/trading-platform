@@ -10,6 +10,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
+
+// Check if Stripe is configured
+const STRIPE_ENABLED = !!import.meta.env.VITE_STRIPE_PUBLIC_KEY;
 import { formatCurrency } from '@/lib/utils';
 import { 
   Shield, 
@@ -23,11 +26,7 @@ import {
   ArrowLeft
 } from 'lucide-react';
 
-if (!import.meta.env.VITE_STRIPE_PUBLIC_KEY) {
-  throw new Error('Missing required Stripe key: VITE_STRIPE_PUBLIC_KEY');
-}
-
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
+const stripePromise = STRIPE_ENABLED ? loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY) : null;
 
 interface CheckoutFormProps {
   clientSecret: string;
@@ -121,6 +120,27 @@ export default function Checkout() {
   const [selectedPlan, setSelectedPlan] = useState<'strategy' | 'subscription'>('strategy');
   const [clientSecret, setClientSecret] = useState('');
   const [applicationData, setApplicationData] = useState<any>(null);
+
+  // If Stripe is not configured, show configuration message
+  if (!STRIPE_ENABLED) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Card className="max-w-md">
+          <CardContent className="p-8 text-center">
+            <CreditCard className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold mb-2">Payment Processing Not Configured</h2>
+            <p className="text-gray-600 mb-4">
+              Payment processing is not available yet. The platform administrator needs to configure Stripe payment processing.
+            </p>
+            <Button onClick={() => navigate('/dashboard')} variant="outline">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Dashboard
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   // Check for plan in URL params
   useEffect(() => {
