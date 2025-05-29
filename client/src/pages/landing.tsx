@@ -25,8 +25,22 @@ export default function Landing() {
               <Button variant="ghost" onClick={() => scrollToElement('pricing')}>
                 Pricing
               </Button>
-              <Button onClick={() => window.location.href = '/api/login'}>
-                Login
+              <Button 
+                onClick={() => {
+                  // Create a new window for Replit authentication
+                  const authWindow = window.open('/api/login', 'replit-auth', 'width=500,height=600,scrollbars=yes,resizable=yes');
+                  
+                  // Check if authentication completed
+                  const checkClosed = setInterval(() => {
+                    if (authWindow?.closed) {
+                      clearInterval(checkClosed);
+                      // Refresh the page to check authentication status
+                      window.location.reload();
+                    }
+                  }, 1000);
+                }}
+              >
+                Login with Replit
               </Button>
             </div>
           </div>
