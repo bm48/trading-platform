@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Shield, Check, Clock, Users, DollarSign, FileText, Calendar, Download, ChevronRight, X, Brain, Lock, Mail, Search, Star } from 'lucide-react';
+import { Shield, Check, Clock, Users, DollarSign, FileText, Calendar, Download, ChevronRight, X, Brain, Lock, Mail, Search, Star, Plus } from 'lucide-react';
 import ApplicationForm from '@/components/application-form';
 import LoginModal from '@/components/login-modal';
 import { scrollToElement } from '@/lib/utils';
@@ -17,7 +17,7 @@ export default function Landing() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <div className="flex-shrink-0 flex items-center">
-                <Shield className="h-8 w-8 text-primary mr-3" />
+                <Plus className="h-8 w-8 text-primary mr-3" />
                 <span className="text-xl font-bold text-neutral-dark">Resolve AI</span>
               </div>
             </div>
@@ -441,7 +441,7 @@ export default function Landing() {
           <div className="grid md:grid-cols-4 gap-8">
             <div className="col-span-2">
               <div className="flex items-center mb-4">
-                <Shield className="h-8 w-8 text-primary mr-3" />
+                <Plus className="h-8 w-8 text-primary mr-3" />
                 <span className="text-xl font-bold">Resolve AI</span>
               </div>
               <p className="text-gray-300 mb-4">
