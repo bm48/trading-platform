@@ -480,7 +480,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ 
         success: true, 
         pdfPath,
-        downloadUrl: `/api/download-strategy-pdf/${encodeURIComponent(pdfPath.split('/').pop())}`,
+        downloadUrl: `/api/download-strategy-pdf/${encodeURIComponent(pdfPath.split('/').pop() || 'strategy-pack.pdf')}`,
         message: "AI Strategy Pack PDF generated successfully" 
       });
     } catch (error: any) {

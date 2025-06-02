@@ -243,6 +243,40 @@ export default function DemoDashboard() {
     setEditingPack(null);
   };
 
+  const handleGeneratePDF = async (pack: any) => {
+    try {
+      // Convert the strategy pack data to case format for the API
+      const caseData = {
+        title: `${pack.trade} Dispute - ${pack.clientName}`,
+        issueType: pack.issueType,
+        amount: pack.amount.toString(),
+        description: `Strategy pack case for ${pack.clientName}`,
+        caseNumber: pack.caseNumber
+      };
+
+      const response = await fetch('/api/generate-ai-strategy-pdf', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ caseData }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        // Open the download link
+        window.open(result.downloadUrl, '_blank');
+        alert('AI Strategy Pack PDF generated successfully!');
+      } else {
+        const error = await response.json();
+        alert(`Failed to generate PDF: ${error.message}`);
+      }
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      alert('Failed to generate PDF. Please try again.');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
