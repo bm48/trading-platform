@@ -206,7 +206,7 @@ export default function Landing() {
           
           <div className="text-center">
             <p className="text-lg text-gray-700 italic">
-              We're not lawyers. We're builders who've been through it — and now we've built a smarter way to fight back.
+              We're not lawyers. We've lived the frustration, spent the money, and learned the hard way — now we're making sure you don't have to.
             </p>
           </div>
         </div>
