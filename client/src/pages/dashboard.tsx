@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/hooks/useAuth';
 import DashboardLayout from '@/components/dashboard-layout';
+import ApplicationForm from '@/components/application-form';
 import { formatCurrency, formatDate, getStatusColor, calculateProgress } from '@/lib/utils';
 import { 
   FolderOpen, 
@@ -24,6 +25,7 @@ import { Link } from 'wouter';
 export default function Dashboard() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('cases');
+  const [showNewCaseForm, setShowNewCaseForm] = useState(false);
 
   const { data: cases = [], isLoading: casesLoading } = useQuery({
     queryKey: ['/api/cases'],
@@ -38,6 +40,25 @@ export default function Dashboard() {
   const activeCases = cases.filter((c: any) => c.status === 'active');
   const resolvedCases = cases.filter((c: any) => c.status === 'resolved');
 
+  if (showNewCaseForm) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-neutral-dark">New Case Application</h1>
+              <p className="text-neutral-medium">Fill out the details to start your legal case</p>
+            </div>
+            <Button variant="outline" onClick={() => setShowNewCaseForm(false)}>
+              Back to Dashboard
+            </Button>
+          </div>
+          <ApplicationForm />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-8">
@@ -48,7 +69,7 @@ export default function Dashboard() {
             <p className="text-neutral-medium">Manage your cases and track your progress</p>
           </div>
           <div className="flex gap-3">
-            <Button onClick={() => window.location.href = '/checkout'}>
+            <Button onClick={() => setShowNewCaseForm(true)}>
               <Plus className="h-4 w-4 mr-2" />
               New Case
             </Button>
@@ -129,7 +150,7 @@ export default function Dashboard() {
           <TabsContent value="cases" className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold text-neutral-dark">Case Files</h2>
-              <Button variant="outline" onClick={() => window.location.href = '/checkout'}>
+              <Button variant="outline" onClick={() => setShowNewCaseForm(true)}>
                 <Plus className="h-4 w-4 mr-2" />
                 New Case
               </Button>
@@ -153,7 +174,7 @@ export default function Dashboard() {
                   <FolderOpen className="h-12 w-12 text-neutral-medium mx-auto mb-4" />
                   <h3 className="text-lg font-semibold text-neutral-dark mb-2">No cases yet</h3>
                   <p className="text-neutral-medium mb-6">Start by creating your first case to get legal support</p>
-                  <Button onClick={() => window.location.href = '/checkout'}>
+                  <Button onClick={() => setShowNewCaseForm(true)}>
                     <Plus className="h-4 w-4 mr-2" />
                     Create First Case
                   </Button>
