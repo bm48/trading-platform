@@ -135,6 +135,8 @@ export const insertApplicationSchema = createInsertSchema(applications).omit({
   status: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  startDate: z.string().optional().transform((val) => val ? new Date(val) : undefined),
 });
 
 export const insertCaseSchema = createInsertSchema(cases).omit({

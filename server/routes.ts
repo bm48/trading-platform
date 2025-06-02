@@ -636,6 +636,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Integration routes for email and calendar
+  app.post("/api/integrations/email/connect", isAuthenticated, async (req, res) => {
+    try {
+      const { provider } = req.body;
+      const userId = req.user?.claims?.sub;
+
+      // For demo purposes, simulate successful connection
+      // In production, this would handle OAuth flow with Gmail/Outlook
+      const mockConnectionData = {
+        provider: provider,
+        email: provider === 'gmail' ? 'user@gmail.com' : 'user@outlook.com',
+        connected: true
+      };
+
+      res.json(mockConnectionData);
+    } catch (error: any) {
+      console.error("Error connecting email:", error);
+      res.status(500).json({ message: "Failed to connect email: " + error.message });
+    }
+  });
+
+  app.post("/api/integrations/email/disconnect", isAuthenticated, async (req, res) => {
+    try {
+      const { provider } = req.body;
+      const userId = req.user?.claims?.sub;
+
+      // For demo purposes, simulate successful disconnection
+      res.json({ message: "Email disconnected successfully" });
+    } catch (error: any) {
+      console.error("Error disconnecting email:", error);
+      res.status(500).json({ message: "Failed to disconnect email: " + error.message });
+    }
+  });
+
+  app.post("/api/integrations/calendar/connect", isAuthenticated, async (req, res) => {
+    try {
+      const { provider } = req.body;
+      const userId = req.user?.claims?.sub;
+
+      // For demo purposes, simulate successful connection
+      // In production, this would handle OAuth flow with Google Calendar/Outlook Calendar
+      const mockConnectionData = {
+        provider: provider,
+        syncEnabled: true,
+        connected: true
+      };
+
+      res.json(mockConnectionData);
+    } catch (error: any) {
+      console.error("Error connecting calendar:", error);
+      res.status(500).json({ message: "Failed to connect calendar: " + error.message });
+    }
+  });
+
+  app.post("/api/integrations/calendar/disconnect", isAuthenticated, async (req, res) => {
+    try {
+      const { provider } = req.body;
+      const userId = req.user?.claims?.sub;
+
+      // For demo purposes, simulate successful disconnection
+      res.json({ message: "Calendar disconnected successfully" });
+    } catch (error: any) {
+      console.error("Error disconnecting calendar:", error);
+      res.status(500).json({ message: "Failed to disconnect calendar: " + error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
