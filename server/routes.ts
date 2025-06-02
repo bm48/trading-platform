@@ -466,7 +466,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Generate RESOLVE Strategy Pack PDF
-  app.post("/api/generate-resolve-pdf", isAuthenticated, async (req: any, res) => {
+  app.post("/api/generate-resolve-pdf", async (req: any, res) => {
     try {
       const { caseData } = req.body;
       
