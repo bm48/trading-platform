@@ -8,6 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/hooks/useAuth';
 import DashboardLayout from '@/components/dashboard-layout';
 import ApplicationForm from '@/components/application-form';
+import CaseForm from '@/components/case-form';
 import { formatCurrency, formatDate, getStatusColor, calculateProgress } from '@/lib/utils';
 import { 
   FolderOpen, 
@@ -60,20 +61,15 @@ export default function Dashboard() {
 
   if (showNewCaseForm) {
     return (
-      <DashboardLayout>
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-neutral-dark">New Case Application</h1>
-              <p className="text-neutral-medium">Fill out the details to start your legal case</p>
-            </div>
-            <Button variant="outline" onClick={() => setShowNewCaseForm(false)}>
-              Back to Dashboard
-            </Button>
-          </div>
-          <ApplicationForm />
-        </div>
-      </DashboardLayout>
+      <>
+        <CaseForm 
+          onClose={() => setShowNewCaseForm(false)}
+          onSuccess={() => {
+            // Refresh cases data after successful creation
+            window.location.reload();
+          }}
+        />
+      </>
     );
   }
 
