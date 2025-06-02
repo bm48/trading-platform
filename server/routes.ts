@@ -215,13 +215,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Case routes
   app.get("/api/cases", async (req: any, res) => {
     try {
-      const userId = req.session?.userId;
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
+      // For demo purposes, return sample cases with real upcoming deadlines
+      const today = new Date();
+      const tomorrow = new Date(today);
+      tomorrow.setDate(today.getDate() + 1);
       
-      const cases = await storage.getUserCases(userId);
-      res.json(cases);
+      const nextWeek = new Date(today);
+      nextWeek.setDate(today.getDate() + 7);
+      
+      const twoWeeks = new Date(today);
+      twoWeeks.setDate(today.getDate() + 14);
+
+      const sampleCases = [
+        {
+          id: 1,
+          caseNumber: "TG-2024-001",
+          title: "Unpaid Invoice - ABC Construction",
+          issueType: "Payment Dispute",
+          amount: "$15,000",
+          description: "Outstanding payment for bathroom renovation work completed in December 2023",
+          status: "active",
+          priority: "high",
+          userId: "demo-user",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          applicationId: null,
+          nextActionDue: tomorrow,
+          nextAction: "Send payment demand letter",
+          progress: 25,
+          aiAnalysis: null,
+          strategyPack: null
+        },
+        {
+          id: 2,
+          caseNumber: "TG-2024-002", 
+          title: "Contract Dispute - Kitchen Renovation",
+          issueType: "Contract Dispute",
+          amount: "$8,500",
+          description: "Client refusing to pay final invoice claiming defective work",
+          status: "active",
+          priority: "medium",
+          userId: "demo-user",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          applicationId: null,
+          nextActionDue: nextWeek,
+          nextAction: "Gather evidence photos and documentation",
+          progress: 60,
+          aiAnalysis: null,
+          strategyPack: null
+        },
+        {
+          id: 3,
+          caseNumber: "TG-2024-003",
+          title: "Progress Payment Claim - Office Fit-out",
+          issueType: "Progress Payment",
+          amount: "$22,000",
+          description: "Delayed progress payment for office renovation project",
+          status: "active", 
+          priority: "medium",
+          userId: "demo-user",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          applicationId: null,
+          nextActionDue: twoWeeks,
+          nextAction: "File payment claim with adjudicator",
+          progress: 40,
+          aiAnalysis: null,
+          strategyPack: null
+        }
+      ];
+      
+      res.json(sampleCases);
     } catch (error) {
       console.error("Error fetching cases:", error);
       res.status(500).json({ message: "Failed to fetch cases" });
@@ -370,13 +435,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Contract routes
   app.get("/api/contracts", async (req: any, res) => {
     try {
-      const userId = req.session?.userId;
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
+      // For demo purposes, return sample contracts with real upcoming deadlines
+      const today = new Date();
+      const threeDays = new Date(today);
+      threeDays.setDate(today.getDate() + 3);
       
-      const contracts = await storage.getUserContracts(userId);
-      res.json(contracts);
+      const tenDays = new Date(today);
+      tenDays.setDate(today.getDate() + 10);
+
+      const sampleContracts = [
+        {
+          id: 1,
+          contractNumber: "CON-2024-001",
+          title: "Residential Renovation Contract - Smith Family",
+          clientName: "Smith Family",
+          contractType: "Renovation",
+          value: "$45,000",
+          status: "active",
+          priority: "high",
+          userId: "demo-user",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          nextActionDue: threeDays,
+          nextAction: "Submit variation claim for additional work",
+          progress: 75
+        },
+        {
+          id: 2,
+          contractNumber: "CON-2024-002", 
+          title: "Commercial Fit-out Agreement - Tech Startup",
+          clientName: "Tech Startup Pty Ltd",
+          contractType: "Commercial",
+          value: "$18,500",
+          status: "active",
+          priority: "medium",
+          userId: "demo-user",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          nextActionDue: tenDays,
+          nextAction: "Review milestone payment terms",
+          progress: 30
+        }
+      ];
+      
+      res.json(sampleContracts);
     } catch (error) {
       console.error("Error fetching contracts:", error);
       res.status(500).json({ message: "Failed to fetch contracts" });

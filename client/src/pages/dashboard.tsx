@@ -20,7 +20,10 @@ import {
   Plus, 
   ChevronRight,
   Shield,
-  AlertCircle 
+  AlertCircle,
+  CheckCircle,
+  ArrowRight,
+  Bell
 } from 'lucide-react';
 import { Link } from 'wouter';
 
@@ -48,6 +51,63 @@ export default function Dashboard() {
     queryKey: ['/api/subscription/status'],
     enabled: !!user,
   });
+
+  // Generate timeline events from cases and contracts
+  const generateTimelineEvents = () => {
+    const events = [];
+    const today = new Date();
+    
+    // Add case events
+    if (Array.isArray(cases)) {
+      cases.forEach((caseItem: any) => {
+        if (caseItem.nextActionDue) {
+          const dueDate = new Date(caseItem.nextActionDue);
+          const daysUntil = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+          
+          events.push({
+            id: `case-${caseItem.id}`,
+            type: 'case',
+            title: caseItem.nextAction || 'Follow up required',
+            subtitle: `Case ${caseItem.caseNumber}`,
+            date: dueDate,
+            daysUntil,
+            priority: daysUntil <= 3 ? 'high' : daysUntil <= 7 ? 'medium' : 'low',
+            status: caseItem.status,
+            amount: caseItem.amount,
+            caseId: caseItem.id
+          });
+        }
+      });
+    }
+
+    // Add contract events
+    if (Array.isArray(contracts)) {
+      contracts.forEach((contract: any) => {
+        if (contract.nextActionDue) {
+          const dueDate = new Date(contract.nextActionDue);
+          const daysUntil = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+          
+          events.push({
+            id: `contract-${contract.id}`,
+            type: 'contract',
+            title: contract.nextAction || 'Contract review required',
+            subtitle: `Contract ${contract.contractNumber}`,
+            date: dueDate,
+            daysUntil,
+            priority: daysUntil <= 3 ? 'high' : daysUntil <= 7 ? 'medium' : 'low',
+            status: contract.status,
+            amount: contract.value,
+            contractId: contract.id
+          });
+        }
+      });
+    }
+
+    // Sort by date (closest first)
+    return events.sort((a, b) => a.date.getTime() - b.date.getTime());
+  };
+
+  const timelineEvents = generateTimelineEvents();
 
   const activeCases = cases.filter((c: any) => c.status === 'active');
   const resolvedCases = cases.filter((c: any) => c.status === 'resolved');
@@ -132,6 +192,78 @@ export default function Dashboard() {
             )}
           </div>
         </div>
+
+        {/* Central Timeline */}
+        {timelineEvents.length > 0 && (
+          <Card className="border-l-4 border-l-primary bg-blue-50">
+            <CardHeader className="pb-4">
+              <div className="flex items-center gap-2">
+                <Bell className="h-5 w-5 text-primary" />
+                <CardTitle className="text-lg text-primary">Upcoming Actions & Deadlines</CardTitle>
+              </div>
+              <p className="text-sm text-neutral-medium">Stay on top of your cases and contracts - never miss a deadline</p>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {timelineEvents.slice(0, 5).map((event: any) => (
+                <div key={event.id} className="flex items-center justify-between p-3 bg-white rounded-lg border">
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-full ${
+                      event.priority === 'high' ? 'bg-red-100 text-red-600' :
+                      event.priority === 'medium' ? 'bg-yellow-100 text-yellow-600' :
+                      'bg-blue-100 text-blue-600'
+                    }`}>
+                      {event.type === 'case' ? <FolderOpen className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
+                    </div>
+                    <div>
+                      <p className="font-medium text-neutral-dark">{event.title}</p>
+                      <p className="text-sm text-neutral-medium">{event.subtitle}</p>
+                      {event.amount && (
+                        <p className="text-sm font-medium text-green-600">{formatCurrency(event.amount)}</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="flex items-center gap-2">
+                      <Badge variant={
+                        event.daysUntil <= 0 ? 'destructive' :
+                        event.daysUntil <= 3 ? 'destructive' :
+                        event.daysUntil <= 7 ? 'secondary' : 'outline'
+                      }>
+                        {event.daysUntil <= 0 ? 'Overdue' :
+                         event.daysUntil === 1 ? 'Tomorrow' :
+                         `${event.daysUntil} days`}
+                      </Badge>
+                      <Link href={event.type === 'case' ? `/case/${event.caseId}` : `/contract/${event.contractId}`}>
+                        <Button size="sm" variant="ghost">
+                          <ArrowRight className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                    </div>
+                    <p className="text-xs text-neutral-medium mt-1">{formatDate(event.date)}</p>
+                  </div>
+                </div>
+              ))}
+              {timelineEvents.length > 5 && (
+                <div className="text-center pt-2">
+                  <Button variant="outline" size="sm">
+                    View All {timelineEvents.length} Actions
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Empty State for Timeline */}
+        {timelineEvents.length === 0 && !casesLoading && !contractsLoading && (
+          <Card className="border-l-4 border-l-green-500 bg-green-50">
+            <CardContent className="p-6 text-center">
+              <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-green-700 mb-2">All Caught Up!</h3>
+              <p className="text-green-600">No upcoming deadlines or actions required. Great work staying on top of your cases!</p>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Subscription Status Banner */}
         {subscriptionStatus && !subscriptionLoading && (
