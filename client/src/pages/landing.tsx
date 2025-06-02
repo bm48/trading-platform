@@ -337,7 +337,7 @@ export default function Landing() {
                   className="w-full btn-primary"
                   onClick={() => scrollToElement('application')}
                 >
-                  Get Started
+                  Start Here - Apply Now
                 </Button>
               </CardContent>
             </Card>
@@ -389,9 +389,12 @@ export default function Landing() {
 
                 <Button 
                   className="w-full bg-white text-accent hover:bg-gray-100"
-                  onClick={() => scrollToElement('application')}
+                  onClick={() => {
+                    alert("First complete the $299 Strategy Pack application above, then you can upgrade to monthly billing.");
+                    scrollToElement('application');
+                  }}
                 >
-                  Get Full Support
+                  Upgrade After Initial Payment
                 </Button>
               </CardContent>
             </Card>
