@@ -13,60 +13,18 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { FileText, X, AlertCircle, CheckCircle, User, Building, DollarSign, Scale, Target, AlertTriangle } from 'lucide-react';
+import { FileText, X, AlertCircle, CheckCircle, User, Building, DollarSign, Scale, Target, AlertTriangle, Upload, FileIcon } from 'lucide-react';
+import FileUpload from '@/components/file-upload';
 
 const caseFormSchema = z.object({
-  // Section 1: Personal & Business Details
-  fullName: z.string().min(2, 'Full name is required'),
-  businessName: z.string().optional(),
-  abn: z.string().optional(),
-  email: z.string().email('Valid email is required'),
-  mobile: z.string().min(10, 'Valid mobile number is required'),
-  state: z.string().min(1, 'State/Territory is required'),
-  tradeService: z.string().min(2, 'Trade or service is required'),
-  
-  // Section 2: Project Details
-  projectAddress: z.string().min(5, 'Project address is required'),
-  clientName: z.string().min(2, 'Client/Builder name is required'),
-  contractType: z.enum(['direct_owner', 'head_contractor']),
-  workScope: z.string().min(10, 'Work scope description is required'),
-  projectType: z.enum(['domestic', 'commercial']),
+  // Basic case info
+  title: z.string().min(5, 'Case title is required'),
+  issueType: z.string().min(1, 'Issue type is required'),
+  description: z.string().min(20, 'Detailed description is required'),
+  amount: z.string().optional(),
   startDate: z.string().min(1, 'Start date is required'),
-  completionDate: z.string().optional(),
-  workCompleted: z.enum(['yes', 'no', 'partial']),
-  incompleteDetails: z.string().optional(),
-  
-  // Section 3: Contractual Agreement
-  writtenContract: z.enum(['yes', 'no']),
-  scopeAgreement: z.enum(['written', 'email', 'verbal']),
-  quoteGiven: z.enum(['yes', 'no']),
-  variations: z.enum(['yes', 'no']),
-  variationsWritten: z.enum(['written', 'verbal']).optional(),
-  
-  // Section 4: Payment & Invoices
-  totalValue: z.string().min(1, 'Total value is required'),
-  amountPaid: z.string().min(1, 'Amount paid is required'),
-  amountOwing: z.string().min(1, 'Amount owing is required'),
-  invoiceIssued: z.enum(['yes', 'no']),
-  lastInvoiceDate: z.string().optional(),
-  followUpSent: z.enum(['yes', 'no']),
-  disputesRaised: z.enum(['yes', 'no']),
-  
-  // Section 6: Legal Action Preferences
-  legalStepsTaken: z.enum(['none', 'letter_demand', 'ncat_vcat', 'other']),
-  threatenedAction: z.enum(['yes', 'no']),
-  preferredApproach: z.enum(['letter_demand', 'security_payment_act', 'negotiation']),
-  willingToEscalate: z.enum(['yes', 'no']),
-  
-  // Section 7: Outcome Sought
-  desiredOutcome: z.enum(['full_payment', 'partial_settlement', 'project_exit', 'other']),
-  urgencyLevel: z.enum(['urgent_7days', 'medium_30days', 'low_no_deadline']),
-  acceptableResolution: z.string().min(10, 'Please describe acceptable resolution'),
-  
-  // Section 8: Risks or Concerns
-  safetyIssues: z.enum(['yes', 'no']),
-  threatsReceived: z.enum(['yes', 'no']),
-  reputationConcerns: z.enum(['yes', 'no']),
+  urgency: z.string().min(1, 'Urgency level is required'),
+  clientContact: z.string().optional(),
 });
 
 type CaseFormData = z.infer<typeof caseFormSchema>;
