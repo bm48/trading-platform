@@ -194,6 +194,14 @@ export default function Landing() {
                 <p className="text-gray-600 text-sm">Approve letters before they're sent</p>
               </CardContent>
             </Card>
+            
+            <Card className="text-center p-6">
+              <CardContent>
+                <DollarSign className="h-12 w-12 text-primary mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">You're Back in Charge — Without Paying Lawyers</h3>
+                <p className="text-gray-600 text-sm">For a fraction of what you'd pay a solicitor, Resolve gives you the tools, support, and clarity to stand your ground and get paid.</p>
+              </CardContent>
+            </Card>
           </div>
           
           <div className="text-center">
