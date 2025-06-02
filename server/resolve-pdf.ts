@@ -1,5 +1,5 @@
 import PDFDocument from 'pdfkit';
-import { promises as fs } from 'fs';
+import { promises as fs, createWriteStream } from 'fs';
 import path from 'path';
 import type { Case } from '@shared/schema';
 import OpenAI from 'openai';
@@ -102,7 +102,7 @@ export async function generateResolvePDF(caseData: Case): Promise<string> {
     await fs.mkdir(uploadsDir, { recursive: true });
     const filepath = path.join(uploadsDir, filename);
     
-    doc.pipe(require('fs').createWriteStream(filepath));
+    doc.pipe(createWriteStream(filepath));
 
     // Cover Page
     doc.fontSize(36).fillColor('#000').text('RESOLVE', 50, 50);
