@@ -133,6 +133,10 @@ export default function Landing() {
               <X className="h-6 w-6 text-red-500 mt-1 flex-shrink-0" />
               <span className="text-gray-700">No idea what letters to send or laws that apply</span>
             </div>
+            <div className="flex items-start space-x-3">
+              <X className="h-6 w-6 text-red-500 mt-1 flex-shrink-0" />
+              <span className="text-gray-700">And no one giving you a straight answer on what to do next</span>
+            </div>
           </div>
           
           <div className="text-center">
