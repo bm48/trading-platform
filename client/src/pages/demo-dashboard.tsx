@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
+import { Link } from "wouter";
 import { 
   Users, 
   FileText, 
@@ -289,6 +290,11 @@ export default function DemoDashboard() {
             </div>
             <div className="flex items-center space-x-4">
               <Badge variant="secondary">Demo Mode</Badge>
+              <Link href="/dashboard">
+                <Button variant="outline" size="sm">
+                  Go to Dashboard
+                </Button>
+              </Link>
               <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
                 <DialogTrigger asChild>
                   <Button size="sm">
@@ -1093,6 +1099,8 @@ export default function DemoDashboard() {
           )}
         </DialogContent>
       </Dialog>
+        </div>
+      </div>
     </div>
   );
 }
