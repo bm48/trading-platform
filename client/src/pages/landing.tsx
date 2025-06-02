@@ -361,52 +361,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Social Proof / Testimonials */}
-      <section className="bg-white py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-neutral-dark mb-4">Built by tradies, for tradies. Trusted by early users.</h2>
-          </div>
-          
-          <div className="grid md:grid-cols-2 gap-8">
-            <Card className="p-6">
-              <CardContent>
-                <div className="flex items-center mb-4">
-                  <div className="flex text-yellow-400">
-                    <Star className="h-5 w-5 fill-current" />
-                    <Star className="h-5 w-5 fill-current" />
-                    <Star className="h-5 w-5 fill-current" />
-                    <Star className="h-5 w-5 fill-current" />
-                    <Star className="h-5 w-5 fill-current" />
-                  </div>
-                </div>
-                <p className="text-gray-700 mb-4 italic">
-                  "I was owed $10k and Resolve helped me get it sorted in weeks. No lawyers, no stress."
-                </p>
-                <p className="text-sm font-semibold text-gray-900">— Jason, Roof Plumber</p>
-              </CardContent>
-            </Card>
-            
-            <Card className="p-6">
-              <CardContent>
-                <div className="flex items-center mb-4">
-                  <div className="flex text-yellow-400">
-                    <Star className="h-5 w-5 fill-current" />
-                    <Star className="h-5 w-5 fill-current" />
-                    <Star className="h-5 w-5 fill-current" />
-                    <Star className="h-5 w-5 fill-current" />
-                    <Star className="h-5 w-5 fill-current" />
-                  </div>
-                </div>
-                <p className="text-gray-700 mb-4 italic">
-                  "Finally a system that speaks my language. I use the contracts now on every job."
-                </p>
-                <p className="text-sm font-semibold text-gray-900">— Sarah, Interior Painter</p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
+
 
       {/* Pricing */}
       <section id="pricing" className="py-20 bg-gray-50">
