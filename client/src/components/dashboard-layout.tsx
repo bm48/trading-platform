@@ -119,9 +119,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                     const Icon = item.icon;
                     return (
                       <Link key={item.name} href={item.href}>
-                        <a
+                        <div
                           className={cn(
-                            'flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+                            'flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer',
                             item.current
                               ? 'bg-primary text-white'
                               : 'text-neutral-medium hover:bg-gray-100 hover:text-neutral-dark'
@@ -129,7 +129,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                         >
                           <Icon className="h-4 w-4 mr-3" />
                           {item.name}
-                        </a>
+                        </div>
                       </Link>
                     );
                   })}
