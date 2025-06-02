@@ -183,11 +183,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Send welcome email
       await sendWelcomeEmail(application.email, application.fullName);
       
-      // Auto-approve for demo (in production, this would be manual review)
-      setTimeout(async () => {
-        await storage.updateApplicationStatus(application.id, 'approved');
-        await sendApprovalEmail(application.email, application.fullName, application.id);
-      }, 1000);
+      // Applications now require manual review in admin dashboard
 
       res.json(application);
     } catch (error: any) {
@@ -633,6 +629,102 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error downloading PDF:", error);
       res.status(500).json({ message: "Download failed: " + error.message });
+    }
+  });
+
+  // Admin dashboard routes
+  app.get("/api/admin/applications", isAuthenticated, async (req, res) => {
+    try {
+      // Simple check - in production you'd want proper role-based auth
+      const applications = await storage.getAllApplications();
+      res.json(applications);
+    } catch (error: any) {
+      console.error("Error fetching applications:", error);
+      res.status(500).json({ message: "Failed to fetch applications: " + error.message });
+    }
+  });
+
+  app.get("/api/admin/stats", isAuthenticated, async (req, res) => {
+    try {
+      const applications = await storage.getAllApplications();
+      const stats = {
+        pending: applications.filter((app: any) => app.status === 'pending').length,
+        approved: applications.filter((app: any) => app.status === 'approved').length,
+        rejected: applications.filter((app: any) => app.status === 'rejected').length,
+        totalValue: applications.reduce((sum: number, app: any) => 
+          sum + (parseFloat(app.amount) || 0), 0)
+      };
+      res.json(stats);
+    } catch (error: any) {
+      console.error("Error fetching stats:", error);
+      res.status(500).json({ message: "Failed to fetch stats: " + error.message });
+    }
+  });
+
+  app.post("/api/admin/applications/:id/analyze", isAuthenticated, async (req, res) => {
+    try {
+      const applicationId = parseInt(req.params.id);
+      const application = await storage.getApplication(applicationId);
+      
+      if (!application) {
+        return res.status(404).json({ message: "Application not found" });
+      }
+
+      // AI analysis using OpenAI
+      const analysis = await analyzeApplication(application);
+      
+      // Store analysis result in application record
+      await storage.updateApplicationAnalysis(applicationId, analysis);
+      
+      res.json({ analysis });
+    } catch (error: any) {
+      console.error("Error analyzing application:", error);
+      res.status(500).json({ message: "Failed to analyze application: " + error.message });
+    }
+  });
+
+  app.post("/api/admin/applications/:id/approve", isAuthenticated, async (req, res) => {
+    try {
+      const applicationId = parseInt(req.params.id);
+      const application = await storage.getApplication(applicationId);
+      
+      if (!application) {
+        return res.status(404).json({ message: "Application not found" });
+      }
+
+      // Update status to approved
+      await storage.updateApplicationStatus(applicationId, 'approved');
+      
+      // Send approval email with payment link
+      await sendApprovalEmail(application.email, application.fullName, applicationId);
+      
+      res.json({ message: "Application approved and email sent" });
+    } catch (error: any) {
+      console.error("Error approving application:", error);
+      res.status(500).json({ message: "Failed to approve application: " + error.message });
+    }
+  });
+
+  app.post("/api/admin/applications/:id/reject", isAuthenticated, async (req, res) => {
+    try {
+      const applicationId = parseInt(req.params.id);
+      const { reason } = req.body;
+      const application = await storage.getApplication(applicationId);
+      
+      if (!application) {
+        return res.status(404).json({ message: "Application not found" });
+      }
+
+      // Update status to rejected
+      await storage.updateApplicationStatus(applicationId, 'rejected');
+      
+      // Send rejection email
+      await sendRejectionEmail(application.email, application.fullName, reason);
+      
+      res.json({ message: "Application rejected and email sent" });
+    } catch (error: any) {
+      console.error("Error rejecting application:", error);
+      res.status(500).json({ message: "Failed to reject application: " + error.message });
     }
   });
 

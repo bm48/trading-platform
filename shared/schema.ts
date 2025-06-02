@@ -56,6 +56,7 @@ export const applications = pgTable("applications", {
   startDate: timestamp("start_date"),
   description: text("description").notNull(),
   status: varchar("status").default("pending"), // pending, approved, rejected
+  aiAnalysis: jsonb("ai_analysis"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

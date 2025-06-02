@@ -33,7 +33,9 @@ export interface IStorage {
   createApplication(application: InsertApplication): Promise<Application>;
   getApplication(id: number): Promise<Application | undefined>;
   getUserApplications(userId: string): Promise<Application[]>;
+  getAllApplications(): Promise<Application[]>;
   updateApplicationStatus(id: number, status: string): Promise<Application>;
+  updateApplicationAnalysis(id: number, analysis: any): Promise<Application>;
 
   // Case operations
   createCase(caseData: InsertCase): Promise<Case>;
@@ -138,10 +140,23 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(applications.createdAt));
   }
 
+  async getAllApplications(): Promise<Application[]> {
+    return await db.select().from(applications).orderBy(applications.createdAt);
+  }
+
   async updateApplicationStatus(id: number, status: string): Promise<Application> {
     const [app] = await db
       .update(applications)
       .set({ status, updatedAt: new Date() })
+      .where(eq(applications.id, id))
+      .returning();
+    return app;
+  }
+
+  async updateApplicationAnalysis(id: number, analysis: any): Promise<Application> {
+    const [app] = await db
+      .update(applications)
+      .set({ aiAnalysis: analysis, updatedAt: new Date() })
       .where(eq(applications.id, id))
       .returning();
     return app;
