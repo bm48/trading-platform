@@ -6,20 +6,26 @@ import OpenAI from 'openai';
 
 const openai = process.env.OPENAI_API_KEY ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY }) : null;
 
-interface AIStrategyPack {
-  executiveSummary: string;
-  caseStrengths: string[];
-  recommendedActions: Array<{
+interface ResolveStrategyPack {
+  clientName: string;
+  caseTitle: string;
+  amount: string;
+  welcomeMessage: string;
+  caseDescription: string;
+  legalSteps: Array<{
     step: number;
     title: string;
     description: string;
-    priority: string;
-    timeframe: string;
   }>;
-  legalRecommendations: string[];
-  riskAssessment: string;
-  nextSteps: string[];
-  disclaimer: string;
+  timeline: Array<{
+    day: string;
+    action: string;
+  }>;
+  coverageExplanation: string;
+  nextSteps: string;
+  adjudicationInfo: string;
+  enforcementInfo: string;
+  attachments: string[];
 }
 
 async function generateAIStrategyContent(caseData: Case): Promise<AIStrategyPack> {

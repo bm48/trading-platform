@@ -254,7 +254,7 @@ export default function DemoDashboard() {
         caseNumber: pack.caseNumber
       };
 
-      const response = await fetch('/api/generate-ai-strategy-pdf', {
+      const response = await fetch('/api/generate-resolve-pdf', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -465,8 +465,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // AI Strategy Pack PDF Generation
-  app.post("/api/generate-ai-strategy-pdf", isAuthenticated, async (req: any, res) => {
+  // Generate RESOLVE Strategy Pack PDF
+  app.post("/api/generate-resolve-pdf", isAuthenticated, async (req: any, res) => {
     try {
       const { caseData } = req.body;
       
@@ -474,18 +474,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Case data is required" });
       }
 
-      // Generate AI-powered strategy pack PDF
-      const pdfPath = await generateAIStrategyPackPDF(caseData);
+      // Import and use RESOLVE PDF generator
+      const { generateResolvePDF } = await import('./resolve-pdf');
+      
+      // Format case data for RESOLVE template
+      const formattedCaseData = {
+        id: Date.now(),
+        caseNumber: caseData.caseNumber || `CASE-${Date.now()}`,
+        title: caseData.title || "Payment Dispute Case",
+        issueType: caseData.issueType || "Payment Dispute",
+        amount: caseData.amount || "$10,000",
+        description: caseData.description || "Payment dispute resolution",
+        status: "active",
+        priority: "medium",
+        userId: "system",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        applicationId: null,
+        nextActionDue: null,
+        progress: 0
+      };
+
+      const pdfPath = await generateResolvePDF(formattedCaseData);
       
       res.json({ 
         success: true, 
         pdfPath,
-        downloadUrl: `/api/download-strategy-pdf/${encodeURIComponent(pdfPath.split('/').pop() || 'strategy-pack.pdf')}`,
-        message: "AI Strategy Pack PDF generated successfully" 
+        downloadUrl: `/api/download-strategy-pdf/${encodeURIComponent(pdfPath.split('/').pop() || 'resolve-strategy.pdf')}`,
+        message: "RESOLVE Strategy Pack generated successfully" 
       });
     } catch (error: any) {
-      console.error("Error generating AI strategy PDF:", error);
-      res.status(500).json({ message: "Failed to generate strategy pack PDF: " + error.message });
+      console.error("Error generating RESOLVE PDF:", error);
+      res.status(500).json({ message: "Failed to generate RESOLVE strategy pack: " + error.message });
     }
   });
 
