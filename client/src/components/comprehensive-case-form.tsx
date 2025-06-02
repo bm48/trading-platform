@@ -12,7 +12,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { FileText, X, User, Building, DollarSign, Scale, Target, AlertTriangle, CheckCircle } from 'lucide-react';
+import { FileText, X, User, Building, DollarSign, Scale, Target, AlertTriangle, CheckCircle, Upload, FileIcon } from 'lucide-react';
+import FileUpload from '@/components/file-upload';
 
 const comprehensiveCaseSchema = z.object({
   // Section 1: Personal & Business Details
@@ -474,7 +475,718 @@ export default function ComprehensiveCaseForm({ onClose, onSuccess }: Comprehens
           </div>
         );
 
-      // Continue with other sections...
+      case 3:
+        return (
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <FileText className="h-5 w-5 text-primary" />
+              Contractual Agreement
+            </h3>
+            
+            <FormField
+              control={form.control}
+              name="writtenContract"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Was there a written contract? *</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="yes">Yes - written contract</SelectItem>
+                      <SelectItem value="no">No - verbal agreement</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {form.watch('writtenContract') === 'yes' && (
+              <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <h4 className="font-medium text-blue-900 mb-2 flex items-center gap-2">
+                  <Upload className="h-4 w-4" />
+                  Upload Contract Documents
+                </h4>
+                <p className="text-sm text-blue-700 mb-3">
+                  Upload your written contract, agreement, or terms and conditions for AI analysis
+                </p>
+                <FileUpload
+                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                  maxSize={10 * 1024 * 1024}
+                  additionalData={{ section: 'contract', type: 'written_contract' }}
+                  className="mb-2"
+                />
+              </div>
+            )}
+
+            <FormField
+              control={form.control}
+              name="scopeAgreement"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>How was the scope of work agreed? *</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="written">Written document</SelectItem>
+                      <SelectItem value="email">Email correspondence</SelectItem>
+                      <SelectItem value="verbal">Verbal agreement only</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {(form.watch('scopeAgreement') === 'written' || form.watch('scopeAgreement') === 'email') && (
+              <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                <h4 className="font-medium text-green-900 mb-2 flex items-center gap-2">
+                  <Upload className="h-4 w-4" />
+                  Upload Scope Documents
+                </h4>
+                <p className="text-sm text-green-700 mb-3">
+                  Upload scope agreements, work orders, or email correspondence
+                </p>
+                <FileUpload
+                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.eml,.msg"
+                  maxSize={10 * 1024 * 1024}
+                  additionalData={{ section: 'contract', type: 'scope_agreement' }}
+                  className="mb-2"
+                />
+              </div>
+            )}
+
+            <FormField
+              control={form.control}
+              name="quoteGiven"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Did you provide a written quote? *</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="yes">Yes - written quote provided</SelectItem>
+                      <SelectItem value="no">No - verbal estimate only</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {form.watch('quoteGiven') === 'yes' && (
+              <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                <h4 className="font-medium text-orange-900 mb-2 flex items-center gap-2">
+                  <Upload className="h-4 w-4" />
+                  Upload Quote Documents
+                </h4>
+                <p className="text-sm text-orange-700 mb-3">
+                  Upload your original quote, estimate, or pricing documents
+                </p>
+                <FileUpload
+                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                  maxSize={10 * 1024 * 1024}
+                  additionalData={{ section: 'contract', type: 'quote' }}
+                  className="mb-2"
+                />
+              </div>
+            )}
+
+            <FormField
+              control={form.control}
+              name="variations"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Were there any variations to the original work? *</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="yes">Yes - variations occurred</SelectItem>
+                      <SelectItem value="no">No - work as originally quoted</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {form.watch('variations') === 'yes' && (
+              <>
+                <FormField
+                  control={form.control}
+                  name="variationsType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>How were variations documented?</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="written">Written variation orders</SelectItem>
+                          <SelectItem value="verbal">Verbal instructions only</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                  <h4 className="font-medium text-purple-900 mb-2 flex items-center gap-2">
+                    <Upload className="h-4 w-4" />
+                    Upload Variation Documents
+                  </h4>
+                  <p className="text-sm text-purple-700 mb-3">
+                    Upload variation orders, change requests, or related correspondence
+                  </p>
+                  <FileUpload
+                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.eml,.msg"
+                    maxSize={10 * 1024 * 1024}
+                    additionalData={{ section: 'contract', type: 'variations' }}
+                    className="mb-2"
+                  />
+                </div>
+              </>
+            )}
+          </div>
+        );
+
+      case 4:
+        return (
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <DollarSign className="h-5 w-5 text-primary" />
+              Payment & Invoices
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <FormField
+                control={form.control}
+                name="totalValue"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Total Value of Work *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="$0.00" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="amountPaid"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Amount Already Paid *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="$0.00" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="amountOwing"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Amount Still Owing *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="$0.00" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <FormField
+              control={form.control}
+              name="invoiceIssued"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Have you issued an invoice? *</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="yes">Yes - invoice issued</SelectItem>
+                      <SelectItem value="no">No - no invoice sent</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {form.watch('invoiceIssued') === 'yes' && (
+              <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <h4 className="font-medium text-blue-900 mb-2 flex items-center gap-2">
+                  <Upload className="h-4 w-4" />
+                  Upload Invoice Documents
+                </h4>
+                <p className="text-sm text-blue-700 mb-3">
+                  Upload your invoices, payment requests, or billing documentation
+                </p>
+                <FileUpload
+                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                  maxSize={10 * 1024 * 1024}
+                  additionalData={{ section: 'payment', type: 'invoices' }}
+                  className="mb-2"
+                />
+              </div>
+            )}
+
+            <FormField
+              control={form.control}
+              name="lastInvoiceDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Last Invoice Date (if applicable)</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="followUpSent"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Have you sent payment follow-ups? *</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="yes">Yes - follow-ups sent</SelectItem>
+                      <SelectItem value="no">No - no follow-ups</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {form.watch('followUpSent') === 'yes' && (
+              <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                <h4 className="font-medium text-green-900 mb-2 flex items-center gap-2">
+                  <Upload className="h-4 w-4" />
+                  Upload Follow-up Communications
+                </h4>
+                <p className="text-sm text-green-700 mb-3">
+                  Upload payment reminders, follow-up emails, or correspondence
+                </p>
+                <FileUpload
+                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.eml,.msg"
+                  maxSize={10 * 1024 * 1024}
+                  additionalData={{ section: 'payment', type: 'follow_ups' }}
+                  className="mb-2"
+                />
+              </div>
+            )}
+
+            <FormField
+              control={form.control}
+              name="disputesRaised"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Have any payment disputes been raised? *</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="yes">Yes - disputes raised</SelectItem>
+                      <SelectItem value="no">No - no disputes</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {form.watch('disputesRaised') === 'yes' && (
+              <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                <h4 className="font-medium text-orange-900 mb-2 flex items-center gap-2">
+                  <Upload className="h-4 w-4" />
+                  Upload Dispute Documentation
+                </h4>
+                <p className="text-sm text-orange-700 mb-3">
+                  Upload dispute letters, defect claims, or related correspondence
+                </p>
+                <FileUpload
+                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.eml,.msg"
+                  maxSize={10 * 1024 * 1024}
+                  additionalData={{ section: 'payment', type: 'disputes' }}
+                  className="mb-2"
+                />
+              </div>
+            )}
+          </div>
+        );
+
+      case 5:
+        return (
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <Scale className="h-5 w-5 text-primary" />
+              Legal Action Preferences
+            </h3>
+            
+            <FormField
+              control={form.control}
+              name="legalStepsTaken"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>What legal steps have you already taken? *</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="none">None - no legal action</SelectItem>
+                      <SelectItem value="lawyer_letter">Lawyer's letter sent</SelectItem>
+                      <SelectItem value="demand_notice">Formal demand notice</SelectItem>
+                      <SelectItem value="court_filing">Court action commenced</SelectItem>
+                      <SelectItem value="mediation">Mediation attempted</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {form.watch('legalStepsTaken') !== 'none' && (
+              <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+                <h4 className="font-medium text-red-900 mb-2 flex items-center gap-2">
+                  <Upload className="h-4 w-4" />
+                  Upload Legal Documents
+                </h4>
+                <p className="text-sm text-red-700 mb-3">
+                  Upload any legal letters, court documents, or formal notices
+                </p>
+                <FileUpload
+                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                  maxSize={10 * 1024 * 1024}
+                  additionalData={{ section: 'legal', type: 'previous_action' }}
+                  className="mb-2"
+                />
+              </div>
+            )}
+
+            <FormField
+              control={form.control}
+              name="threatenedAction"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Have you threatened legal action? *</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="yes">Yes - threats made</SelectItem>
+                      <SelectItem value="no">No - no threats</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="preferredApproach"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>What's your preferred approach? *</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="letter_demand">Letter of demand</SelectItem>
+                      <SelectItem value="negotiation">Direct negotiation</SelectItem>
+                      <SelectItem value="mediation">Mediation</SelectItem>
+                      <SelectItem value="court_action">Court action</SelectItem>
+                      <SelectItem value="debt_collection">Debt collection agency</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="willingToEscalate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Are you willing to escalate to court if necessary? *</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="yes">Yes - willing to go to court</SelectItem>
+                      <SelectItem value="no">No - prefer settlement</SelectItem>
+                      <SelectItem value="maybe">Maybe - depends on amount</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        );
+
+      case 6:
+        return (
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <Target className="h-5 w-5 text-primary" />
+              Outcome Sought
+            </h3>
+            
+            <FormField
+              control={form.control}
+              name="desiredOutcome"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>What outcome do you want? *</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="full_payment">Full payment of amount owing</SelectItem>
+                      <SelectItem value="partial_payment">Partial payment settlement</SelectItem>
+                      <SelectItem value="payment_plan">Payment plan arrangement</SelectItem>
+                      <SelectItem value="work_completion">Completion of remaining work</SelectItem>
+                      <SelectItem value="damages">Compensation for damages</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="urgencyLevel"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>How urgent is resolution? *</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="immediate">Immediate (within 7 days)</SelectItem>
+                      <SelectItem value="urgent_14days">Urgent (within 14 days)</SelectItem>
+                      <SelectItem value="medium_30days">Medium (within 30 days)</SelectItem>
+                      <SelectItem value="low_60days">Low priority (within 60 days)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="acceptableResolution"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Describe what resolution you'd accept</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="e.g. 80% payment within 14 days, or completion of outstanding work"
+                      className="min-h-[100px]"
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        );
+
+      case 7:
+        return (
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-primary" />
+              Risks or Concerns
+            </h3>
+            
+            <FormField
+              control={form.control}
+              name="safetyIssues"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Are there any safety issues with the work? *</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="yes">Yes - safety concerns exist</SelectItem>
+                      <SelectItem value="no">No - work is safe</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {form.watch('safetyIssues') === 'yes' && (
+              <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+                <h4 className="font-medium text-red-900 mb-2 flex items-center gap-2">
+                  <Upload className="h-4 w-4" />
+                  Upload Safety Documentation
+                </h4>
+                <p className="text-sm text-red-700 mb-3">
+                  Upload photos, reports, or documentation of safety issues
+                </p>
+                <FileUpload
+                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                  maxSize={10 * 1024 * 1024}
+                  additionalData={{ section: 'risks', type: 'safety_issues' }}
+                  className="mb-2"
+                />
+              </div>
+            )}
+
+            <FormField
+              control={form.control}
+              name="threatsReceived"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Have you received any threats? *</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="yes">Yes - threats received</SelectItem>
+                      <SelectItem value="no">No - no threats</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {form.watch('threatsReceived') === 'yes' && (
+              <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                <h4 className="font-medium text-orange-900 mb-2 flex items-center gap-2">
+                  <Upload className="h-4 w-4" />
+                  Upload Threat Documentation
+                </h4>
+                <p className="text-sm text-orange-700 mb-3">
+                  Upload screenshots, emails, or records of threats received
+                </p>
+                <FileUpload
+                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.eml,.msg"
+                  maxSize={10 * 1024 * 1024}
+                  additionalData={{ section: 'risks', type: 'threats' }}
+                  className="mb-2"
+                />
+              </div>
+            )}
+
+            <FormField
+              control={form.control}
+              name="reputationConcerns"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Do you have reputation concerns? *</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="yes">Yes - reputation at risk</SelectItem>
+                      <SelectItem value="no">No - not concerned</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+              <h4 className="font-medium text-yellow-900 mb-2 flex items-center gap-2">
+                <Upload className="h-4 w-4" />
+                Upload Additional Supporting Documents
+              </h4>
+              <p className="text-sm text-yellow-700 mb-3">
+                Upload any other relevant documents, photos, or evidence
+              </p>
+              <FileUpload
+                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.eml,.msg"
+                maxSize={10 * 1024 * 1024}
+                multiple={true}
+                additionalData={{ section: 'general', type: 'supporting_documents' }}
+                className="mb-2"
+              />
+            </div>
+          </div>
+        );
+
       default:
         return (
           <div className="text-center py-8">
