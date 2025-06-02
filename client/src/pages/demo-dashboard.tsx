@@ -32,7 +32,8 @@ const mockStats = {
   totalRevenue: 78350,
   activeCases: 89,
   pendingApplications: 23,
-  documentsGenerated: 342
+  documentsGenerated: 342,
+  pendingStrategyPacks: 7
 };
 
 const mockRecentCases = [
@@ -107,6 +108,81 @@ const mockUsers = [
     joinDate: "2024-01-05",
     totalCases: 8,
     revenue: 695
+  }
+];
+
+const mockPendingStrategyPacks = [
+  {
+    id: 1,
+    caseNumber: "RC-2024-001",
+    clientName: "Mike Thompson",
+    trade: "Plumber",
+    issueType: "Payment Dispute",
+    amount: 12500,
+    generatedAt: "2024-01-19 09:30",
+    aiConfidence: 94,
+    summary: "Client defaulted on $12,500 payment for bathroom renovation. Contract clearly outlines payment terms. Strong case for debt recovery.",
+    keyPoints: [
+      "Valid contract with clear payment terms",
+      "Work completed to satisfaction (photos available)",
+      "Previous communication attempts documented",
+      "No legitimate disputes raised by client"
+    ],
+    recommendedActions: [
+      "Send formal letter of demand (draft attached)",
+      "File with relevant trade licensing board",
+      "Consider small claims court if under $10k threshold",
+      "Engage debt collection agency as final option"
+    ],
+    documents: ["Contract Agreement", "Progress Photos", "Email Communications", "Invoice History"]
+  },
+  {
+    id: 2,
+    caseNumber: "RC-2024-004",
+    clientName: "Jennifer Walsh",
+    trade: "Electrician",
+    issueType: "Scope Dispute",
+    amount: 8750,
+    generatedAt: "2024-01-19 14:15",
+    aiConfidence: 87,
+    summary: "Client demanding additional work outside original scope without compensation. Clear documentation supports tradesperson position.",
+    keyPoints: [
+      "Original scope clearly defined in signed contract",
+      "Additional work requests documented via email",
+      "Standard industry practices support billing for extras",
+      "Client acknowledged scope changes verbally"
+    ],
+    recommendedActions: [
+      "Provide detailed breakdown of additional work",
+      "Reference industry standards for variation pricing",
+      "Offer compromise payment plan if needed",
+      "Consider mediation through industry body"
+    ],
+    documents: ["Original Contract", "Variation Requests", "Time Sheets", "Industry Rate Guide"]
+  },
+  {
+    id: 3,
+    caseNumber: "RC-2024-005",
+    clientName: "Robert Kim",
+    trade: "Carpenter",
+    issueType: "Defect Claims",
+    amount: 15200,
+    generatedAt: "2024-01-19 16:45",
+    aiConfidence: 91,
+    summary: "Client claiming defects in kitchen renovation, requesting full refund. Investigation shows claims are largely unfounded.",
+    keyPoints: [
+      "Work completed to Australian Standards",
+      "Independent inspection supports quality",
+      "Minor issues already addressed at no cost",
+      "Client's expectations exceed contract specifications"
+    ],
+    recommendedActions: [
+      "Provide independent inspection report",
+      "Offer warranty repair for any legitimate issues",
+      "Stand firm on completed work quality",
+      "Document all future interactions carefully"
+    ],
+    documents: ["Quality Inspection Report", "Warranty Documents", "Before/After Photos", "Standards Compliance"]
   }
 ];
 
@@ -354,9 +430,10 @@ export default function DemoDashboard() {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="cases">Case Management</TabsTrigger>
+            <TabsTrigger value="strategy-review">Strategy Review</TabsTrigger>
             <TabsTrigger value="users">User Administration</TabsTrigger>
             <TabsTrigger value="documents">Documents</TabsTrigger>
           </TabsList>
@@ -429,6 +506,17 @@ export default function DemoDashboard() {
                   <p className="text-xs text-muted-foreground">AI-powered documents</p>
                 </CardContent>
               </Card>
+
+              <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setActiveTab("strategy-review")}>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Pending Strategy Packs</CardTitle>
+                  <AlertCircle className="h-4 w-4 text-orange-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-orange-600">{mockStats.pendingStrategyPacks}</div>
+                  <p className="text-xs text-muted-foreground">Awaiting review</p>
+                </CardContent>
+              </Card>
             </div>
 
             {/* Recent Activity */}
@@ -458,6 +546,120 @@ export default function DemoDashboard() {
                         <Eye className="w-4 h-4 mr-2" />
                         View
                       </Button>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="strategy-review" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Strategy Pack Review Queue</CardTitle>
+                <CardDescription>Review AI-generated strategy packs before sending to users</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  {mockPendingStrategyPacks.map((pack) => (
+                    <div key={pack.id} className="border rounded-lg p-6 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="text-lg font-semibold">{pack.caseNumber} - {pack.clientName}</h3>
+                          <div className="flex items-center space-x-4 text-sm text-gray-600">
+                            <span>{pack.trade}</span>
+                            <span>•</span>
+                            <span>{pack.issueType}</span>
+                            <span>•</span>
+                            <span>${pack.amount.toLocaleString()}</span>
+                            <span>•</span>
+                            <span>Generated: {pack.generatedAt}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                            AI Confidence: {pack.aiConfidence}%
+                          </Badge>
+                          <div className="flex space-x-2">
+                            <Button variant="outline" size="sm">
+                              <Eye className="w-4 h-4 mr-2" />
+                              Preview
+                            </Button>
+                            <Button variant="outline" size="sm">
+                              Edit
+                            </Button>
+                            <Button size="sm" className="bg-green-600 hover:bg-green-700">
+                              <CheckCircle className="w-4 h-4 mr-2" />
+                              Approve & Send
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <h4 className="font-medium mb-2">AI Analysis Summary</h4>
+                        <p className="text-sm text-gray-700">{pack.summary}</p>
+                      </div>
+
+                      <div className="grid md:grid-cols-2 gap-6">
+                        <div>
+                          <h4 className="font-medium mb-2 flex items-center">
+                            <CheckCircle className="w-4 h-4 mr-2 text-green-600" />
+                            Key Strengths
+                          </h4>
+                          <ul className="text-sm space-y-1">
+                            {pack.keyPoints.map((point, index) => (
+                              <li key={index} className="flex items-start">
+                                <span className="w-2 h-2 bg-green-400 rounded-full mt-2 mr-2 flex-shrink-0"></span>
+                                {point}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+
+                        <div>
+                          <h4 className="font-medium mb-2 flex items-center">
+                            <TrendingUp className="w-4 h-4 mr-2 text-blue-600" />
+                            Recommended Actions
+                          </h4>
+                          <ul className="text-sm space-y-1">
+                            {pack.recommendedActions.map((action, index) => (
+                              <li key={index} className="flex items-start">
+                                <span className="w-2 h-2 bg-blue-400 rounded-full mt-2 mr-2 flex-shrink-0"></span>
+                                {action}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+
+                      <div>
+                        <h4 className="font-medium mb-2 flex items-center">
+                          <FileText className="w-4 h-4 mr-2 text-purple-600" />
+                          Supporting Documents
+                        </h4>
+                        <div className="flex flex-wrap gap-2">
+                          {pack.documents.map((doc, index) => (
+                            <Badge key={index} variant="outline" className="bg-purple-50 text-purple-700">
+                              {doc}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between pt-4 border-t">
+                        <div className="text-sm text-gray-600">
+                          Quality check: High confidence analysis with comprehensive documentation
+                        </div>
+                        <div className="flex space-x-2">
+                          <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50">
+                            Reject
+                          </Button>
+                          <Button variant="outline" size="sm">
+                            Request Revision
+                          </Button>
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>
