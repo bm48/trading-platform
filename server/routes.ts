@@ -192,9 +192,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Case routes
-  app.get("/api/cases", isAuthenticated, async (req: any, res) => {
+  app.get("/api/cases", async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session?.userId;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
       const cases = await storage.getUserCases(userId);
       res.json(cases);
     } catch (error) {
@@ -343,9 +347,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Contract routes
-  app.get("/api/contracts", isAuthenticated, async (req: any, res) => {
+  app.get("/api/contracts", async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session?.userId;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
       const contracts = await storage.getUserContracts(userId);
       res.json(contracts);
     } catch (error) {
