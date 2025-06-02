@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
 import { 
   Users, 
   FileText, 
@@ -208,6 +209,10 @@ function getPriorityColor(priority: string) {
 export default function DemoDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [selectedPack, setSelectedPack] = useState(null);
+  const [editingPack, setEditingPack] = useState(null);
   const [settings, setSettings] = useState({
     emailNotifications: true,
     smsNotifications: false,
@@ -221,6 +226,22 @@ export default function DemoDashboard() {
     maxCasesPerUser: "50",
     adminEmail: "admin@resolveai.com.au"
   });
+
+  const handlePreview = (pack) => {
+    setSelectedPack(pack);
+    setPreviewOpen(true);
+  };
+
+  const handleEdit = (pack) => {
+    setEditingPack({...pack});
+    setEditOpen(true);
+  };
+
+  const handleSaveEdit = () => {
+    // In a real app, this would save to the database
+    setEditOpen(false);
+    setEditingPack(null);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -581,11 +602,11 @@ export default function DemoDashboard() {
                             AI Confidence: {pack.aiConfidence}%
                           </Badge>
                           <div className="flex space-x-2">
-                            <Button variant="outline" size="sm">
+                            <Button variant="outline" size="sm" onClick={() => handlePreview(pack)}>
                               <Eye className="w-4 h-4 mr-2" />
                               Preview
                             </Button>
-                            <Button variant="outline" size="sm">
+                            <Button variant="outline" size="sm" onClick={() => handleEdit(pack)}>
                               Edit
                             </Button>
                             <Button size="sm" className="bg-green-600 hover:bg-green-700">
@@ -806,6 +827,234 @@ export default function DemoDashboard() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Preview Modal */}
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Strategy Pack Preview - {selectedPack?.caseNumber}</DialogTitle>
+          </DialogHeader>
+          {selectedPack && (
+            <div className="space-y-6">
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <h3 className="font-semibold text-lg mb-2">Case Overview</h3>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div><strong>Client:</strong> {selectedPack.clientName}</div>
+                  <div><strong>Trade:</strong> {selectedPack.trade}</div>
+                  <div><strong>Issue Type:</strong> {selectedPack.issueType}</div>
+                  <div><strong>Amount:</strong> ${selectedPack.amount.toLocaleString()}</div>
+                  <div><strong>AI Confidence:</strong> {selectedPack.aiConfidence}%</div>
+                  <div><strong>Generated:</strong> {selectedPack.generatedAt}</div>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-lg mb-3">Executive Summary</h3>
+                <p className="text-gray-700 leading-relaxed">{selectedPack.summary}</p>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="font-semibold text-lg mb-3 flex items-center">
+                    <CheckCircle className="w-5 h-5 mr-2 text-green-600" />
+                    Case Strengths
+                  </h3>
+                  <ul className="space-y-2">
+                    {selectedPack.keyPoints.map((point, index) => (
+                      <li key={index} className="flex items-start">
+                        <span className="w-2 h-2 bg-green-400 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                        <span className="text-sm">{point}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-lg mb-3 flex items-center">
+                    <TrendingUp className="w-5 h-5 mr-2 text-blue-600" />
+                    Recommended Strategy
+                  </h3>
+                  <ol className="space-y-2">
+                    {selectedPack.recommendedActions.map((action, index) => (
+                      <li key={index} className="flex items-start">
+                        <span className="w-6 h-6 bg-blue-100 text-blue-800 rounded-full text-xs font-medium flex items-center justify-center mr-3 flex-shrink-0 mt-0.5">
+                          {index + 1}
+                        </span>
+                        <span className="text-sm">{action}</span>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-lg mb-3 flex items-center">
+                  <FileText className="w-5 h-5 mr-2 text-purple-600" />
+                  Supporting Documentation
+                </h3>
+                <div className="grid grid-cols-2 gap-3">
+                  {selectedPack.documents.map((doc, index) => (
+                    <div key={index} className="flex items-center p-3 border rounded-lg bg-gray-50">
+                      <FileText className="w-4 h-4 mr-2 text-gray-600" />
+                      <span className="text-sm font-medium">{doc}</span>
+                      <Button variant="ghost" size="sm" className="ml-auto">
+                        <Download className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h3 className="font-semibold mb-2">Next Steps</h3>
+                <p className="text-sm text-gray-700">
+                  This strategy pack provides a comprehensive analysis and action plan. Review the recommended steps and supporting documents before approving for delivery to the client.
+                </p>
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4 border-t">
+                <Button variant="outline" onClick={() => setPreviewOpen(false)}>
+                  Close Preview
+                </Button>
+                <Button onClick={() => {
+                  setPreviewOpen(false);
+                  handleEdit(selectedPack);
+                }}>
+                  Edit Strategy Pack
+                </Button>
+                <Button className="bg-green-600 hover:bg-green-700">
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  Approve & Send
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Modal */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Strategy Pack - {editingPack?.caseNumber}</DialogTitle>
+          </DialogHeader>
+          {editingPack && (
+            <div className="space-y-6">
+              <div>
+                <Label htmlFor="summary">Executive Summary</Label>
+                <Textarea 
+                  id="summary"
+                  value={editingPack.summary}
+                  onChange={(e) => setEditingPack({...editingPack, summary: e.target.value})}
+                  rows={4}
+                  className="mt-2"
+                />
+              </div>
+
+              <div>
+                <Label>Case Strengths</Label>
+                <div className="space-y-2 mt-2">
+                  {editingPack.keyPoints.map((point, index) => (
+                    <div key={index} className="flex items-center space-x-2">
+                      <Input
+                        value={point}
+                        onChange={(e) => {
+                          const newPoints = [...editingPack.keyPoints];
+                          newPoints[index] = e.target.value;
+                          setEditingPack({...editingPack, keyPoints: newPoints});
+                        }}
+                        className="flex-1"
+                      />
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          const newPoints = editingPack.keyPoints.filter((_, i) => i !== index);
+                          setEditingPack({...editingPack, keyPoints: newPoints});
+                        }}
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  ))}
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      setEditingPack({
+                        ...editingPack, 
+                        keyPoints: [...editingPack.keyPoints, "New strength point"]
+                      });
+                    }}
+                  >
+                    Add Strength
+                  </Button>
+                </div>
+              </div>
+
+              <div>
+                <Label>Recommended Actions</Label>
+                <div className="space-y-2 mt-2">
+                  {editingPack.recommendedActions.map((action, index) => (
+                    <div key={index} className="flex items-center space-x-2">
+                      <span className="w-8 h-8 bg-blue-100 text-blue-800 rounded-full text-sm font-medium flex items-center justify-center flex-shrink-0">
+                        {index + 1}
+                      </span>
+                      <Input
+                        value={action}
+                        onChange={(e) => {
+                          const newActions = [...editingPack.recommendedActions];
+                          newActions[index] = e.target.value;
+                          setEditingPack({...editingPack, recommendedActions: newActions});
+                        }}
+                        className="flex-1"
+                      />
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          const newActions = editingPack.recommendedActions.filter((_, i) => i !== index);
+                          setEditingPack({...editingPack, recommendedActions: newActions});
+                        }}
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  ))}
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      setEditingPack({
+                        ...editingPack, 
+                        recommendedActions: [...editingPack.recommendedActions, "New recommended action"]
+                      });
+                    }}
+                  >
+                    Add Action
+                  </Button>
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4 border-t">
+                <Button variant="outline" onClick={() => setEditOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleSaveEdit}>
+                  Save Changes
+                </Button>
+                <Button className="bg-green-600 hover:bg-green-700" onClick={() => {
+                  handleSaveEdit();
+                  // In real app, this would also approve and send
+                }}>
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  Save & Approve
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
