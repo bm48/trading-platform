@@ -6,6 +6,7 @@ import { insertApplicationSchema, insertCaseSchema } from "@shared/schema";
 import { analyzeCase, generateStrategyPack } from "./openai";
 import { sendWelcomeEmail, sendApprovalEmail } from "./email";
 import { generateStrategyPackPDF } from "./pdf";
+import { checkSubscriptionStatus, consumeStrategyPack } from "./subscription";
 import Stripe from "stripe";
 import multer from "multer";
 import path from "path";
@@ -118,6 +119,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/auth/logout', async (req, res) => {
     (req as any).session?.destroy();
     res.json({ message: "Logged out successfully" });
+  });
+
+  // Subscription status endpoint
+  app.get('/api/subscription/status', async (req, res) => {
+    try {
+      const userId = (req as any).session?.userId;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const subscriptionStatus = await checkSubscriptionStatus(userId);
+      res.json(subscriptionStatus);
+    } catch (error) {
+      console.error("Error checking subscription status:", error);
+      res.status(500).json({ message: "Failed to check subscription status" });
+    }
   });
 
   // Application routes
