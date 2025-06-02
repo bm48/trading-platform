@@ -241,11 +241,19 @@ export default function Settings() {
 
             <div className="space-y-4 pt-4">
               {/* Show pricing structure clearly */}
-              <div className="bg-blue-50 p-4 rounded-lg space-y-2">
-                <h4 className="font-medium text-blue-900">Pricing Structure</h4>
-                <div className="text-sm text-blue-800 space-y-1">
-                  <div>1. Start with $299 Strategy Pack (required first step)</div>
-                  <div>2. Then optionally upgrade to $49/month for unlimited cases</div>
+              <div className="bg-blue-50 p-4 rounded-lg space-y-3">
+                <h4 className="font-medium text-blue-900">How Our Pricing Works</h4>
+                <div className="text-sm text-blue-800 space-y-2">
+                  <div className="font-medium">Step 1: Required Initial Sign-Up Fee</div>
+                  <div className="pl-4">• Pay $299 Strategy Pack to get started</div>
+                  <div className="pl-4">• This gives you access to our platform and case creation</div>
+                  
+                  <div className="font-medium pt-2">Step 2: Optional Monthly Subscription</div>
+                  <div className="pl-4">• Only available AFTER paying the $299 initial fee</div>
+                  <div className="pl-4">• Upgrade to $49/month for unlimited cases</div>
+                </div>
+                <div className="bg-blue-100 p-2 rounded text-xs text-blue-900 font-medium">
+                  Monthly subscription access requires payment of the $299 initial sign-up fee first
                 </div>
               </div>
 
@@ -274,9 +282,14 @@ export default function Settings() {
 
               {/* Show restriction message for monthly subscription */}
               {!subscription?.hasInitialStrategyPack && (
-                <p className="text-sm text-neutral-medium italic">
-                  Monthly subscription available after purchasing the initial $299 strategy pack
-                </p>
+                <div className="bg-yellow-50 border border-yellow-200 p-3 rounded-lg">
+                  <p className="text-sm text-yellow-800 font-medium">
+                    🔒 Monthly Subscription Access Locked
+                  </p>
+                  <p className="text-sm text-yellow-700 mt-1">
+                    You must pay the $299 initial sign-up fee before you can access the monthly subscription option.
+                  </p>
+                </div>
               )}
             </div>
           </CardContent>

@@ -345,7 +345,7 @@ export default function Landing() {
             {/* Ongoing Support */}
             <Card className="gradient-accent text-white border-2 border-accent relative">
               <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                <span className="bg-white text-accent px-4 py-1 rounded-full text-sm font-medium">Most Popular</span>
+                <span className="bg-white text-accent px-4 py-1 rounded-full text-sm font-medium">After Initial Payment</span>
               </div>
 
               <CardContent className="p-8">
@@ -355,6 +355,9 @@ export default function Landing() {
                   </div>
                   <h3 className="text-xl font-bold mb-2">$49/month</h3>
                   <p className="text-orange-100">Unlimited case files, contracts, storage & support</p>
+                  <div className="bg-orange-200 text-orange-800 px-3 py-2 rounded text-sm mt-2">
+                    Requires $299 initial sign-up fee first
+                  </div>
                 </div>
 
                 <ul className="space-y-3 mb-8">
