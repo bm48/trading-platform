@@ -113,11 +113,7 @@ export default function Dashboard() {
   const resolvedCases = cases.filter((c: any) => c.status === 'resolved');
 
   const handleNewCaseClick = () => {
-    if (!subscriptionStatus?.canCreateCases) {
-      // Redirect to pricing/subscription page
-      window.location.href = '/checkout';
-      return;
-    }
+    // For demo purposes, always allow case creation
     setShowNewCaseForm(true);
   };
 
