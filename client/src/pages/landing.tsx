@@ -18,7 +18,7 @@ export default function Landing() {
             <div className="flex items-center">
               <div className="flex-shrink-0 flex items-center">
                 <Shield className="h-8 w-8 text-primary mr-3" />
-                <span className="text-xl font-bold text-neutral-dark">TradeGuard AI</span>
+                <span className="text-xl font-bold text-neutral-dark">Resolve AI</span>
               </div>
             </div>
             <div className="flex items-center space-x-4">
@@ -442,7 +442,7 @@ export default function Landing() {
             <div className="col-span-2">
               <div className="flex items-center mb-4">
                 <Shield className="h-8 w-8 text-primary mr-3" />
-                <span className="text-xl font-bold">TradeGuard AI</span>
+                <span className="text-xl font-bold">Resolve AI</span>
               </div>
               <p className="text-gray-300 mb-4">
                 AI-powered legal support platform designed specifically for Australian tradespeople. 
