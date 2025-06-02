@@ -609,6 +609,10 @@ export default function DemoDashboard() {
                             <Button variant="outline" size="sm" onClick={() => handleEdit(pack)}>
                               Edit
                             </Button>
+                            <Button size="sm" variant="outline" onClick={() => handleGeneratePDF(pack)}>
+                              <FileText className="w-4 h-4 mr-2" />
+                              Generate PDF
+                            </Button>
                             <Button size="sm" className="bg-green-600 hover:bg-green-700">
                               <CheckCircle className="w-4 h-4 mr-2" />
                               Approve & Send

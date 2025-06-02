@@ -5,7 +5,7 @@ import { setupAuth, isAuthenticated } from "./replitAuth";
 import { insertApplicationSchema, insertCaseSchema } from "@shared/schema";
 import { analyzeCase, generateStrategyPack } from "./openai";
 import { sendWelcomeEmail, sendApprovalEmail } from "./email";
-import { generateStrategyPackPDF } from "./pdf";
+import { generateStrategyPackPDF, generateAIStrategyPackPDF } from "./pdf";
 import { checkSubscriptionStatus, consumeStrategyPack, grantStrategyPack } from "./subscription";
 import Stripe from "stripe";
 import multer from "multer";
@@ -462,6 +462,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Subscription error:", error);
       res.status(400).json({ error: { message: error.message } });
+    }
+  });
+
+  // AI Strategy Pack PDF Generation
+  app.post("/api/generate-ai-strategy-pdf", isAuthenticated, async (req: any, res) => {
+    try {
+      const { caseData } = req.body;
+      
+      if (!caseData) {
+        return res.status(400).json({ message: "Case data is required" });
+      }
+
+      // Generate AI-powered strategy pack PDF
+      const pdfPath = await generateAIStrategyPackPDF(caseData);
+      
+      res.json({ 
+        success: true, 
+        pdfPath,
+        downloadUrl: `/api/download-strategy-pdf/${encodeURIComponent(pdfPath.split('/').pop())}`,
+        message: "AI Strategy Pack PDF generated successfully" 
+      });
+    } catch (error: any) {
+      console.error("Error generating AI strategy PDF:", error);
+      res.status(500).json({ message: "Failed to generate strategy pack PDF: " + error.message });
+    }
+  });
+
+  // Download Strategy Pack PDF
+  app.get("/api/download-strategy-pdf/:filename", async (req, res) => {
+    try {
+      const filename = decodeURIComponent(req.params.filename);
+      const filePath = path.join('uploads', filename);
+      
+      // Check if file exists
+      try {
+        await fs.access(filePath);
+      } catch {
+        return res.status(404).json({ message: "File not found" });
+      }
+      
+      res.download(filePath, filename, (err) => {
+        if (err) {
+          console.error("Download error:", err);
+          res.status(500).json({ message: "Download failed" });
+        }
+      });
+    } catch (error: any) {
+      console.error("Error downloading PDF:", error);
+      res.status(500).json({ message: "Download failed: " + error.message });
     }
   });
 
