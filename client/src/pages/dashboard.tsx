@@ -79,8 +79,30 @@ export default function Dashboard() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-neutral-dark">Welcome back, {user?.firstName || 'User'}</h1>
+            <h1 className="text-3xl font-bold text-neutral-dark">Welcome back, {user?.firstName || 'Demo User'}</h1>
             <p className="text-neutral-medium">Manage your cases and track your progress</p>
+            {!user && (
+              <Button 
+                size="sm" 
+                className="mt-2"
+                onClick={async () => {
+                  try {
+                    const response = await fetch('/api/auth/login', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ email: 'demo@example.com', password: 'demo123' })
+                    });
+                    if (response.ok) {
+                      window.location.reload();
+                    }
+                  } catch (error) {
+                    console.error('Login failed');
+                  }
+                }}
+              >
+                Demo Login
+              </Button>
+            )}
           </div>
           <div className="flex gap-3">
             <Button onClick={handleNewCaseClick}>
