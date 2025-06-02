@@ -3,6 +3,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
 import { 
   Users, 
   FileText, 
@@ -13,7 +18,11 @@ import {
   TrendingUp,
   Settings,
   Download,
-  Eye
+  Eye,
+  Mail,
+  Bell,
+  Shield,
+  Database
 } from "lucide-react";
 
 // Mock data for demonstration
@@ -122,6 +131,20 @@ function getPriorityColor(priority: string) {
 
 export default function DemoDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settings, setSettings] = useState({
+    emailNotifications: true,
+    smsNotifications: false,
+    systemAlerts: true,
+    maintenanceMode: false,
+    autoBackup: true,
+    dataRetention: "12",
+    apiRateLimit: "1000",
+    platformName: "Resolve AI",
+    supportEmail: "support@resolveai.com.au",
+    maxCasesPerUser: "50",
+    adminEmail: "admin@resolveai.com.au"
+  });
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -135,10 +158,194 @@ export default function DemoDashboard() {
             </div>
             <div className="flex items-center space-x-4">
               <Badge variant="secondary">Demo Mode</Badge>
-              <Button size="sm">
-                <Settings className="w-4 h-4 mr-2" />
-                Settings
-              </Button>
+              <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm">
+                    <Settings className="w-4 h-4 mr-2" />
+                    Settings
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Platform Settings</DialogTitle>
+                  </DialogHeader>
+                  
+                  <div className="space-y-6">
+                    {/* General Settings */}
+                    <div>
+                      <h3 className="text-lg font-medium mb-4 flex items-center">
+                        <Shield className="w-5 h-5 mr-2" />
+                        General Settings
+                      </h3>
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label htmlFor="platformName">Platform Name</Label>
+                            <Input 
+                              id="platformName"
+                              value={settings.platformName}
+                              onChange={(e) => setSettings({...settings, platformName: e.target.value})}
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="supportEmail">Support Email</Label>
+                            <Input 
+                              id="supportEmail"
+                              type="email"
+                              value={settings.supportEmail}
+                              onChange={(e) => setSettings({...settings, supportEmail: e.target.value})}
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label htmlFor="maxCases">Max Cases Per User</Label>
+                            <Input 
+                              id="maxCases"
+                              type="number"
+                              value={settings.maxCasesPerUser}
+                              onChange={(e) => setSettings({...settings, maxCasesPerUser: e.target.value})}
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="adminEmail">Admin Email</Label>
+                            <Input 
+                              id="adminEmail"
+                              type="email"
+                              value={settings.adminEmail}
+                              onChange={(e) => setSettings({...settings, adminEmail: e.target.value})}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    {/* Notification Settings */}
+                    <div>
+                      <h3 className="text-lg font-medium mb-4 flex items-center">
+                        <Bell className="w-5 h-5 mr-2" />
+                        Notification Settings
+                      </h3>
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label htmlFor="emailNotifications">Email Notifications</Label>
+                            <p className="text-sm text-gray-600">Send email alerts for important events</p>
+                          </div>
+                          <Switch 
+                            id="emailNotifications"
+                            checked={settings.emailNotifications}
+                            onCheckedChange={(checked) => setSettings({...settings, emailNotifications: checked})}
+                          />
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label htmlFor="smsNotifications">SMS Notifications</Label>
+                            <p className="text-sm text-gray-600">Send SMS alerts for urgent issues</p>
+                          </div>
+                          <Switch 
+                            id="smsNotifications"
+                            checked={settings.smsNotifications}
+                            onCheckedChange={(checked) => setSettings({...settings, smsNotifications: checked})}
+                          />
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label htmlFor="systemAlerts">System Alerts</Label>
+                            <p className="text-sm text-gray-600">Receive alerts about system issues</p>
+                          </div>
+                          <Switch 
+                            id="systemAlerts"
+                            checked={settings.systemAlerts}
+                            onCheckedChange={(checked) => setSettings({...settings, systemAlerts: checked})}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    {/* System Settings */}
+                    <div>
+                      <h3 className="text-lg font-medium mb-4 flex items-center">
+                        <Database className="w-5 h-5 mr-2" />
+                        System Settings
+                      </h3>
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label htmlFor="maintenanceMode">Maintenance Mode</Label>
+                            <p className="text-sm text-gray-600">Put platform in maintenance mode</p>
+                          </div>
+                          <Switch 
+                            id="maintenanceMode"
+                            checked={settings.maintenanceMode}
+                            onCheckedChange={(checked) => setSettings({...settings, maintenanceMode: checked})}
+                          />
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label htmlFor="autoBackup">Auto Backup</Label>
+                            <p className="text-sm text-gray-600">Automatically backup data daily</p>
+                          </div>
+                          <Switch 
+                            id="autoBackup"
+                            checked={settings.autoBackup}
+                            onCheckedChange={(checked) => setSettings({...settings, autoBackup: checked})}
+                          />
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label htmlFor="dataRetention">Data Retention (months)</Label>
+                            <Input 
+                              id="dataRetention"
+                              type="number"
+                              value={settings.dataRetention}
+                              onChange={(e) => setSettings({...settings, dataRetention: e.target.value})}
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="apiRateLimit">API Rate Limit (requests/hour)</Label>
+                            <Input 
+                              id="apiRateLimit"
+                              type="number"
+                              value={settings.apiRateLimit}
+                              onChange={(e) => setSettings({...settings, apiRateLimit: e.target.value})}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    {/* Actions */}
+                    <div className="flex justify-between">
+                      <Button variant="outline" onClick={() => setSettingsOpen(false)}>
+                        Cancel
+                      </Button>
+                      <div className="space-x-2">
+                        <Button variant="outline">
+                          Export Settings
+                        </Button>
+                        <Button onClick={() => {
+                          // Save settings logic would go here
+                          setSettingsOpen(false);
+                        }}>
+                          Save Changes
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
         </div>
