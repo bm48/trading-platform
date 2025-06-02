@@ -9,6 +9,7 @@ import { useAuth } from '@/hooks/useAuth';
 import DashboardLayout from '@/components/dashboard-layout';
 import ApplicationForm from '@/components/application-form';
 import ComprehensiveCaseForm from '@/components/comprehensive-case-form';
+import ContractForm from '@/components/contract-form';
 import { formatCurrency, formatDate, getStatusColor, calculateProgress } from '@/lib/utils';
 import { 
   FolderOpen, 
@@ -26,6 +27,7 @@ import { Link } from 'wouter';
 export default function Dashboard() {
   const { user } = useAuth();
   const [showNewCaseForm, setShowNewCaseForm] = useState(false);
+  const [showNewContractForm, setShowNewContractForm] = useState(false);
   
   // Get tab from URL params
   const urlParams = new URLSearchParams(window.location.search);
@@ -66,6 +68,20 @@ export default function Dashboard() {
           onClose={() => setShowNewCaseForm(false)}
           onSuccess={() => {
             // Refresh cases data after successful creation
+            window.location.reload();
+          }}
+        />
+      </>
+    );
+  }
+
+  if (showNewContractForm) {
+    return (
+      <>
+        <ContractForm 
+          onClose={() => setShowNewContractForm(false)}
+          onSuccess={() => {
+            // Refresh contracts data after successful creation
             window.location.reload();
           }}
         />
@@ -342,7 +358,7 @@ export default function Dashboard() {
           <TabsContent value="contracts" className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold text-neutral-dark">Contract Files</h2>
-              <Button variant="outline">
+              <Button variant="outline" onClick={() => setShowNewContractForm(true)}>
                 <Plus className="h-4 w-4 mr-2" />
                 New Contract
               </Button>
@@ -368,7 +384,7 @@ export default function Dashboard() {
                   <p className="text-neutral-medium mb-6">
                     Protect your future work by creating professional contracts
                   </p>
-                  <Button variant="outline">
+                  <Button variant="outline" onClick={() => setShowNewContractForm(true)}>
                     <Plus className="h-4 w-4 mr-2" />
                     Create First Contract
                   </Button>
