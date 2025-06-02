@@ -239,16 +239,44 @@ export default function Settings() {
               )}
             </div>
 
-            <div className="flex space-x-2 pt-4">
-              {subscription?.planType !== 'monthly_subscription' && (
-                <Button variant="outline" asChild>
-                  <a href="/checkout?plan=subscription">Upgrade to Monthly</a>
-                </Button>
-              )}
-              {subscription?.planType !== 'strategy_pack' && (
-                <Button variant="outline" asChild>
-                  <a href="/checkout?plan=strategy">Buy Strategy Pack</a>
-                </Button>
+            <div className="space-y-4 pt-4">
+              {/* Show pricing structure clearly */}
+              <div className="bg-blue-50 p-4 rounded-lg space-y-2">
+                <h4 className="font-medium text-blue-900">Pricing Structure</h4>
+                <div className="text-sm text-blue-800 space-y-1">
+                  <div>1. Start with $299 Strategy Pack (required first step)</div>
+                  <div>2. Then optionally upgrade to $49/month for unlimited cases</div>
+                </div>
+              </div>
+
+              <div className="flex space-x-2">
+                {/* Strategy Pack Button - Always available for new users */}
+                {!subscription?.hasInitialStrategyPack && (
+                  <Button variant="default" asChild>
+                    <a href="/checkout?plan=strategy">Get Started - $299 Strategy Pack</a>
+                  </Button>
+                )}
+
+                {/* Monthly Subscription - Only available after strategy pack purchase */}
+                {subscription?.hasInitialStrategyPack && subscription?.planType !== 'monthly_subscription' && (
+                  <Button variant="outline" asChild>
+                    <a href="/checkout?plan=subscription">Upgrade to $49/month</a>
+                  </Button>
+                )}
+
+                {/* Additional Strategy Packs for existing customers */}
+                {subscription?.hasInitialStrategyPack && subscription?.planType === 'strategy_pack' && (
+                  <Button variant="outline" asChild>
+                    <a href="/checkout?plan=strategy">Buy More Strategy Packs</a>
+                  </Button>
+                )}
+              </div>
+
+              {/* Show restriction message for monthly subscription */}
+              {!subscription?.hasInitialStrategyPack && (
+                <p className="text-sm text-neutral-medium italic">
+                  Monthly subscription available after purchasing the initial $299 strategy pack
+                </p>
               )}
             </div>
           </CardContent>

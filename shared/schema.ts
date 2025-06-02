@@ -36,6 +36,7 @@ export const users = pgTable("users", {
   subscriptionStatus: varchar("subscription_status").default("none"), // none, active, past_due, canceled
   planType: varchar("plan_type").default("none"), // none, strategy_pack, monthly_subscription
   strategyPacksRemaining: integer("strategy_packs_remaining").default(0),
+  hasInitialStrategyPack: boolean("has_initial_strategy_pack").default(false),
   subscriptionExpiresAt: timestamp("subscription_expires_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

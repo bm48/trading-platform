@@ -6,6 +6,8 @@ export interface SubscriptionStatus {
   status: string;
   message?: string;
   strategyPacksRemaining?: number;
+  canUpgradeToMonthly?: boolean;
+  hasInitialStrategyPack?: boolean;
 }
 
 export async function checkSubscriptionStatus(userId: string): Promise<SubscriptionStatus> {
@@ -16,19 +18,26 @@ export async function checkSubscriptionStatus(userId: string): Promise<Subscript
       canCreateCases: false,
       planType: "none",
       status: "no_user",
-      message: "User not found"
+      message: "User not found",
+      canUpgradeToMonthly: false,
+      hasInitialStrategyPack: false
     };
   }
 
+  // Check if user has ever purchased the initial strategy pack
+  const hasInitialStrategyPack = user.hasInitialStrategyPack || false;
+
   // Check monthly subscription first
-  if (user.planType === "monthly_subscription" && user.subscriptionStatus === "active") {
+  if (user.planType === "monthly_subscription" && user.subscriptionStatus === "active" && hasInitialStrategyPack) {
     // Check if subscription is still valid
     if (user.subscriptionExpiresAt && new Date(user.subscriptionExpiresAt) > new Date()) {
       return {
         canCreateCases: true,
         planType: "monthly_subscription",
         status: "active",
-        message: "Active monthly subscription - unlimited cases"
+        message: "Active monthly subscription - unlimited cases",
+        canUpgradeToMonthly: false,
+        hasInitialStrategyPack: true
       };
     }
   }
@@ -40,16 +49,32 @@ export async function checkSubscriptionStatus(userId: string): Promise<Subscript
       planType: "strategy_pack",
       status: "active",
       message: `${user.strategyPacksRemaining} strategy pack${user.strategyPacksRemaining === 1 ? '' : 's'} remaining`,
-      strategyPacksRemaining: user.strategyPacksRemaining
+      strategyPacksRemaining: user.strategyPacksRemaining || undefined,
+      canUpgradeToMonthly: hasInitialStrategyPack,
+      hasInitialStrategyPack
     };
   }
 
-  // No active subscription or credits
+  // User has purchased initial strategy pack but no remaining credits
+  if (hasInitialStrategyPack) {
+    return {
+      canCreateCases: false,
+      planType: user.planType || "strategy_pack",
+      status: "expired",
+      message: "Strategy packs used up. Upgrade to monthly subscription for unlimited cases.",
+      canUpgradeToMonthly: true,
+      hasInitialStrategyPack: true
+    };
+  }
+
+  // No strategy pack purchased yet
   return {
     canCreateCases: false,
-    planType: user.planType || "none",
-    status: user.subscriptionStatus || "none",
-    message: "No active subscription or strategy packs available"
+    planType: "none",
+    status: "none",
+    message: "Purchase the $299 strategy pack to get started, then optionally upgrade to monthly subscription.",
+    canUpgradeToMonthly: false,
+    hasInitialStrategyPack: false
   };
 }
 
@@ -75,14 +100,27 @@ export async function grantStrategyPack(userId: string, count: number = 1): Prom
   }
 
   const currentPacks = user.strategyPacksRemaining || 0;
+  const isFirstPurchase = !user.hasInitialStrategyPack;
   
   await storage.updateUserSubscription(userId, {
     planType: "strategy_pack",
-    strategyPacksRemaining: currentPacks + count
+    strategyPacksRemaining: currentPacks + count,
+    hasInitialStrategyPack: true
   });
 }
 
 export async function activateMonthlySubscription(userId: string): Promise<void> {
+  const user = await storage.getUser(userId);
+  
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  // Check if user has purchased the initial $299 strategy pack
+  if (!user.hasInitialStrategyPack) {
+    throw new Error("Must purchase the $299 strategy pack before upgrading to monthly subscription");
+  }
+
   const expiresAt = new Date();
   expiresAt.setMonth(expiresAt.getMonth() + 1);
 
