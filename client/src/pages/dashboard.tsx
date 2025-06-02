@@ -24,8 +24,12 @@ import { Link } from 'wouter';
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('cases');
   const [showNewCaseForm, setShowNewCaseForm] = useState(false);
+  
+  // Get tab from URL params
+  const urlParams = new URLSearchParams(window.location.search);
+  const tabFromUrl = urlParams.get('tab') || 'cases';
+  const [activeTab, setActiveTab] = useState(tabFromUrl);
 
   const { data: cases = [], isLoading: casesLoading } = useQuery({
     queryKey: ['/api/cases'],
@@ -211,7 +215,13 @@ export default function Dashboard() {
         </div>
 
         {/* Main Content Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <Tabs value={activeTab} onValueChange={(value) => {
+          setActiveTab(value);
+          // Update URL without full page reload
+          const url = new URL(window.location.href);
+          url.searchParams.set('tab', value);
+          window.history.pushState({}, '', url.toString());
+        }} className="space-y-6">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="cases" className="flex items-center gap-2">
               <FolderOpen className="h-4 w-4" />

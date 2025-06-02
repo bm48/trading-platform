@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
-  Shield, 
+  Plus, 
   FolderOpen, 
   FileText, 
   Settings, 
@@ -23,24 +23,27 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { user } = useAuth();
   const [location] = useLocation();
 
+  const urlParams = new URLSearchParams(window.location.search);
+  const currentTab = urlParams.get('tab');
+  
   const navigation = [
     {
       name: 'Dashboard',
       href: '/dashboard',
       icon: Home,
-      current: location === '/dashboard' || location === '/',
+      current: (location === '/dashboard' || location === '/') && !currentTab,
     },
     {
       name: 'Case Files',
       href: '/dashboard?tab=cases',
       icon: FolderOpen,
-      current: location.includes('case'),
+      current: currentTab === 'cases',
     },
     {
       name: 'Contract Files',
       href: '/dashboard?tab=contracts',
       icon: FileText,
-      current: location.includes('contract'),
+      current: currentTab === 'contracts',
     },
     {
       name: 'Settings',
@@ -67,8 +70,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <Shield className="h-8 w-8 text-primary mr-3" />
-              <span className="text-xl font-bold text-neutral-dark">TradeGuard AI</span>
+              <Plus className="h-8 w-8 text-primary mr-3" />
+              <span className="text-xl font-bold text-neutral-dark">Resolve AI</span>
             </div>
             
             <div className="flex items-center space-x-4">
