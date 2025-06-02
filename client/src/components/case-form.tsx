@@ -10,19 +10,63 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { FileText, X, AlertCircle, CheckCircle } from 'lucide-react';
+import { FileText, X, AlertCircle, CheckCircle, User, Building, DollarSign, Scale, Target, AlertTriangle } from 'lucide-react';
 
 const caseFormSchema = z.object({
-  title: z.string().min(5, 'Title must be at least 5 characters'),
-  issueType: z.string().min(1, 'Please select an issue type'),
-  description: z.string().min(20, 'Description must be at least 20 characters'),
-  amount: z.string().optional(),
+  // Section 1: Personal & Business Details
+  fullName: z.string().min(2, 'Full name is required'),
+  businessName: z.string().optional(),
+  abn: z.string().optional(),
+  email: z.string().email('Valid email is required'),
+  mobile: z.string().min(10, 'Valid mobile number is required'),
+  state: z.string().min(1, 'State/Territory is required'),
+  tradeService: z.string().min(2, 'Trade or service is required'),
+  
+  // Section 2: Project Details
+  projectAddress: z.string().min(5, 'Project address is required'),
+  clientName: z.string().min(2, 'Client/Builder name is required'),
+  contractType: z.enum(['direct_owner', 'head_contractor']),
+  workScope: z.string().min(10, 'Work scope description is required'),
+  projectType: z.enum(['domestic', 'commercial']),
   startDate: z.string().min(1, 'Start date is required'),
-  urgency: z.enum(['low', 'medium', 'high']),
-  clientName: z.string().optional(),
-  clientContact: z.string().optional(),
+  completionDate: z.string().optional(),
+  workCompleted: z.enum(['yes', 'no', 'partial']),
+  incompleteDetails: z.string().optional(),
+  
+  // Section 3: Contractual Agreement
+  writtenContract: z.enum(['yes', 'no']),
+  scopeAgreement: z.enum(['written', 'email', 'verbal']),
+  quoteGiven: z.enum(['yes', 'no']),
+  variations: z.enum(['yes', 'no']),
+  variationsWritten: z.enum(['written', 'verbal']).optional(),
+  
+  // Section 4: Payment & Invoices
+  totalValue: z.string().min(1, 'Total value is required'),
+  amountPaid: z.string().min(1, 'Amount paid is required'),
+  amountOwing: z.string().min(1, 'Amount owing is required'),
+  invoiceIssued: z.enum(['yes', 'no']),
+  lastInvoiceDate: z.string().optional(),
+  followUpSent: z.enum(['yes', 'no']),
+  disputesRaised: z.enum(['yes', 'no']),
+  
+  // Section 6: Legal Action Preferences
+  legalStepsTaken: z.enum(['none', 'letter_demand', 'ncat_vcat', 'other']),
+  threatenedAction: z.enum(['yes', 'no']),
+  preferredApproach: z.enum(['letter_demand', 'security_payment_act', 'negotiation']),
+  willingToEscalate: z.enum(['yes', 'no']),
+  
+  // Section 7: Outcome Sought
+  desiredOutcome: z.enum(['full_payment', 'partial_settlement', 'project_exit', 'other']),
+  urgencyLevel: z.enum(['urgent_7days', 'medium_30days', 'low_no_deadline']),
+  acceptableResolution: z.string().min(10, 'Please describe acceptable resolution'),
+  
+  // Section 8: Risks or Concerns
+  safetyIssues: z.enum(['yes', 'no']),
+  threatsReceived: z.enum(['yes', 'no']),
+  reputationConcerns: z.enum(['yes', 'no']),
 });
 
 type CaseFormData = z.infer<typeof caseFormSchema>;
@@ -39,14 +83,57 @@ export default function CaseForm({ onClose, onSuccess }: CaseFormProps) {
   const form = useForm<CaseFormData>({
     resolver: zodResolver(caseFormSchema),
     defaultValues: {
-      title: '',
-      issueType: '',
-      description: '',
-      amount: '',
-      startDate: '',
-      urgency: 'medium',
+      // Section 1: Personal & Business Details
+      fullName: '',
+      businessName: '',
+      abn: '',
+      email: '',
+      mobile: '',
+      state: '',
+      tradeService: '',
+      
+      // Section 2: Project Details
+      projectAddress: '',
       clientName: '',
-      clientContact: '',
+      contractType: 'direct_owner',
+      workScope: '',
+      projectType: 'domestic',
+      startDate: '',
+      completionDate: '',
+      workCompleted: 'yes',
+      incompleteDetails: '',
+      
+      // Section 3: Contractual Agreement
+      writtenContract: 'no',
+      scopeAgreement: 'written',
+      quoteGiven: 'no',
+      variations: 'no',
+      variationsWritten: 'written',
+      
+      // Section 4: Payment & Invoices
+      totalValue: '',
+      amountPaid: '',
+      amountOwing: '',
+      invoiceIssued: 'no',
+      lastInvoiceDate: '',
+      followUpSent: 'no',
+      disputesRaised: 'no',
+      
+      // Section 6: Legal Action Preferences
+      legalStepsTaken: 'none',
+      threatenedAction: 'no',
+      preferredApproach: 'letter_demand',
+      willingToEscalate: 'no',
+      
+      // Section 7: Outcome Sought
+      desiredOutcome: 'full_payment',
+      urgencyLevel: 'medium_30days',
+      acceptableResolution: '',
+      
+      // Section 8: Risks or Concerns
+      safetyIssues: 'no',
+      threatsReceived: 'no',
+      reputationConcerns: 'no',
     },
   });
 
