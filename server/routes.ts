@@ -116,6 +116,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put('/api/auth/profile', async (req, res) => {
+    try {
+      const userId = (req as any).session?.userId;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const { firstName, lastName, email, phone } = req.body;
+      const user = await storage.updateUserProfile(userId, {
+        firstName,
+        lastName,
+        email,
+        phone
+      });
+      res.json(user);
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      res.status(500).json({ message: "Failed to update profile" });
+    }
+  });
+
   app.post('/api/auth/logout', async (req, res) => {
     (req as any).session?.destroy();
     res.json({ message: "Logged out successfully" });

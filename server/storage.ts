@@ -27,6 +27,7 @@ export interface IStorage {
   upsertUser(user: UpsertUser): Promise<User>;
   updateUserStripeInfo(userId: string, stripeCustomerId: string, stripeSubscriptionId?: string): Promise<User>;
   updateUserSubscription(userId: string, updates: Partial<User>): Promise<User>;
+  updateUserProfile(userId: string, profileData: Partial<User>): Promise<User>;
 
   // Application operations
   createApplication(application: InsertApplication): Promise<Application>;

@@ -8,6 +8,7 @@ import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
 import CaseDetail from "@/pages/case-detail";
 import Checkout from "@/pages/checkout";
+import Settings from "@/pages/settings";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -17,6 +18,7 @@ function Router() {
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/case/:id" component={CaseDetail} />
       <Route path="/checkout" component={Checkout} />
+      <Route path="/settings" component={Settings} />
       <Route path="/application/:id/complete" component={Checkout} />
       <Route component={NotFound} />
     </Switch>
