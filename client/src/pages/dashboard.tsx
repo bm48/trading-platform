@@ -108,9 +108,23 @@ export default function Dashboard() {
                   <p className="text-sm text-neutral-medium">{subscriptionStatus.message}</p>
                 </div>
                 {!subscriptionStatus.canCreateCases && (
-                  <Button size="sm" onClick={() => window.location.href = '/checkout'}>
-                    Upgrade Plan
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={() => window.location.href = '/checkout'}>
+                      Upgrade Plan
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={async () => {
+                      try {
+                        const response = await fetch('/api/subscription/grant-demo-pack', { method: 'POST' });
+                        if (response.ok) {
+                          window.location.reload();
+                        }
+                      } catch (error) {
+                        console.error('Failed to grant demo pack');
+                      }
+                    }}>
+                      Get Demo Pack
+                    </Button>
+                  </div>
                 )}
               </div>
             </CardContent>
