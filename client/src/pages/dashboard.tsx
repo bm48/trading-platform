@@ -37,8 +37,22 @@ export default function Dashboard() {
     enabled: !!user,
   });
 
+  const { data: subscriptionStatus, isLoading: subscriptionLoading } = useQuery({
+    queryKey: ['/api/subscription/status'],
+    enabled: !!user,
+  });
+
   const activeCases = cases.filter((c: any) => c.status === 'active');
   const resolvedCases = cases.filter((c: any) => c.status === 'resolved');
+
+  const handleNewCaseClick = () => {
+    if (!subscriptionStatus?.canCreateCases) {
+      // Redirect to pricing/subscription page
+      window.location.href = '/checkout';
+      return;
+    }
+    setShowNewCaseForm(true);
+  };
 
   if (showNewCaseForm) {
     return (
@@ -69,12 +83,39 @@ export default function Dashboard() {
             <p className="text-neutral-medium">Manage your cases and track your progress</p>
           </div>
           <div className="flex gap-3">
-            <Button onClick={() => setShowNewCaseForm(true)}>
+            <Button onClick={handleNewCaseClick}>
               <Plus className="h-4 w-4 mr-2" />
               New Case
             </Button>
+            {subscriptionStatus && !subscriptionStatus.canCreateCases && (
+              <div className="text-sm text-neutral-medium">
+                {subscriptionStatus.message}
+              </div>
+            )}
           </div>
         </div>
+
+        {/* Subscription Status Banner */}
+        {subscriptionStatus && !subscriptionLoading && (
+          <Card className={`border-l-4 ${subscriptionStatus.canCreateCases ? 'border-l-success bg-green-50' : 'border-l-warning bg-yellow-50'}`}>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-semibold text-neutral-dark">
+                    {subscriptionStatus.planType === 'monthly_subscription' ? 'Monthly Subscription' : 
+                     subscriptionStatus.planType === 'strategy_pack' ? 'Strategy Pack' : 'No Active Plan'}
+                  </h3>
+                  <p className="text-sm text-neutral-medium">{subscriptionStatus.message}</p>
+                </div>
+                {!subscriptionStatus.canCreateCases && (
+                  <Button size="sm" onClick={() => window.location.href = '/checkout'}>
+                    Upgrade Plan
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -150,7 +191,7 @@ export default function Dashboard() {
           <TabsContent value="cases" className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold text-neutral-dark">Case Files</h2>
-              <Button variant="outline" onClick={() => setShowNewCaseForm(true)}>
+              <Button variant="outline" onClick={handleNewCaseClick}>
                 <Plus className="h-4 w-4 mr-2" />
                 New Case
               </Button>
@@ -174,7 +215,7 @@ export default function Dashboard() {
                   <FolderOpen className="h-12 w-12 text-neutral-medium mx-auto mb-4" />
                   <h3 className="text-lg font-semibold text-neutral-dark mb-2">No cases yet</h3>
                   <p className="text-neutral-medium mb-6">Start by creating your first case to get legal support</p>
-                  <Button onClick={() => setShowNewCaseForm(true)}>
+                  <Button onClick={handleNewCaseClick}>
                     <Plus className="h-4 w-4 mr-2" />
                     Create First Case
                   </Button>

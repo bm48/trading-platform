@@ -6,7 +6,7 @@ import { insertApplicationSchema, insertCaseSchema } from "@shared/schema";
 import { analyzeCase, generateStrategyPack } from "./openai";
 import { sendWelcomeEmail, sendApprovalEmail } from "./email";
 import { generateStrategyPackPDF } from "./pdf";
-import { checkSubscriptionStatus, consumeStrategyPack } from "./subscription";
+import { checkSubscriptionStatus, consumeStrategyPack, grantStrategyPack } from "./subscription";
 import Stripe from "stripe";
 import multer from "multer";
 import path from "path";
@@ -134,6 +134,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error checking subscription status:", error);
       res.status(500).json({ message: "Failed to check subscription status" });
+    }
+  });
+
+  // Demo endpoint to grant strategy packs for testing
+  app.post('/api/subscription/grant-demo-pack', async (req, res) => {
+    try {
+      const userId = (req as any).session?.userId;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      await grantStrategyPack(userId, 1);
+      res.json({ message: "Demo strategy pack granted" });
+    } catch (error) {
+      console.error("Error granting demo pack:", error);
+      res.status(500).json({ message: "Failed to grant demo pack" });
     }
   });
 
