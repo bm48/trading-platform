@@ -200,6 +200,101 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Why Trades Are Jumping On Board */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-neutral-dark mb-4">Why Trades Are Jumping On Board With Resolve — For Tradies</h2>
+          </div>
+
+          <div className="space-y-8 max-w-4xl mx-auto">
+            {/* Point 1 */}
+            <div className="flex items-start space-x-4">
+              <div className="flex-shrink-0">
+                <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                  <Check className="h-5 w-5 text-white" />
+                </div>
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-neutral-dark mb-2">1. A Legal Game Plan — Without the Lawyer Price Tag</h3>
+                <p className="text-gray-600 leading-relaxed">
+                  Get a step-by-step action plan built for your exact situation. Whether you're owed money, kicked off-site, or stuck in a contract mess, Resolve shows you what to do next — backed by real Australian building laws like SOPA. No confusion, no courtrooms, no $10k lawyer bills.
+                </p>
+              </div>
+            </div>
+
+            {/* Point 2 */}
+            <div className="flex items-start space-x-4">
+              <div className="flex-shrink-0">
+                <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                  <Check className="h-5 w-5 text-white" />
+                </div>
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-neutral-dark mb-2">2. Letters & Contracts That Actually Hold Up</h3>
+                <p className="text-gray-600 leading-relaxed">
+                  Tired of sending texts or dodgy invoices that get ignored? Resolve generates professional, legally strong documents — from payment demands to contract templates — all customised to your trade, job, and state. Download in Word format, edit as needed, and send with confidence.
+                </p>
+              </div>
+            </div>
+
+            {/* Point 3 */}
+            <div className="flex items-start space-x-4">
+              <div className="flex-shrink-0">
+                <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                  <Check className="h-5 w-5 text-white" />
+                </div>
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-neutral-dark mb-2">3. Your Own Jobsite Command Centre</h3>
+                <p className="text-gray-600 leading-relaxed">
+                  Everything in one place: timelines, documents, contracts, photos, and deadlines. The Dashboard keeps you on top of every project and every dispute — no more scrambling for emails or missing key dates. Connect your calendar and email to stay synced automatically.
+                </p>
+              </div>
+            </div>
+
+            {/* Point 4 */}
+            <div className="flex items-start space-x-4">
+              <div className="flex-shrink-0">
+                <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                  <Check className="h-5 w-5 text-white" />
+                </div>
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-neutral-dark mb-2">4. 24/7 Support That Has Your Back</h3>
+                <p className="text-gray-600 leading-relaxed">
+                  Resolve's AI assistant is ready whenever you are — helping you write letters, update contracts, or work out your next move. Plus, our team reviews and approves everything before it's sent. You stay in control, with real support behind the scenes.
+                </p>
+              </div>
+            </div>
+
+            {/* Point 5 */}
+            <div className="flex items-start space-x-4">
+              <div className="flex-shrink-0">
+                <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                  <Check className="h-5 w-5 text-white" />
+                </div>
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-neutral-dark mb-2">5. Keep Your Cash — Stop Paying Legal Middlemen</h3>
+                <p className="text-gray-600 leading-relaxed">
+                  Forget giving away 40% to debt collectors or paying $400 an hour to a lawyer. For just $299 once (and $49/month for unlimited access), you get a full legal-grade system designed for tradies — without the middleman.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="text-center mt-12">
+            <Button 
+              className="btn-primary px-8 py-3 text-lg"
+              onClick={() => scrollToElement('application')}
+            >
+              Get Your Game Plan Now
+            </Button>
+          </div>
+        </div>
+      </section>
+
       {/* Application Form */}
       <ApplicationForm />
 
