@@ -317,7 +317,7 @@ export default function Landing() {
             <h2 className="text-3xl font-bold text-neutral-dark mb-4">Simple. Fast. Legally backed.</h2>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 mb-12">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
             <div className="text-center">
               <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-white text-xl font-bold">1</span>
@@ -340,6 +340,14 @@ export default function Landing() {
               </div>
               <h3 className="text-lg font-semibold text-neutral-dark mb-2">Start resolving your issue</h3>
               <p className="text-neutral-medium text-sm">Use the step-by-step timeline, contract templates, and guidance to take action and move on.</p>
+            </div>
+
+            <div className="text-center">
+              <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-white text-xl font-bold">4</span>
+              </div>
+              <h3 className="text-lg font-semibold text-neutral-dark mb-2">Stay protected with ongoing support</h3>
+              <p className="text-neutral-medium text-sm">Subscribe for just $49/month to access unlimited case creation, contract generation, document storage, deadline tracking, and expert support — so you're always ready, no matter what comes up.</p>
             </div>
           </div>
           
