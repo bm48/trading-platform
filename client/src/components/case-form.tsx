@@ -177,31 +177,85 @@ export default function CaseForm({ onClose, onSuccess }: CaseFormProps) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <CardHeader>
+      <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-white to-blue-50 border-blue-200">
+        <CardHeader className="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-t-lg">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <FileText className="h-5 w-5 text-primary" />
-              <CardTitle>Create New Case</CardTitle>
+              <Scale className="h-6 w-6 text-blue-100" />
+              <CardTitle className="text-xl text-white">Create New Legal Case</CardTitle>
             </div>
-            <Button variant="ghost" size="sm" onClick={onClose}>
+            <Button variant="ghost" size="sm" onClick={onClose} className="text-white hover:bg-blue-600">
               <X className="h-4 w-4" />
             </Button>
           </div>
+          <p className="text-blue-100 text-sm mt-2">Submit your case details for AI-powered legal analysis and strategy development</p>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-6">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              {/* Case Title */}
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Case Title</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="Brief description of your case"
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+              
+              {/* Case Overview Section */}
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg border border-blue-200">
+                <div className="flex items-center space-x-2 mb-4">
+                  <FileText className="h-5 w-5 text-blue-600" />
+                  <h3 className="text-lg font-semibold text-blue-800">Case Overview</h3>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="title"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-blue-700">Case Title</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="Brief description of your case"
+                            className="border-blue-200 focus:border-blue-400"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="issueType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-blue-700">Issue Type</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="border-blue-200 focus:border-blue-400">
+                              <SelectValue placeholder="Select the type of issue" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {issueTypes.map((type) => (
+                              <SelectItem key={type.value} value={type.value}>
+                                {type.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem className="mt-4">
+                      <FormLabel className="text-blue-700">Detailed Description</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Provide detailed information about your case, including timeline, parties involved, and specific issues..."
+                          className="min-h-[120px] border-blue-200 focus:border-blue-400"
                         {...field} 
                       />
                     </FormControl>
@@ -209,144 +263,103 @@ export default function CaseForm({ onClose, onSuccess }: CaseFormProps) {
                   </FormItem>
                 )}
               />
+              </div>
 
-              {/* Issue Type */}
-              <FormField
-                control={form.control}
-                name="issueType"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Issue Type</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select the type of issue" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {issueTypes.map((type) => (
-                          <SelectItem key={type.value} value={type.value}>
-                            {type.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {/* Financial Details Section */}
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-lg border border-green-200">
+                <div className="flex items-center space-x-2 mb-4">
+                  <DollarSign className="h-5 w-5 text-green-600" />
+                  <h3 className="text-lg font-semibold text-green-800">Financial Details</h3>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="amount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-green-700">Amount in Dispute (Optional)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="e.g., 15000"
+                            type="number"
+                            className="border-green-200 focus:border-green-400"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-              {/* Description */}
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Detailed Description</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="Provide detailed information about your case, including timeline, parties involved, and specific issues..."
-                        className="min-h-[120px]"
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  <FormField
+                    control={form.control}
+                    name="startDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-green-700">Issue Start Date</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="date"
+                            className="border-green-200 focus:border-green-400"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Amount */}
+              {/* Urgency Section */}
+              <div className="bg-gradient-to-r from-orange-50 to-red-50 p-6 rounded-lg border border-orange-200">
+                <div className="flex items-center space-x-2 mb-4">
+                  <AlertTriangle className="h-5 w-5 text-orange-600" />
+                  <h3 className="text-lg font-semibold text-orange-800">Urgency & Priority</h3>
+                </div>
+                
                 <FormField
                   control={form.control}
-                  name="amount"
+                  name="urgency"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Amount in Dispute (Optional)</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="e.g., 15000"
-                          type="number"
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Start Date */}
-                <FormField
-                  control={form.control}
-                  name="startDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Issue Start Date</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="date"
-                          {...field} 
-                        />
-                      </FormControl>
+                      <FormLabel className="text-orange-700">Urgency Level</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="border-orange-200 focus:border-orange-400">
+                            <SelectValue placeholder="Select urgency level" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="low">🟢 Low - No immediate deadline</SelectItem>
+                          <SelectItem value="medium">🟡 Medium - Within 30 days</SelectItem>
+                          <SelectItem value="high">🔴 High - Urgent, within 7 days</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
 
-              {/* Urgency */}
-              <FormField
-                control={form.control}
-                name="urgency"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Urgency Level</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="low">Low - No immediate deadline</SelectItem>
-                        <SelectItem value="medium">Medium - Within 30 days</SelectItem>
-                        <SelectItem value="high">High - Urgent, within 7 days</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Client Name */}
-                <FormField
-                  control={form.control}
-                  name="clientName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Client/Company Name (Optional)</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="Name of other party"
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Client Contact */}
+              {/* Contact Information Section */}
+              <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-6 rounded-lg border border-purple-200">
+                <div className="flex items-center space-x-2 mb-4">
+                  <User className="h-5 w-5 text-purple-600" />
+                  <h3 className="text-lg font-semibold text-purple-800">Contact Information</h3>
+                </div>
+                
                 <FormField
                   control={form.control}
                   name="clientContact"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Client Contact (Optional)</FormLabel>
+                      <FormLabel className="text-purple-700">Additional Contact Details (Optional)</FormLabel>
                       <FormControl>
-                        <Input 
-                          placeholder="Phone or email"
+                        <Textarea 
+                          placeholder="Other parties involved, their contact information, legal representatives, etc."
+                          className="border-purple-200 focus:border-purple-400"
                           {...field} 
                         />
                       </FormControl>
@@ -356,42 +369,30 @@ export default function CaseForm({ onClose, onSuccess }: CaseFormProps) {
                 />
               </div>
 
-              {/* Info Box */}
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <div className="flex items-start space-x-2">
-                  <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5" />
-                  <div className="text-sm text-blue-800">
-                    <p className="font-medium mb-1">What happens next:</p>
-                    <ul className="space-y-1 text-blue-700">
-                      <li>• AI analysis will be generated for your case</li>
-                      <li>• You'll receive a custom strategy pack</li>
-                      <li>• Document templates will be prepared</li>
-                      <li>• You can upload supporting documents</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-
-              {/* Form Actions */}
-              <div className="flex items-center justify-end space-x-2 pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
+              {/* Submit Section */}
+              <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+                <Button 
+                  type="button" 
+                  variant="outline" 
                   onClick={onClose}
-                  disabled={createCaseMutation.isPending}
+                  className="border-gray-300 text-gray-700 hover:bg-gray-50"
                 >
                   Cancel
                 </Button>
-                <Button
-                  type="submit"
+                <Button 
+                  type="submit" 
                   disabled={createCaseMutation.isPending}
+                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white"
                 >
                   {createCaseMutation.isPending ? (
-                    <>Creating Case...</>
+                    <>
+                      <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2" />
+                      Creating Case...
+                    </>
                   ) : (
                     <>
                       <CheckCircle className="h-4 w-4 mr-2" />
-                      Create Case
+                      Create Case File
                     </>
                   )}
                 </Button>
