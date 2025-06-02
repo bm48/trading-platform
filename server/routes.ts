@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { insertApplicationSchema, insertCaseSchema } from "@shared/schema";
 import { analyzeCase, generateStrategyPack } from "./openai";
-import { sendWelcomeEmail, sendApprovalEmail } from "./email";
+import { sendWelcomeEmail, sendApprovalEmail, sendRejectionEmail } from "./email";
 import { generateStrategyPackPDF, generateAIStrategyPackPDF } from "./pdf";
 import { checkSubscriptionStatus, consumeStrategyPack, grantStrategyPack } from "./subscription";
 import Stripe from "stripe";

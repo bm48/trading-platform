@@ -187,3 +187,61 @@ export async function sendStrategyPackEmail(email: string, fullName: string, cas
     console.error('Error sending strategy pack email:', error);
   }
 }
+
+export async function sendRejectionEmail(email: string, fullName: string, reason: string): Promise<void> {
+  if (!EMAIL_ENABLED) {
+    console.log(`Email would be sent to ${email} (${fullName}) - Application rejected: ${reason}`);
+    return;
+  }
+  
+  try {
+    const mailOptions = {
+      from: process.env.FROM_EMAIL || 'noreply@tradeguard.ai',
+      to: email,
+      subject: 'Application Update - TradeGuard AI',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background: linear-gradient(135deg, #D32F2F, #F44336); color: white; padding: 30px; text-align: center;">
+            <h1 style="margin: 0; font-size: 28px;">Application Update</h1>
+            <p style="margin: 10px 0 0 0; font-size: 16px;">TradeGuard AI</p>
+          </div>
+          
+          <div style="padding: 30px; background: #f8f9fa;">
+            <h2 style="color: #D32F2F; margin-top: 0;">Thank you for your application, ${fullName}</h2>
+            
+            <p>We appreciate your interest in TradeGuard AI. After careful review of your case details, we regret to inform you that we cannot proceed with your application at this time.</p>
+            
+            <div style="background: #FFEBEE; padding: 20px; border-radius: 8px; border-left: 4px solid #F44336; margin: 20px 0;">
+              <h3 style="color: #D32F2F; margin-top: 0;">Reason:</h3>
+              <p style="color: #37474F; margin-bottom: 0;">${reason}</p>
+            </div>
+            
+            <p style="color: #37474F;">This decision doesn't reflect on the validity of your situation. We recommend consulting with a qualified legal professional who can provide personalized advice for your specific circumstances.</p>
+            
+            <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="color: #1565C0; margin-top: 0;">Alternative Resources:</h3>
+              <ul style="color: #37474F; padding-left: 20px;">
+                <li>Legal Aid Australia - Free legal advice</li>
+                <li>Local Bar Association referral services</li>
+                <li>Community legal centers in your area</li>
+                <li>Industry-specific dispute resolution services</li>
+              </ul>
+            </div>
+            
+            <p style="color: #78909C; font-size: 14px; margin-top: 30px;">
+              Thank you for considering TradeGuard AI for your legal support needs.
+            </p>
+          </div>
+          
+          <div style="background: #37474F; color: white; padding: 20px; text-align: center; font-size: 14px;">
+            <p style="margin: 0;">© 2024 TradeGuard AI - Legal Support for Australian Tradespeople</p>
+          </div>
+        </div>
+      `,
+    };
+
+    await transporter!.sendMail(mailOptions);
+  } catch (error) {
+    console.error('Error sending rejection email:', error);
+  }
+}
