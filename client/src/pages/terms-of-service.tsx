@@ -215,9 +215,8 @@ export default function TermsOfService() {
               </p>
               <div className="bg-gray-50 p-4 rounded-lg">
                 <p className="text-gray-700"><strong>Project Resolve AI Support</strong></p>
-                <p className="text-gray-700">Email: support@projectresolve.ai</p>
-                <p className="text-gray-700">Phone: 1300 RESOLVE (1300 737 658)</p>
-                <p className="text-gray-700">Website: www.projectresolve.ai</p>
+                <p className="text-gray-700">Email: hello@projectresolveai.com</p>
+                <p className="text-gray-700">Website: www.projectresolveai.com</p>
               </div>
             </section>
           </div>

@@ -21,7 +21,7 @@ export async function sendWelcomeEmail(email: string, fullName: string): Promise
   
   try {
     const mailOptions = {
-      from: process.env.FROM_EMAIL || 'noreply@projectresolve.ai',
+      from: process.env.FROM_EMAIL || 'hello@projectresolveai.com',
       to: email,
       subject: 'Application Received - Project Resolve AI',
       html: `
@@ -83,7 +83,7 @@ export async function sendApprovalEmail(email: string, fullName: string, applica
     const approvalLink = `${process.env.BASE_URL || 'http://localhost:5000'}/application/${applicationId}/complete`;
     
     const mailOptions = {
-      from: process.env.FROM_EMAIL || 'noreply@projectresolve.ai',
+      from: process.env.FROM_EMAIL || 'hello@projectresolveai.com',
       to: email,
       subject: 'Case Approved - Project Resolve AI',
       html: `
@@ -145,7 +145,7 @@ export async function sendStrategyPackEmail(email: string, fullName: string, cas
     const portalLink = `${process.env.BASE_URL || 'http://localhost:5000'}/dashboard`;
     
     const mailOptions = {
-      from: process.env.FROM_EMAIL || 'noreply@projectresolve.ai',
+      from: process.env.FROM_EMAIL || 'hello@projectresolveai.com',
       to: email,
       subject: `Your Strategy Pack is Ready - Project Resolve AI Case ${caseNumber}`,
       html: `
@@ -205,7 +205,7 @@ export async function sendRejectionEmail(email: string, fullName: string, reason
   
   try {
     const mailOptions = {
-      from: process.env.FROM_EMAIL || 'noreply@projectresolve.ai',
+      from: process.env.FROM_EMAIL || 'hello@projectresolveai.com',
       to: email,
       subject: 'Application Update - Project Resolve AI',
       html: `

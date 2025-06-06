@@ -336,10 +336,9 @@ export async function generateAIStrategyPackPDF(caseData: Case): Promise<string>
 
       doc.fontSize(12)
          .fillColor('#333')
-         .text('Resolve AI Support Team', 60, 280)
-         .text('Email: support@resolveai.com.au', 60, 300)
-         .text('Phone: 1300 RESOLVE (1300 737 658)', 60, 320)
-         .text('Website: www.resolveai.com.au', 60, 340);
+         .text('Project Resolve AI Support Team', 60, 280)
+         .text('Email: hello@projectresolveai.com', 60, 300)
+         .text('Website: www.projectresolveai.com', 60, 320);
 
       // Footer
       doc.fontSize(10)
