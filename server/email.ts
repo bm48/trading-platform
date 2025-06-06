@@ -241,12 +241,12 @@ export async function sendRejectionEmail(email: string, fullName: string, reason
             </div>
             
             <p style="color: #78909C; font-size: 14px; margin-top: 30px;">
-              Thank you for considering TradeGuard AI for your legal support needs.
+              Thank you for considering Project Resolve AI for your legal support needs.
             </p>
           </div>
           
           <div style="background: #37474F; color: white; padding: 20px; text-align: center; font-size: 14px;">
-            <p style="margin: 0;">© 2024 TradeGuard AI - Legal Support for Australian Tradespeople</p>
+            <p style="margin: 0;">© 2024 Project Resolve AI - Legal Support for Australian Tradespeople</p>
           </div>
         </div>
       `,

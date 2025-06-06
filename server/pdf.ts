@@ -344,7 +344,7 @@ export async function generateAIStrategyPackPDF(caseData: Case): Promise<string>
       // Footer
       doc.fontSize(10)
          .fillColor('#666')
-         .text('© 2024 Resolve AI - Empowering Australian Tradespeople with AI-Powered Legal Solutions', 60, 750, {
+         .text('© 2024 Project Resolve AI - Empowering Australian Tradespeople with AI-Powered Legal Solutions', 60, 750, {
            align: 'center',
            width: 475
          });
