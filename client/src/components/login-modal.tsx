@@ -48,12 +48,12 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      onClose();
       toast({
         title: "Account Created",
-        description: "Welcome to TradeGuard AI!",
+        description: "Please login with your new account",
       });
+      setIsSignUp(false); // Switch to login form
+      setPassword(''); // Clear password for security
     },
     onError: (error: any) => {
       toast({
