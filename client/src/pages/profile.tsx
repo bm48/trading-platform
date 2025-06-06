@@ -172,7 +172,7 @@ export default function Profile() {
           <CardContent>
             <div className="space-y-3 text-sm text-muted-foreground">
               <div>
-                <span className="font-medium">Account ID:</span> {(user && typeof user === 'object' && 'id' in user && user.id) || 'N/A'}
+                <span className="font-medium">Account ID:</span> {(user && typeof user === 'object' && 'id' in user && typeof user.id === 'string' ? user.id : 'N/A')}
               </div>
               <div>
                 <span className="font-medium">Member since:</span> {(user && typeof user === 'object' && 'createdAt' in user && user.createdAt) ? new Date(user.createdAt as string).toLocaleDateString() : 'N/A'}
