@@ -79,7 +79,10 @@ export default function Landing() {
               </Button>
               {isAuthenticated ? (
                 <div className="flex items-center space-x-3">
-                  <Avatar className="h-8 w-8">
+                  <Avatar 
+                    className="h-8 w-8 cursor-pointer hover:ring-2 hover:ring-primary transition-all"
+                    onClick={() => window.location.href = '/profile'}
+                  >
                     <AvatarFallback className="bg-primary text-white text-sm">
                       {getUserInitials()}
                     </AvatarFallback>
@@ -91,7 +94,7 @@ export default function Landing() {
                     className="flex items-center space-x-2"
                   >
                     <LogOut className="h-4 w-4" />
-                    <span>Logout</span>
+                    <span>{logoutMutation.isPending ? 'Logging out...' : 'Logout'}</span>
                   </Button>
                 </div>
               ) : (
