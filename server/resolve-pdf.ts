@@ -127,7 +127,7 @@ export async function generateResolvePDF(caseData: Case): Promise<string> {
 
     // Page 3 - Welcome
     doc.addPage();
-    doc.fontSize(16).text('Welcome to Resolve', 50, 50);
+    doc.fontSize(16).text('Welcome to Project Resolve AI', 50, 50);
     doc.fontSize(10).text('02', 500, 50);
     doc.moveDown();
     doc.fontSize(10).text(content.welcomeMessage);
