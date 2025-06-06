@@ -11,6 +11,7 @@ import AdminDashboard from "@/pages/admin-dashboard";
 import CaseDetail from "@/pages/case-detail";
 import Checkout from "@/pages/checkout";
 import Settings from "@/pages/settings";
+import TermsOfService from "@/pages/terms-of-service";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -23,6 +24,7 @@ function Router() {
       <Route path="/case/:id" component={CaseDetail} />
       <Route path="/checkout" component={Checkout} />
       <Route path="/settings" component={Settings} />
+      <Route path="/terms-of-service" component={TermsOfService} />
       <Route path="/application/:id/complete" component={Checkout} />
       <Route component={NotFound} />
     </Switch>
