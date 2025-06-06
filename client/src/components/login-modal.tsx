@@ -21,6 +21,15 @@ export default function LoginModal({ isOpen, onClose, initialMode = 'login' }: L
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Reset form when modal opens with different mode
+  useEffect(() => {
+    if (isOpen) {
+      setIsSignUp(initialMode === 'signup');
+      setEmail('');
+      setPassword('');
+    }
+  }, [isOpen, initialMode]);
+
   const loginMutation = useMutation({
     mutationFn: async (data: { email: string; password: string }) => {
       const response = await apiRequest("POST", "/api/auth/login", data);
