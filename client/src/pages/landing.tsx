@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 
 export default function Landing() {
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [isSignUpMode, setIsSignUpMode] = useState(false);
   const { user, isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -43,8 +44,18 @@ export default function Landing() {
   };
 
   const getUserInitials = () => {
-    if (!user?.email) return 'U';
+    if (!user || typeof user !== 'object' || !('email' in user) || !user.email || typeof user.email !== 'string') return 'U';
     return user.email.charAt(0).toUpperCase();
+  };
+
+  const openLoginModal = () => {
+    setIsSignUpMode(false);
+    setShowLoginModal(true);
+  };
+
+  const openSignUpModal = () => {
+    setIsSignUpMode(true);
+    setShowLoginModal(true);
   };
   
   return (
@@ -84,9 +95,14 @@ export default function Landing() {
                   </Button>
                 </div>
               ) : (
-                <Button onClick={() => setShowLoginModal(true)}>
-                  Login
-                </Button>
+                <div className="flex items-center space-x-3">
+                  <Button variant="outline" onClick={openLoginModal}>
+                    Login
+                  </Button>
+                  <Button onClick={openSignUpModal}>
+                    Sign Up
+                  </Button>
+                </div>
               )}
             </div>
           </div>
@@ -613,7 +629,8 @@ export default function Landing() {
       
       <LoginModal 
         isOpen={showLoginModal} 
-        onClose={() => setShowLoginModal(false)} 
+        onClose={() => setShowLoginModal(false)}
+        initialMode={isSignUpMode ? 'signup' : 'login'}
       />
     </div>
   );
