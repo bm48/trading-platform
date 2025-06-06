@@ -518,7 +518,7 @@ export default function Landing() {
             <div className="col-span-2">
               <div className="flex items-center mb-4">
                 <Plus className="h-8 w-8 text-primary mr-3" />
-                <span className="text-xl font-bold">Resolve AI</span>
+                <span className="text-xl font-bold">Project Resolve AI</span>
               </div>
               <p className="text-gray-300 mb-4">
                 AI-powered legal support platform designed specifically for Australian tradespeople. 
@@ -547,7 +547,7 @@ export default function Landing() {
 
           <div className="border-t border-gray-700 mt-8 pt-8 text-center">
             <p className="text-gray-400">
-              © 2024 TradeGuard AI. This platform provides information services, not legal advice. 
+              © 2024 Project Resolve AI. This platform provides information services, not legal advice. 
               Always consult with qualified legal professionals for complex matters.
             </p>
           </div>

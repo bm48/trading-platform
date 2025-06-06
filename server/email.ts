@@ -60,7 +60,7 @@ export async function sendWelcomeEmail(email: string, fullName: string): Promise
           </div>
           
           <div style="background: #37474F; color: white; padding: 20px; text-align: center; font-size: 14px;">
-            <p style="margin: 0;">© 2024 TradeGuard AI - Legal Support for Australian Tradespeople</p>
+            <p style="margin: 0;">© 2024 Project Resolve AI - Legal Support for Australian Tradespeople</p>
             <p style="margin: 5px 0 0 0; color: #B0BEC5;">This platform provides information services, not legal advice.</p>
           </div>
         </div>
@@ -123,7 +123,7 @@ export async function sendApprovalEmail(email: string, fullName: string, applica
           </div>
           
           <div style="background: #37474F; color: white; padding: 20px; text-align: center; font-size: 14px;">
-            <p style="margin: 0;">© 2024 TradeGuard AI - Legal Support for Australian Tradespeople</p>
+            <p style="margin: 0;">© 2024 Project Resolve AI - Legal Support for Australian Tradespeople</p>
           </div>
         </div>
       `,
@@ -185,7 +185,7 @@ export async function sendStrategyPackEmail(email: string, fullName: string, cas
           </div>
           
           <div style="background: #37474F; color: white; padding: 20px; text-align: center; font-size: 14px;">
-            <p style="margin: 0;">© 2024 TradeGuard AI - Legal Support for Australian Tradespeople</p>
+            <p style="margin: 0;">© 2024 Project Resolve AI - Legal Support for Australian Tradespeople</p>
           </div>
         </div>
       `,
