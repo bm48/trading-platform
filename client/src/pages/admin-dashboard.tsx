@@ -142,9 +142,14 @@ export default function AdminDashboard() {
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-          <p className="text-muted-foreground">Review and manage applications</p>
+        <div className="flex items-center">
+          <div className="bg-blue-600 text-white rounded-full w-12 h-12 flex items-center justify-center text-xl font-bold mr-4">
+            +
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold">Project Resolve AI - Admin</h1>
+            <p className="text-muted-foreground">Review and manage applications</p>
+          </div>
         </div>
       </div>
 
