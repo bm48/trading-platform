@@ -24,7 +24,10 @@ export default function Landing() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      // Clear all cached queries
+      queryClient.clear();
+      // Force page reload to ensure clean state
+      window.location.href = '/';
       toast({
         title: "Logged Out",
         description: "You have been successfully logged out",
