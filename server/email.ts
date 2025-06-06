@@ -21,13 +21,16 @@ export async function sendWelcomeEmail(email: string, fullName: string): Promise
   
   try {
     const mailOptions = {
-      from: process.env.FROM_EMAIL || 'noreply@tradeguard.ai',
+      from: process.env.FROM_EMAIL || 'noreply@projectresolve.ai',
       to: email,
-      subject: 'Application Received - TradeGuard AI',
+      subject: 'Application Received - Project Resolve AI',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <div style="background: linear-gradient(135deg, #1565C0, #0277BD); color: white; padding: 30px; text-align: center;">
-            <h1 style="margin: 0; font-size: 28px;">TradeGuard AI</h1>
+            <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">
+              <div style="background: rgba(255,255,255,0.2); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; font-size: 24px; font-weight: bold;">+</div>
+              <h1 style="margin: 0; font-size: 28px;">Project Resolve AI</h1>
+            </div>
             <p style="margin: 10px 0 0 0; font-size: 16px;">Legal Support for Australian Tradespeople</p>
           </div>
           
@@ -36,7 +39,7 @@ export async function sendWelcomeEmail(email: string, fullName: string): Promise
             
             <p>Hi ${fullName},</p>
             
-            <p>Thank you for submitting your application to TradeGuard AI. We've received your case details and our team is reviewing your situation.</p>
+            <p>Thank you for submitting your application to Project Resolve AI. We've received your case details and our team is reviewing your situation.</p>
             
             <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #FF8F00; margin: 20px 0;">
               <h3 style="color: #1565C0; margin-top: 0;">What happens next?</h3>
@@ -80,14 +83,17 @@ export async function sendApprovalEmail(email: string, fullName: string, applica
     const approvalLink = `${process.env.BASE_URL || 'http://localhost:5000'}/application/${applicationId}/complete`;
     
     const mailOptions = {
-      from: process.env.FROM_EMAIL || 'noreply@tradeguard.ai',
+      from: process.env.FROM_EMAIL || 'noreply@projectresolve.ai',
       to: email,
-      subject: 'Case Approved - Complete Your Application',
+      subject: 'Case Approved - Project Resolve AI',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <div style="background: linear-gradient(135deg, #2E7D32, #4CAF50); color: white; padding: 30px; text-align: center;">
-            <h1 style="margin: 0; font-size: 28px;">Case Approved!</h1>
-            <p style="margin: 10px 0 0 0; font-size: 16px;">Your application has been accepted</p>
+            <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">
+              <div style="background: rgba(255,255,255,0.2); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; font-size: 24px; font-weight: bold;">+</div>
+              <h1 style="margin: 0; font-size: 28px;">Case Approved!</h1>
+            </div>
+            <p style="margin: 10px 0 0 0; font-size: 16px;">Project Resolve AI - Your application has been accepted</p>
           </div>
           
           <div style="padding: 30px; background: #f8f9fa;">
@@ -139,14 +145,17 @@ export async function sendStrategyPackEmail(email: string, fullName: string, cas
     const portalLink = `${process.env.BASE_URL || 'http://localhost:5000'}/dashboard`;
     
     const mailOptions = {
-      from: process.env.FROM_EMAIL || 'noreply@tradeguard.ai',
+      from: process.env.FROM_EMAIL || 'noreply@projectresolve.ai',
       to: email,
-      subject: `Your Strategy Pack is Ready - Case ${caseNumber}`,
+      subject: `Your Strategy Pack is Ready - Project Resolve AI Case ${caseNumber}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <div style="background: linear-gradient(135deg, #1565C0, #0277BD); color: white; padding: 30px; text-align: center;">
-            <h1 style="margin: 0; font-size: 28px;">Strategy Pack Complete!</h1>
-            <p style="margin: 10px 0 0 0; font-size: 16px;">Case ${caseNumber}</p>
+            <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">
+              <div style="background: rgba(255,255,255,0.2); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; font-size: 24px; font-weight: bold;">+</div>
+              <h1 style="margin: 0; font-size: 28px;">Strategy Pack Complete!</h1>
+            </div>
+            <p style="margin: 10px 0 0 0; font-size: 16px;">Project Resolve AI - Case ${caseNumber}</p>
           </div>
           
           <div style="padding: 30px; background: #f8f9fa;">
@@ -196,20 +205,23 @@ export async function sendRejectionEmail(email: string, fullName: string, reason
   
   try {
     const mailOptions = {
-      from: process.env.FROM_EMAIL || 'noreply@tradeguard.ai',
+      from: process.env.FROM_EMAIL || 'noreply@projectresolve.ai',
       to: email,
-      subject: 'Application Update - TradeGuard AI',
+      subject: 'Application Update - Project Resolve AI',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <div style="background: linear-gradient(135deg, #D32F2F, #F44336); color: white; padding: 30px; text-align: center;">
-            <h1 style="margin: 0; font-size: 28px;">Application Update</h1>
-            <p style="margin: 10px 0 0 0; font-size: 16px;">TradeGuard AI</p>
+            <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">
+              <div style="background: rgba(255,255,255,0.2); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; font-size: 24px; font-weight: bold;">+</div>
+              <h1 style="margin: 0; font-size: 28px;">Application Update</h1>
+            </div>
+            <p style="margin: 10px 0 0 0; font-size: 16px;">Project Resolve AI</p>
           </div>
           
           <div style="padding: 30px; background: #f8f9fa;">
             <h2 style="color: #D32F2F; margin-top: 0;">Thank you for your application, ${fullName}</h2>
             
-            <p>We appreciate your interest in TradeGuard AI. After careful review of your case details, we regret to inform you that we cannot proceed with your application at this time.</p>
+            <p>We appreciate your interest in Project Resolve AI. After careful review of your case details, we regret to inform you that we cannot proceed with your application at this time.</p>
             
             <div style="background: #FFEBEE; padding: 20px; border-radius: 8px; border-left: 4px solid #F44336; margin: 20px 0;">
               <h3 style="color: #D32F2F; margin-top: 0;">Reason:</h3>
