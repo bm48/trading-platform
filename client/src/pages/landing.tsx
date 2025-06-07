@@ -378,7 +378,14 @@ export default function Landing() {
           <div className="text-center mt-12">
             <Button 
               className="btn-primary px-8 py-3 text-lg"
-              onClick={() => scrollToElement('application')}
+              onClick={() => {
+                if (!isAuthenticated) {
+                  setShowLoginModal(true);
+                  setIsSignUpMode(false);
+                } else {
+                  scrollToElement('application');
+                }
+              }}
             >
               Get Your Game Plan Now
             </Button>
@@ -386,8 +393,8 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Application Form */}
-      <ApplicationForm />
+      {/* Application Form - Only show for authenticated users */}
+      {isAuthenticated && <ApplicationForm />}
 
       {/* How It Works */}
       <section id="how-it-works" className="py-20 bg-gray-50">
@@ -589,7 +596,14 @@ export default function Landing() {
           <Button 
             size="lg" 
             className="btn-accent text-lg px-8 py-4"
-            onClick={() => scrollToElement('application')}
+            onClick={() => {
+              if (!isAuthenticated) {
+                setShowLoginModal(true);
+                setIsSignUpMode(false);
+              } else {
+                scrollToElement('application');
+              }
+            }}
           >
             Apply for Help Now
             <ChevronRight className="h-5 w-5 ml-2" />
