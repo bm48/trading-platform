@@ -393,8 +393,8 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Application Form - Only show for authenticated users */}
-      {isAuthenticated && <ApplicationForm />}
+      {/* Application Form */}
+      <ApplicationForm />
 
       {/* How It Works */}
       <section id="how-it-works" className="py-20 bg-gray-50">
