@@ -70,7 +70,7 @@ export default function Landing() {
             <div className="flex items-center">
               <div className="flex-shrink-0 flex items-center">
                 <Plus className="h-8 w-8 text-primary mr-3" />
-                <span className="text-xl font-bold text-neutral-dark">Project Resolve AI</span>
+                <span className="text-xl font-bold text-neutral-dark">Resolve AI</span>
               </div>
             </div>
             <div className="flex items-center space-x-4">

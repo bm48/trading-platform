@@ -409,7 +409,11 @@ export default function ComprehensiveCaseForm({ onClose, onSuccess }: Comprehens
                   <FormItem>
                     <FormLabel>Approximate Start Date *</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <Input 
+                        type="date" 
+                        className="[&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                        {...field} 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -423,7 +427,11 @@ export default function ComprehensiveCaseForm({ onClose, onSuccess }: Comprehens
                   <FormItem>
                     <FormLabel>Completion Date (if finished)</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <Input 
+                        type="date" 
+                        className="[&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                        {...field} 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
