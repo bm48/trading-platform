@@ -484,7 +484,14 @@ export default function Landing() {
 
                 <Button 
                   className="w-full btn-primary"
-                  onClick={() => scrollToElement('application')}
+                  onClick={() => {
+                    if (!isAuthenticated) {
+                      setShowLoginModal(true);
+                      setIsSignUpMode(false);
+                    } else {
+                      scrollToElement('application');
+                    }
+                  }}
                 >
                   Start Here - Apply Now
                 </Button>

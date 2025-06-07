@@ -260,7 +260,12 @@ export default function CaseForm({ onClose, onSuccess }: CaseFormProps) {
                           <Input 
                             type="date"
                             className="border-green-200 focus:border-green-400 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
-                            {...field} 
+                            {...field}
+                            readOnly
+                            onClick={(e) => {
+                              const input = e.target as HTMLInputElement;
+                              input.showPicker?.();
+                            }}
                           />
                         </FormControl>
                         <FormMessage />
