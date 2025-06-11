@@ -641,9 +641,7 @@ export default function Settings() {
               <Button 
                 variant="outline" 
                 onClick={() => {
-                  localStorage.clear();
-                  sessionStorage.clear();
-                  window.location.href = '/api/logout';
+                  import('@/lib/authUtils').then(({ logout }) => logout());
                 }}
               >
                 Sign Out

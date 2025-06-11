@@ -78,11 +78,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               <Button
                 variant="ghost"
                 onClick={() => {
-                  // Clear any cached data
-                  localStorage.clear();
-                  sessionStorage.clear();
-                  // Redirect to logout endpoint
-                  window.location.href = '/api/logout';
+                  import('@/lib/authUtils').then(({ logout }) => logout());
                 }}
                 className="text-neutral-medium hover:text-neutral-dark"
               >
