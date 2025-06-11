@@ -79,7 +79,7 @@ export default function Landing() {
                 <div className="flex items-center space-x-3">
                   <Avatar 
                     className="h-8 w-8 cursor-pointer hover:ring-2 hover:ring-primary transition-all"
-                    onClick={() => window.location.href = '/profile'}
+                    onClick={() => window.location.href = '/dashboard'}
                   >
                     <AvatarFallback className="bg-primary text-white text-sm">
                       {getUserInitials()}

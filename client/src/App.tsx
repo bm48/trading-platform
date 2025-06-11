@@ -25,7 +25,6 @@ function Router() {
       <Route path="/case/:id" component={CaseDetail} />
       <Route path="/checkout" component={Checkout} />
       <Route path="/settings" component={Settings} />
-      <Route path="/profile" component={Profile} />
       <Route path="/terms-of-service" component={TermsOfService} />
       <Route path="/application/:id/complete" component={Checkout} />
       <Route component={NotFound} />

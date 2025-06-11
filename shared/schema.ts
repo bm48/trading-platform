@@ -129,6 +129,22 @@ export const contracts = pgTable("contracts", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// File storage table for Supabase integration
+export const fileStorage = pgTable("file_storage", {
+  id: varchar("id").primaryKey(),
+  name: varchar("name").notNull(),
+  path: varchar("path").notNull(),
+  size: integer("size").notNull(),
+  mimeType: varchar("mime_type").notNull(),
+  url: text("url").notNull(),
+  bucket: varchar("bucket").notNull(),
+  uploadedBy: varchar("uploaded_by").notNull(),
+  uploadedAt: timestamp("uploaded_at").defaultNow(),
+  caseId: integer("case_id").references(() => cases.id),
+  contractId: integer("contract_id").references(() => contracts.id),
+  category: varchar("category").notNull(), // 'pdf', 'contract', 'photo', 'document', 'timeline'
+});
+
 // Schema validation
 export const insertApplicationSchema = createInsertSchema(applications).omit({
   id: true,
@@ -162,6 +178,10 @@ export const insertContractSchema = createInsertSchema(contracts).omit({
   updatedAt: true,
 });
 
+export const insertFileStorageSchema = createInsertSchema(fileStorage).omit({
+  uploadedAt: true,
+});
+
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -175,3 +195,5 @@ export type InsertTimelineEvent = z.infer<typeof insertTimelineEventSchema>;
 export type TimelineEvent = typeof timelineEvents.$inferSelect;
 export type InsertContract = z.infer<typeof insertContractSchema>;
 export type Contract = typeof contracts.$inferSelect;
+export type InsertFileStorage = z.infer<typeof insertFileStorageSchema>;
+export type FileStorage = typeof fileStorage.$inferSelect;
