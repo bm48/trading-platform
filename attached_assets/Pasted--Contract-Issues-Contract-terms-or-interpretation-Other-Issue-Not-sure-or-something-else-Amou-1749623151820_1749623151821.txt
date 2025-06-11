@@ -1,0 +1,82 @@
+
+Contract Issues
+Contract terms or interpretation
+
+Other Issue
+Not sure or something else
+Amount Involved (if applicable)
+0.00
+When did this start?
+dd-mm-jjjj
+Describe Your Situation *
+Tell us what happened, who's involved, and what you've tried so far...
+What happens next?
+• You'll receive an instant confirmation email
+• Case approval notification within 2 hours
+• Complete your detailed application and payment ($299)
+• Receive your custom strategy pack in 24-48 hours
+Submit Application - Free Assessment
+No payment required at this stage. You'll only pay after case approval and when proceeding to the detailed application.
+
+Simple. Fast. Legally backed.
+1
+Apply for help
+Briefly describe your issue. We'll assess if we can help.
+
+2
+Get your custom plan
+Pay $299 to receive your full case PDF, documents, next steps, and portal login.
+
+3
+Start resolving your issue
+Use the step-by-step timeline, contract templates, and guidance to take action and move on.
+
+4
+Stay protected with ongoing support
+Subscribe for just $49/month to access unlimited case creation, contract generation, document storage, deadline tracking, and expert support — so you're always ready, no matter what comes up.
+
+"Feels like having a lawyer in your pocket — without the cost."
+
+Straightforward pricing. No surprises.
+$299 one-time
+Case Plan, PDF, Letters + Portal Access
+
+AI-powered case analysis
+Custom strategy plan with documents
+Step-by-step action timeline
+Portal access for 12 months
+Document storage & management
+Start Here - Apply Now
+After Initial Payment
+$49/month
+Unlimited case files, contracts, storage & support
+
+Requires $299 initial sign-up fee first
+Everything in Strategy Pack, plus:
+Monthly strategy reviews
+New document generation
+Email support (48hr response)
+Additional case support
+Contract generation tools
+Upgrade After Initial Payment
+Bonus: First 20 users receive a private access code to unlock exclusive support.
+
+Ready to take control? Apply now.
+No lawyer required
+No legal jargon
+No more being ignored or underpaid
+Apply for Help Now
+Project Resolve AI
+AI-powered legal support platform designed specifically for Australian tradespeople. Get paid what you're owed without the legal fees.
+
+Platform
+How It Works
+Pricing
+Login
+Legal
+Privacy Policy
+Terms of Service
+Disclaimer
+© 2024 Project Resolve AI. This platform provides information services, not legal advice. Always consult with qualified legal professionals for complex matters.
+
+[plugin:runtime-error-plugin] Failed to execute 'showPicker' on 'HTMLInputElement': showPicker() called from cross-origin iframe.

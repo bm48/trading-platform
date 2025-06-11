@@ -280,11 +280,6 @@ export default function ApplicationForm() {
                       value={formData.startDate}
                       onChange={(e) => updateFormData('startDate', e.target.value)}
                       className="[&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
-                      readOnly
-                      onClick={(e) => {
-                        const input = e.target as HTMLInputElement;
-                        input.showPicker?.();
-                      }}
                     />
                   </div>
                 </div>
