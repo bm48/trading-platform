@@ -20,22 +20,15 @@ export default function Landing() {
 
   const handleLogout = async () => {
     try {
-      const { error } = await authHelpers.signOut();
-      if (error) throw error;
-      
-      // Clear all cached queries
-      queryClient.clear();
-      
-      toast({
-        title: "Logged out successfully",
-        description: "You have been logged out",
-      });
+      const { logout } = await import('@/lib/authUtils');
+      await logout();
     } catch (error: any) {
-      toast({
-        title: "Logout failed",
-        description: error.message || "Please try again",
-        variant: "destructive",
-      });
+      console.error('Logout error:', error);
+      // Fallback logout
+      queryClient.clear();
+      localStorage.clear();
+      sessionStorage.clear();
+      window.location.href = '/';
     }
   };
 
