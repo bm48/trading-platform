@@ -13,6 +13,7 @@ import Checkout from "@/pages/checkout";
 import Settings from "@/pages/settings";
 import Profile from "@/pages/profile";
 import TermsOfService from "@/pages/terms-of-service";
+import FileUploadDemo from "@/pages/file-upload-demo";
 import NotFound from "@/pages/not-found";
 
 function Router() {

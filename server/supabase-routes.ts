@@ -265,19 +265,19 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
       const userId = req.user!.id;
 
       // Determine bucket based on category
-      let bucket = STORAGE_BUCKETS.DOCUMENTS;
+      let bucket = 'documents';
       switch (category) {
         case 'pdf':
-          bucket = STORAGE_BUCKETS.CASE_FILES;
+          bucket = 'case-files';
           break;
         case 'contract':
-          bucket = STORAGE_BUCKETS.CONTRACTS;
+          bucket = 'contracts';
           break;
         case 'photo':
-          bucket = STORAGE_BUCKETS.PHOTOS;
+          bucket = 'photos';
           break;
         case 'timeline':
-          bucket = STORAGE_BUCKETS.TIMELINES;
+          bucket = 'timelines';
           break;
       }
 
