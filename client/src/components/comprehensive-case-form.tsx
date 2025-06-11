@@ -411,7 +411,7 @@ export default function ComprehensiveCaseForm({ onClose, onSuccess }: Comprehens
                     <FormControl>
                       <Input 
                         type="date" 
-                        className="[&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                        className="[&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:ml-auto"
                         {...field}
                       />
                     </FormControl>
@@ -429,7 +429,7 @@ export default function ComprehensiveCaseForm({ onClose, onSuccess }: Comprehens
                     <FormControl>
                       <Input 
                         type="date" 
-                        className="[&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                        className="[&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:ml-auto"
                         {...field}
                       />
                     </FormControl>

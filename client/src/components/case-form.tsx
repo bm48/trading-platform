@@ -259,7 +259,7 @@ export default function CaseForm({ onClose, onSuccess }: CaseFormProps) {
                         <FormControl>
                           <Input 
                             type="date"
-                            className="border-green-200 focus:border-green-400 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                            className="border-green-200 focus:border-green-400 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:ml-auto"
                             {...field}
                           />
                         </FormControl>
