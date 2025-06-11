@@ -132,7 +132,18 @@ export default function LoginModal({ isOpen, onClose, initialMode = 'login' }: L
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        // Check if it's a provider not enabled error
+        if (error.message?.includes('provider is not enabled') || error.message?.includes('Unsupported provider')) {
+          toast({
+            title: "Google Sign In Not Available",
+            description: "Google authentication needs to be configured in Supabase. Please use email signup for now.",
+            variant: "destructive",
+          });
+          return;
+        }
+        throw error;
+      }
 
       toast({
         title: "Redirecting",
