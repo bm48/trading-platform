@@ -75,6 +75,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             </div>
             
             <div className="flex items-center space-x-4">
+              <Link href="/dashboard">
+                <Avatar className="h-8 w-8 cursor-pointer hover:ring-2 hover:ring-primary transition-all">
+                  <AvatarImage src={user?.profileImageUrl} alt={getUserInitials()} />
+                  <AvatarFallback className="bg-primary text-white text-sm font-medium">
+                    {getUserInitials()}
+                  </AvatarFallback>
+                </Avatar>
+              </Link>
               <Button
                 variant="ghost"
                 onClick={() => {
