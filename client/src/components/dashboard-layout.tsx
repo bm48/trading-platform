@@ -77,7 +77,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             <div className="flex items-center space-x-4">
               <Button
                 variant="ghost"
-                onClick={() => window.location.href = '/api/logout'}
+                onClick={() => {
+                  // Clear any cached data
+                  localStorage.clear();
+                  sessionStorage.clear();
+                  // Redirect to logout endpoint
+                  window.location.href = '/api/logout';
+                }}
                 className="text-neutral-medium hover:text-neutral-dark"
               >
                 <LogOut className="h-4 w-4 mr-2" />

@@ -638,8 +638,15 @@ export default function Settings() {
                   Sign out of your account on this device
                 </p>
               </div>
-              <Button variant="outline" asChild>
-                <a href="/api/auth/logout">Sign Out</a>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  localStorage.clear();
+                  sessionStorage.clear();
+                  window.location.href = '/api/logout';
+                }}
+              >
+                Sign Out
               </Button>
             </div>
           </CardContent>
