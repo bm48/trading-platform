@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { supabaseAdmin, userManagement, database } from "./supabase";
+import { Request, Response, NextFunction } from "express";
 import { insertApplicationSchema, insertCaseSchema } from "@shared/schema";
 import { analyzeCase, generateStrategyPack } from "./openai";
 import { sendWelcomeEmail, sendApprovalEmail, sendRejectionEmail } from "./email";
@@ -35,8 +35,8 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Auth middleware
-  await setupAuth(app);
+  // Import auth middleware
+  const { authenticateToken, requireAdmin, requireModerator, optionalAuth } = require('./auth-middleware');
 
   // Simple authentication routes for testing
   app.post('/api/auth/login', async (req, res) => {
