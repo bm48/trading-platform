@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { supabaseAdmin, userManagement, database } from "./supabase";
-import { Request, Response, NextFunction } from "express";
+import { setupAuth, isAuthenticated } from "./replitAuth";
+import { storage } from "./storage";
 import { insertApplicationSchema, insertCaseSchema } from "@shared/schema";
 import { analyzeCase, generateStrategyPack } from "./openai";
 import { sendWelcomeEmail, sendApprovalEmail, sendRejectionEmail } from "./email";
@@ -10,7 +10,6 @@ import { checkSubscriptionStatus, consumeStrategyPack, grantStrategyPack } from 
 import Stripe from "stripe";
 import multer from "multer";
 import path from "path";
-import { promises as fs } from "fs";
 
 // Stripe is optional for development
 const STRIPE_ENABLED = !!process.env.STRIPE_SECRET_KEY;
@@ -35,8 +34,8 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Import auth middleware
-  const { authenticateToken, requireAdmin, requireModerator, optionalAuth } = require('./auth-middleware');
+  // Set up Replit authentication
+  await setupAuth(app);
 
   // Simple authentication routes for testing
   app.post('/api/auth/login', async (req, res) => {
