@@ -7,9 +7,9 @@ import ApplicationForm from '@/components/application-form';
 import LoginModal from '@/components/login-modal';
 import { scrollToElement } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
+import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
+import { authHelpers } from '@/lib/supabase';
 
 export default function Landing() {
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -18,33 +18,28 @@ export default function Landing() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const logoutMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest("POST", "/api/auth/logout", {});
-      return response.json();
-    },
-    onSuccess: () => {
+  const handleLogout = async () => {
+    try {
+      const { error } = await authHelpers.signOut();
+      if (error) throw error;
+      
       // Clear all cached queries
       queryClient.clear();
-      // Force page reload to ensure clean state
-      window.location.href = '/';
+      
       toast({
-        title: "Logged Out",
-        description: "You have been successfully logged out",
+        title: "Logged out successfully",
+        description: "You have been logged out",
       });
-    },
-    onError: (error: any) => {
+    } catch (error: any) {
       toast({
-        title: "Logout Failed",
+        title: "Logout failed",
         description: error.message || "Please try again",
         variant: "destructive",
       });
-    },
-  });
-
-  const handleLogout = () => {
-    logoutMutation.mutate();
+    }
   };
+
+
 
   const getUserInitials = () => {
     if (!user || typeof user !== 'object' || !('email' in user) || !user.email || typeof user.email !== 'string') return 'U';
@@ -93,11 +88,10 @@ export default function Landing() {
                   <Button 
                     variant="outline" 
                     onClick={handleLogout}
-                    disabled={logoutMutation.isPending}
                     className="flex items-center space-x-2"
                   >
                     <LogOut className="h-4 w-4" />
-                    <span>{logoutMutation.isPending ? 'Logging out...' : 'Logout'}</span>
+                    <span>Logout</span>
                   </Button>
                 </div>
               ) : (

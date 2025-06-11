@@ -115,9 +115,9 @@ export default function LoginModal({ isOpen, onClose, initialMode = 'login' }: L
             <Button
               type="submit"
               className="w-full"
-              disabled={loginMutation.isPending || signUpMutation.isPending}
+              disabled={isLoading}
             >
-              {loginMutation.isPending || signUpMutation.isPending
+              {isLoading
                 ? 'Please wait...'
                 : isSignUp
                 ? 'Create Account'
