@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Separator } from '@/components/ui/separator';
+import { CalendarPicker } from '@/components/ui/calendar-picker';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { FileText, X, AlertCircle, CheckCircle, User, Building, DollarSign, Scale, Target, AlertTriangle, Upload, FileIcon } from 'lucide-react';

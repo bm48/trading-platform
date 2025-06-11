@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { CalendarPicker } from '@/components/ui/calendar-picker';
 import { useToast } from '@/hooks/use-toast';
 import { useMutation } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
@@ -274,12 +275,10 @@ export default function ApplicationForm() {
                   </div>
                   <div>
                     <Label htmlFor="startDate">When did this start?</Label>
-                    <Input
-                      id="startDate"
-                      type="date"
+                    <CalendarPicker
                       value={formData.startDate}
-                      onChange={(e) => updateFormData('startDate', e.target.value)}
-                      className="[&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-2 [&::-webkit-calendar-picker-indicator]:top-1/2 [&::-webkit-calendar-picker-indicator]:-translate-y-1/2 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:w-5 [&::-webkit-calendar-picker-indicator]:h-5"
+                      onChange={(value) => updateFormData('startDate', value)}
+                      placeholder="Select start date"
                     />
                   </div>
                 </div>
