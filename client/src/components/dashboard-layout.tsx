@@ -96,12 +96,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               <CardContent className="p-6">
                 {/* User Profile */}
                 <div className="flex items-center mb-6">
-                  <Avatar className="h-10 w-10 mr-3">
-                    <AvatarImage src={user?.profileImageUrl} />
-                    <AvatarFallback className="bg-primary text-white">
-                      {getUserInitials()}
-                    </AvatarFallback>
-                  </Avatar>
+                  <Link href="/dashboard">
+                    <Avatar className="h-10 w-10 mr-3 cursor-pointer hover:ring-2 hover:ring-primary hover:ring-offset-2 transition-all">
+                      <AvatarImage src={user?.profileImageUrl} />
+                      <AvatarFallback className="bg-primary text-white">
+                        {getUserInitials()}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Link>
                   <div>
                     <div className="font-semibold text-neutral-dark">
                       {user?.firstName && user?.lastName 
