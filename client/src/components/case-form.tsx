@@ -258,10 +258,11 @@ export default function CaseForm({ onClose, onSuccess }: CaseFormProps) {
                       <FormItem>
                         <FormLabel className="text-green-700">Issue Start Date</FormLabel>
                         <FormControl>
-                          <Input 
-                            type="date"
-                            className="border-green-200 focus:border-green-400 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-2 [&::-webkit-calendar-picker-indicator]:top-1/2 [&::-webkit-calendar-picker-indicator]:-translate-y-1/2 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:w-5 [&::-webkit-calendar-picker-indicator]:h-5"
-                            {...field}
+                          <CalendarPicker
+                            value={field.value}
+                            onChange={field.onChange}
+                            placeholder="Select issue start date"
+                            className="border-green-200 focus:border-green-400"
                           />
                         </FormControl>
                         <FormMessage />

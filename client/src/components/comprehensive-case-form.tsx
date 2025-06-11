@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Separator } from '@/components/ui/separator';
+import { CalendarPicker } from '@/components/ui/calendar-picker';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { FileText, X, User, Building, DollarSign, Scale, Target, AlertTriangle, CheckCircle, Upload, FileIcon } from 'lucide-react';
@@ -409,10 +410,10 @@ export default function ComprehensiveCaseForm({ onClose, onSuccess }: Comprehens
                   <FormItem>
                     <FormLabel>Approximate Start Date *</FormLabel>
                     <FormControl>
-                      <Input 
-                        type="date" 
-                        className="[&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-2 [&::-webkit-calendar-picker-indicator]:top-1/2 [&::-webkit-calendar-picker-indicator]:-translate-y-1/2 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:w-5 [&::-webkit-calendar-picker-indicator]:h-5"
-                        {...field}
+                      <CalendarPicker
+                        value={field.value}
+                        onChange={field.onChange}
+                        placeholder="Select start date"
                       />
                     </FormControl>
                     <FormMessage />
@@ -427,10 +428,10 @@ export default function ComprehensiveCaseForm({ onClose, onSuccess }: Comprehens
                   <FormItem>
                     <FormLabel>Completion Date (if finished)</FormLabel>
                     <FormControl>
-                      <Input 
-                        type="date" 
-                        className="[&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-2 [&::-webkit-calendar-picker-indicator]:top-1/2 [&::-webkit-calendar-picker-indicator]:-translate-y-1/2 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:w-5 [&::-webkit-calendar-picker-indicator]:h-5"
-                        {...field}
+                      <CalendarPicker
+                        value={field.value}
+                        onChange={field.onChange}
+                        placeholder="Select completion date"
                       />
                     </FormControl>
                     <FormMessage />
