@@ -154,7 +154,7 @@ export default function FileUploadDemo() {
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <FileContract className="h-5 w-5 text-purple-500" />
+                      <FileType className="h-5 w-5 text-purple-500" />
                       Contract Documents
                     </CardTitle>
                   </CardHeader>
