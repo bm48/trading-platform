@@ -141,12 +141,10 @@ export async function setupAuth(app: Express) {
           secure: true
         });
         
-        console.log('Cookie cleared, redirecting to home');
+        console.log('Cookie cleared, sending success response');
         
-        // Add a small delay to ensure cleanup completes
-        setTimeout(() => {
-          res.redirect('/');
-        }, 100);
+        // Send JSON response instead of redirect to avoid 404
+        res.json({ success: true, message: "Logged out successfully" });
       });
     });
   });
