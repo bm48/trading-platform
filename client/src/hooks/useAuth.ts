@@ -29,11 +29,22 @@ export function useAuth() {
     return () => subscription.unsubscribe();
   }, [queryClient]);
 
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+      queryClient.clear();
+      console.log("Logout successful");
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
+  };
+
   return {
     user,
     isLoading,
     isAuthenticated: !!user,
     role: user?.user_metadata?.role || 'user',
     isAdmin: user?.user_metadata?.role === 'admin',
+    logout,
   };
 }

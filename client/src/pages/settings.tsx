@@ -27,7 +27,7 @@ import {
 } from 'lucide-react';
 
 export default function Settings() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -638,8 +638,8 @@ export default function Settings() {
                   Sign out of your account on this device
                 </p>
               </div>
-              <Button variant="outline" asChild>
-                <a href="/api/auth/logout">Sign Out</a>
+              <Button variant="outline" onClick={logout}>
+                Sign Out
               </Button>
             </div>
           </CardContent>

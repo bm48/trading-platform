@@ -20,7 +20,7 @@ interface DashboardLayoutProps {
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [location] = useLocation();
 
   const urlParams = new URLSearchParams(window.location.search);
@@ -77,7 +77,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             <div className="flex items-center space-x-4">
               <Button
                 variant="ghost"
-                onClick={() => window.location.href = '/api/logout'}
+                onClick={logout}
                 className="text-neutral-medium hover:text-neutral-dark"
               >
                 <LogOut className="h-4 w-4 mr-2" />
