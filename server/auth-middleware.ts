@@ -1,15 +1,18 @@
 import { Request, Response, NextFunction } from "express";
 import { supabaseAdmin } from "./supabase";
 
+// Define user interface for authentication
+interface AuthUser {
+  id: string;
+  email?: string;
+  role?: string;
+}
+
 // Extend Request interface to include user
 declare global {
   namespace Express {
     interface Request {
-      user?: {
-        id: string;
-        email?: string;
-        role?: string;
-      };
+      user?: AuthUser;
     }
   }
 }
