@@ -4,9 +4,8 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
 import { X } from 'lucide-react';
+import { authHelpers } from '@/lib/supabase';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -18,8 +17,8 @@ export default function LoginModal({ isOpen, onClose, initialMode = 'login' }: L
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSignUp, setIsSignUp] = useState(initialMode === 'signup');
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const queryClient = useQueryClient();
 
   // Reset form when modal opens with different mode
   useEffect(() => {
@@ -30,56 +29,44 @@ export default function LoginModal({ isOpen, onClose, initialMode = 'login' }: L
     }
   }, [isOpen, initialMode]);
 
-  const loginMutation = useMutation({
-    mutationFn: async (data: { email: string; password: string }) => {
-      const response = await apiRequest("POST", "/api/auth/login", data);
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      onClose();
-      toast({
-        title: "Login Successful",
-        description: "Welcome to TradeGuard AI!",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Login Failed",
-        description: error.message || "Please check your credentials",
-        variant: "destructive",
-      });
-    },
-  });
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
 
-  const signUpMutation = useMutation({
-    mutationFn: async (data: { email: string; password: string }) => {
-      const response = await apiRequest("POST", "/api/auth/signup", data);
-      return response.json();
-    },
-    onSuccess: () => {
+    try {
+      if (isSignUp) {
+        const { data, error } = await authHelpers.signUp(email, password, {
+          full_name: '',
+          role: 'user'
+        });
+
+        if (error) throw error;
+
+        toast({
+          title: "Account Created",
+          description: "Please check your email to verify your account",
+        });
+        setIsSignUp(false);
+        setPassword('');
+      } else {
+        const { data, error } = await authHelpers.signIn(email, password);
+
+        if (error) throw error;
+
+        toast({
+          title: "Login Successful",
+          description: "Welcome to Project Resolve AI!",
+        });
+        onClose();
+      }
+    } catch (error: any) {
       toast({
-        title: "Account Created",
-        description: "Please login with your new account",
-      });
-      setIsSignUp(false); // Switch to login form
-      setPassword(''); // Clear password for security
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Sign Up Failed",
+        title: isSignUp ? "Sign Up Failed" : "Login Failed",
         description: error.message || "Please try again",
         variant: "destructive",
       });
-    },
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (isSignUp) {
-      signUpMutation.mutate({ email, password });
-    } else {
-      loginMutation.mutate({ email, password });
+    } finally {
+      setIsLoading(false);
     }
   };
 
