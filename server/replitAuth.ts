@@ -131,13 +131,8 @@ export async function setupAuth(app: Express) {
         // Clear the session cookie
         res.clearCookie('connect.sid');
         
-        // Build the end session URL for Replit OIDC logout
-        const logoutUrl = client.buildEndSessionUrl(config, {
-          client_id: process.env.REPL_ID!,
-          post_logout_redirect_uri: `${req.protocol}://${req.hostname}`,
-        }).href;
-        
-        res.redirect(logoutUrl);
+        // Redirect to home page after successful logout
+        res.redirect('/');
       });
     });
   });
