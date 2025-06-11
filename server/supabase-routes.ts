@@ -5,9 +5,34 @@ import { authenticateToken, requireAdmin, requireModerator, optionalAuth } from 
 import { analyzeCase, generateStrategyPack } from "./openai";
 import { sendWelcomeEmail, sendApprovalEmail, sendRejectionEmail } from "./email";
 import { generateStrategyPackPDF, generateAIStrategyPackPDF } from "./pdf";
-import { storageService, upload, STORAGE_BUCKETS } from "./storage-service";
 import multer from 'multer';
 import path from 'path';
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf', 'text/plain'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type'));
+    }
+  },
+});
 
 export async function registerSupabaseRoutes(app: Express): Promise<Server> {
   // User profile routes
@@ -261,35 +286,30 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No file uploaded" });
       }
 
-      const { caseId, contractId, category = 'document' } = req.body;
-      const userId = req.user!.id;
+      const { case_id, document_type = 'upload' } = req.body;
 
-      // Determine bucket based on category
-      let bucket = 'documents';
-      switch (category) {
-        case 'pdf':
-          bucket = 'case-files';
-          break;
-        case 'contract':
-          bucket = 'contracts';
-          break;
-        case 'photo':
-          bucket = 'photos';
-          break;
-        case 'timeline':
-          bucket = 'timelines';
-          break;
-      }
+      const documentData = {
+        user_id: req.user!.id,
+        case_id: case_id ? parseInt(case_id) : null,
+        title: req.file.originalname,
+        file_path: req.file.path,
+        file_type: req.file.mimetype,
+        file_size: req.file.size,
+        document_type,
+        created_at: new Date().toISOString()
+      };
 
-      const result = await storageService.uploadFile(req.file, bucket, userId, {
-        caseId: caseId ? parseInt(caseId) : undefined,
-        contractId: contractId ? parseInt(contractId) : undefined,
-        category: category as any
-      });
+      const { data: document, error } = await supabaseAdmin
+        .from('documents')
+        .insert(documentData)
+        .select()
+        .single();
 
-      res.json({
+      if (error) throw error;
+
+      res.status(201).json({
         message: "File uploaded successfully",
-        file: result
+        document
       });
     } catch (error) {
       console.error("Error uploading file:", error);
@@ -297,147 +317,15 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Upload case PDF
-  app.post('/api/upload/case-pdf', authenticateToken, upload.single('file'), async (req: Request, res: Response) => {
-    try {
-      if (!req.file) {
-        return res.status(400).json({ message: "No file uploaded" });
-      }
-
-      const { caseId } = req.body;
-      if (!caseId) {
-        return res.status(400).json({ message: "Case ID is required" });
-      }
-
-      const result = await storageService.uploadCasePDF(req.file, req.user!.id, parseInt(caseId));
-
-      res.json({
-        message: "Case PDF uploaded successfully",
-        file: result
-      });
-    } catch (error) {
-      console.error("Error uploading case PDF:", error);
-      res.status(500).json({ message: "Failed to upload case PDF" });
-    }
-  });
-
-  // Upload contract version
-  app.post('/api/upload/contract', authenticateToken, upload.single('file'), async (req: Request, res: Response) => {
-    try {
-      if (!req.file) {
-        return res.status(400).json({ message: "No file uploaded" });
-      }
-
-      const { contractId } = req.body;
-      if (!contractId) {
-        return res.status(400).json({ message: "Contract ID is required" });
-      }
-
-      const result = await storageService.uploadContract(req.file, req.user!.id, parseInt(contractId));
-
-      res.json({
-        message: "Contract uploaded successfully",
-        file: result
-      });
-    } catch (error) {
-      console.error("Error uploading contract:", error);
-      res.status(500).json({ message: "Failed to upload contract" });
-    }
-  });
-
-  // Upload photo
-  app.post('/api/upload/photo', authenticateToken, upload.single('file'), async (req: Request, res: Response) => {
-    try {
-      if (!req.file) {
-        return res.status(400).json({ message: "No file uploaded" });
-      }
-
-      const { caseId } = req.body;
-      const result = await storageService.uploadPhoto(req.file, req.user!.id, caseId ? parseInt(caseId) : undefined);
-
-      res.json({
-        message: "Photo uploaded successfully",
-        file: result
-      });
-    } catch (error) {
-      console.error("Error uploading photo:", error);
-      res.status(500).json({ message: "Failed to upload photo" });
-    }
-  });
-
-  // Get files for a case
-  app.get('/api/files/case/:id', authenticateToken, async (req: Request, res: Response) => {
-    try {
-      const caseId = parseInt(req.params.id);
-      const files = await storageService.getCaseFiles(caseId);
-      res.json(files);
-    } catch (error) {
-      console.error("Error fetching case files:", error);
-      res.status(500).json({ message: "Failed to fetch case files" });
-    }
-  });
-
-  // Get files for a contract
-  app.get('/api/files/contract/:id', authenticateToken, async (req: Request, res: Response) => {
-    try {
-      const contractId = parseInt(req.params.id);
-      const files = await storageService.getContractFiles(contractId);
-      res.json(files);
-    } catch (error) {
-      console.error("Error fetching contract files:", error);
-      res.status(500).json({ message: "Failed to fetch contract files" });
-    }
-  });
-
-  // Get user files by category
-  app.get('/api/files/user', authenticateToken, async (req: Request, res: Response) => {
-    try {
-      const { category } = req.query;
-      const files = await storageService.getUserFiles(req.user!.id, category as any);
-      res.json(files);
-    } catch (error) {
-      console.error("Error fetching user files:", error);
-      res.status(500).json({ message: "Failed to fetch user files" });
-    }
-  });
-
-  // Delete a file
-  app.delete('/api/files/:id', authenticateToken, async (req: Request, res: Response) => {
-    try {
-      const fileId = req.params.id;
-      await storageService.deleteFile(fileId, req.user!.id);
-      res.json({ message: "File deleted successfully" });
-    } catch (error) {
-      console.error("Error deleting file:", error);
-      res.status(500).json({ message: "Failed to delete file" });
-    }
-  });
-
-  // Get signed URL for private files
-  app.get('/api/files/:id/download', authenticateToken, async (req: Request, res: Response) => {
-    try {
-      const fileId = req.params.id;
-      
-      // Get file metadata to check ownership and get path/bucket
-      const files = await storageService.getUserFiles(req.user!.id);
-      const file = files.find(f => f.id === fileId);
-      
-      if (!file) {
-        return res.status(404).json({ message: "File not found or access denied" });
-      }
-
-      const signedUrl = await storageService.getSignedUrl(file.path, file.bucket);
-      res.json({ url: signedUrl });
-    } catch (error) {
-      console.error("Error generating download URL:", error);
-      res.status(500).json({ message: "Failed to generate download URL" });
-    }
-  });
-
-  // Admin role management
+  // Role management routes
   app.get('/api/admin/roles', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
     try {
-      const roles = ['user', 'moderator', 'admin'];
+      const roles = [
+        { value: 'user', label: 'User', description: 'Standard user with basic access' },
+        { value: 'moderator', label: 'Moderator', description: 'Can review and approve applications' },
+        { value: 'admin', label: 'Administrator', description: 'Full system access and user management' }
+      ];
+      
       res.json(roles);
     } catch (error) {
       console.error("Error fetching roles:", error);

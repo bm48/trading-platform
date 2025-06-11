@@ -638,13 +638,8 @@ export default function Settings() {
                   Sign out of your account on this device
                 </p>
               </div>
-              <Button 
-                variant="outline" 
-                onClick={() => {
-                  import('@/lib/authUtils').then(({ logout }) => logout());
-                }}
-              >
-                Sign Out
+              <Button variant="outline" asChild>
+                <a href="/api/auth/logout">Sign Out</a>
               </Button>
             </div>
           </CardContent>

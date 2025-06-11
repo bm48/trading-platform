@@ -151,7 +151,7 @@ export default function Dashboard() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-neutral-dark">Welcome</h1>
+            <h1 className="text-3xl font-bold text-neutral-dark">Welcome back, {user?.firstName || 'Demo User'}</h1>
             <p className="text-neutral-medium">Manage your cases and track your progress</p>
             {!user && (
               <Button 

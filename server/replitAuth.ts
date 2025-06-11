@@ -116,36 +116,13 @@ export async function setupAuth(app: Express) {
   });
 
   app.get("/api/logout", (req, res) => {
-    console.log('Logout endpoint called');
-    
-    req.logout((err) => {
-      if (err) {
-        console.error('Logout error:', err);
-        return res.status(500).json({ message: "Logout failed" });
-      }
-      
-      console.log('User logged out successfully');
-      
-      // Destroy the session
-      req.session.destroy((err) => {
-        if (err) {
-          console.error('Session destruction error:', err);
-        }
-        
-        console.log('Session destroyed');
-        
-        // Clear the session cookie
-        res.clearCookie('connect.sid', {
-          path: '/',
-          httpOnly: true,
-          secure: true
-        });
-        
-        console.log('Cookie cleared, sending success response');
-        
-        // Send JSON response instead of redirect to avoid 404
-        res.json({ success: true, message: "Logged out successfully" });
-      });
+    req.logout(() => {
+      res.redirect(
+        client.buildEndSessionUrl(config, {
+          client_id: process.env.REPL_ID!,
+          post_logout_redirect_uri: `${req.protocol}://${req.hostname}`,
+        }).href
+      );
     });
   });
 }

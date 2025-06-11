@@ -20,15 +20,22 @@ export default function Landing() {
 
   const handleLogout = async () => {
     try {
-      const { logout } = await import('@/lib/authUtils');
-      await logout();
-    } catch (error: any) {
-      console.error('Logout error:', error);
-      // Fallback logout
+      const { error } = await authHelpers.signOut();
+      if (error) throw error;
+      
+      // Clear all cached queries
       queryClient.clear();
-      localStorage.clear();
-      sessionStorage.clear();
-      window.location.href = '/';
+      
+      toast({
+        title: "Logged out successfully",
+        description: "You have been logged out",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Logout failed",
+        description: error.message || "Please try again",
+        variant: "destructive",
+      });
     }
   };
 
@@ -72,7 +79,7 @@ export default function Landing() {
                 <div className="flex items-center space-x-3">
                   <Avatar 
                     className="h-8 w-8 cursor-pointer hover:ring-2 hover:ring-primary transition-all"
-                    onClick={() => window.location.href = '/dashboard'}
+                    onClick={() => window.location.href = '/profile'}
                   >
                     <AvatarFallback className="bg-primary text-white text-sm">
                       {getUserInitials()}

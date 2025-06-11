@@ -1,192 +1,181 @@
 import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
-import { Upload, FileText, Image, X, Download } from 'lucide-react';
-import { apiRequest } from '@/lib/queryClient';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
+import { Upload, X, FileText, AlertCircle, CheckCircle } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface FileUploadProps {
-  caseId?: number;
-  contractId?: number;
-  category?: 'pdf' | 'contract' | 'photo' | 'document' | 'timeline';
+  onUploadSuccess?: () => void;
   accept?: string;
-  maxSize?: number; // in MB
-  onUploadComplete?: (file: any) => void;
+  maxSize?: number;
+  multiple?: boolean;
+  additionalData?: Record<string, any>;
   className?: string;
 }
 
-interface UploadedFile {
+interface UploadFile {
+  file: File;
   id: string;
-  name: string;
-  size: number;
-  mimeType: string;
-  url: string;
-  uploadedAt: Date;
+  status: 'pending' | 'uploading' | 'success' | 'error';
+  progress: number;
+  error?: string;
 }
 
 export default function FileUpload({
-  caseId,
-  contractId,
-  category = 'document',
-  accept = '.pdf,.doc,.docx,.jpg,.jpeg,.png,.gif',
-  maxSize = 50,
-  onUploadComplete,
-  className = ''
+  onUploadSuccess,
+  accept = '.pdf,.doc,.docx,.jpg,.jpeg,.png',
+  maxSize = 10 * 1024 * 1024, // 10MB
+  multiple = true,
+  additionalData = {},
+  className,
 }: FileUploadProps) {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [files, setFiles] = useState<UploadFile[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
-  const queryClient = useQueryClient();
 
   const uploadMutation = useMutation({
-    mutationFn: async (file: File) => {
+    mutationFn: async ({ file, additionalData }: { file: File; additionalData: Record<string, any> }) => {
       const formData = new FormData();
       formData.append('file', file);
-      if (caseId) formData.append('caseId', caseId.toString());
-      if (contractId) formData.append('contractId', contractId.toString());
-      formData.append('category', category);
+      
+      // Add additional data to the form
+      Object.entries(additionalData).forEach(([key, value]) => {
+        formData.append(key, value.toString());
+      });
 
-      // Determine the upload endpoint based on category
-      let endpoint = '/api/upload';
-      switch (category) {
-        case 'pdf':
-          endpoint = '/api/upload/case-pdf';
-          break;
-        case 'contract':
-          endpoint = '/api/upload/contract';
-          break;
-        case 'photo':
-          endpoint = '/api/upload/photo';
-          break;
-      }
-
-      const response = await fetch(endpoint, {
+      const response = await fetch('/api/documents/upload', {
         method: 'POST',
         body: formData,
+        credentials: 'include',
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Upload failed');
+        const error = await response.text();
+        throw new Error(error || 'Upload failed');
       }
 
       return response.json();
     },
-    onSuccess: (data) => {
-      toast({
-        title: "Upload Successful",
-        description: `${selectedFile?.name} has been uploaded successfully.`,
-      });
-      
-      setSelectedFile(null);
-      setUploadProgress(0);
-      
-      // Invalidate relevant queries
-      if (caseId) {
-        queryClient.invalidateQueries({ queryKey: ['/api/files/case', caseId] });
-      }
-      if (contractId) {
-        queryClient.invalidateQueries({ queryKey: ['/api/files/contract', contractId] });
-      }
-      queryClient.invalidateQueries({ queryKey: ['/api/files/user'] });
-
-      onUploadComplete?.(data.file);
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Upload Failed",
-        description: error.message,
-        variant: "destructive",
-      });
-      setUploadProgress(0);
-    },
   });
 
-  const handleFileSelect = (file: File) => {
-    // Validate file size
-    if (file.size > maxSize * 1024 * 1024) {
-      toast({
-        title: "File Too Large",
-        description: `File size must be less than ${maxSize}MB`,
-        variant: "destructive",
-      });
-      return;
+  const validateFile = (file: File): string | null => {
+    // Check file size
+    if (file.size > maxSize) {
+      return `File size must be less than ${Math.round(maxSize / (1024 * 1024))}MB`;
     }
 
-    // Validate file type
+    // Check file type
     const allowedTypes = accept.split(',').map(type => type.trim());
     const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
-    const isValidType = allowedTypes.some(type => 
-      type === fileExtension || file.type.startsWith(type.replace('.*', ''))
-    );
-
-    if (!isValidType) {
-      toast({
-        title: "Invalid File Type",
-        description: `Please select a file with one of these extensions: ${accept}`,
-        variant: "destructive",
-      });
-      return;
+    
+    if (!allowedTypes.includes(fileExtension)) {
+      return `File type not allowed. Accepted types: ${accept}`;
     }
 
-    setSelectedFile(file);
+    return null;
+  };
+
+  const handleFiles = (fileList: FileList) => {
+    const newFiles: UploadFile[] = [];
+    
+    Array.from(fileList).forEach((file) => {
+      const error = validateFile(file);
+      const uploadFile: UploadFile = {
+        file,
+        id: `${Date.now()}-${Math.random()}`,
+        status: error ? 'error' : 'pending',
+        progress: 0,
+        error,
+      };
+      newFiles.push(uploadFile);
+    });
+
+    if (!multiple) {
+      setFiles(newFiles.slice(0, 1));
+    } else {
+      setFiles(prev => [...prev, ...newFiles]);
+    }
+
+    // Auto-upload valid files
+    newFiles.forEach((uploadFile) => {
+      if (uploadFile.status === 'pending') {
+        uploadFile.status = 'uploading';
+        setFiles(prev => prev.map(f => f.id === uploadFile.id ? uploadFile : f));
+        
+        uploadMutation.mutate(
+          { file: uploadFile.file, additionalData },
+          {
+            onSuccess: () => {
+              setFiles(prev => prev.map(f => 
+                f.id === uploadFile.id 
+                  ? { ...f, status: 'success', progress: 100 }
+                  : f
+              ));
+              onUploadSuccess?.();
+              toast({
+                title: "Upload Successful",
+                description: `${uploadFile.file.name} has been uploaded.`,
+              });
+            },
+            onError: (error: any) => {
+              setFiles(prev => prev.map(f => 
+                f.id === uploadFile.id 
+                  ? { ...f, status: 'error', error: error.message }
+                  : f
+              ));
+              toast({
+                title: "Upload Failed",
+                description: error.message,
+                variant: "destructive",
+              });
+            },
+          }
+        );
+      }
+    });
   };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
-    setIsDragging(false);
+    setIsDragOver(false);
     
-    const files = Array.from(e.dataTransfer.files);
-    if (files.length > 0) {
-      handleFileSelect(files[0]);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleFiles(e.dataTransfer.files);
     }
   };
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
-    setIsDragging(true);
+    setIsDragOver(true);
   };
 
-  const handleDragLeave = () => {
-    setIsDragging(false);
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
   };
 
-  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      handleFileSelect(file);
+  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      handleFiles(e.target.files);
     }
   };
 
-  const triggerFileSelect = () => {
-    fileInputRef.current?.click();
+  const removeFile = (fileId: string) => {
+    setFiles(prev => prev.filter(f => f.id !== fileId));
   };
 
-  const handleUpload = () => {
-    if (selectedFile) {
-      uploadMutation.mutate(selectedFile);
-    }
+  const clearAll = () => {
+    setFiles([]);
   };
 
-  const clearFile = () => {
-    setSelectedFile(null);
-    setUploadProgress(0);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
-  const getFileIcon = (file: File) => {
-    if (file.type.startsWith('image/')) {
-      return <Image className="h-6 w-6 text-blue-500" />;
-    }
-    return <FileText className="h-6 w-6 text-gray-500" />;
+  const getFileIcon = (fileName: string) => {
+    const extension = fileName.split('.').pop()?.toLowerCase();
+    if (['pdf'].includes(extension || '')) return 'fas fa-file-pdf text-red-500';
+    if (['doc', 'docx'].includes(extension || '')) return 'fas fa-file-word text-blue-500';
+    if (['jpg', 'jpeg', 'png'].includes(extension || '')) return 'fas fa-file-image text-green-500';
+    return 'fas fa-file-alt text-gray-500';
   };
 
   const formatFileSize = (bytes: number) => {
@@ -198,175 +187,129 @@ export default function FileUpload({
   };
 
   return (
-    <Card className={className}>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Upload className="h-5 w-5" />
-          Upload {category === 'pdf' ? 'PDF Document' : 
-                 category === 'photo' ? 'Photo' : 
-                 category === 'contract' ? 'Contract' : 'File'}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {!selectedFile ? (
-          <div
-            className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-              isDragging 
-                ? 'border-primary bg-primary/5' 
-                : 'border-gray-300 hover:border-gray-400'
-            }`}
-            onDrop={handleDrop}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onClick={triggerFileSelect}
-          >
-            <Upload className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-            <p className="text-lg font-medium mb-2">
-              Drop your file here or click to browse
-            </p>
-            <p className="text-sm text-gray-500 mb-4">
-              Supported formats: {accept}
-            </p>
-            <p className="text-xs text-gray-400">
-              Maximum file size: {maxSize}MB
-            </p>
-            <Input
-              ref={fileInputRef}
-              type="file"
-              accept={accept}
-              onChange={handleFileInputChange}
-              className="hidden"
-            />
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 border rounded-lg">
-              <div className="flex items-center gap-3">
-                {getFileIcon(selectedFile)}
-                <div>
-                  <p className="font-medium">{selectedFile.name}</p>
-                  <p className="text-sm text-gray-500">
-                    {formatFileSize(selectedFile.size)}
-                  </p>
-                </div>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={clearFile}
-                disabled={uploadMutation.isPending}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-
-            {uploadMutation.isPending && (
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Uploading...</span>
-                  <span>{uploadProgress}%</span>
-                </div>
-                <Progress value={uploadProgress} className="w-full" />
-              </div>
-            )}
-
-            <div className="flex gap-2">
-              <Button 
-                onClick={handleUpload}
-                disabled={uploadMutation.isPending}
-                className="flex-1"
-              >
-                {uploadMutation.isPending ? 'Uploading...' : 'Upload File'}
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={clearFile}
-                disabled={uploadMutation.isPending}
-              >
-                Cancel
-              </Button>
-            </div>
-          </div>
+    <div className={cn('space-y-4', className)}>
+      {/* Drop Zone */}
+      <div
+        className={cn(
+          'border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer',
+          isDragOver 
+            ? 'border-primary bg-primary/5' 
+            : 'border-gray-300 hover:border-primary hover:bg-gray-50'
         )}
-      </CardContent>
-    </Card>
-  );
-}
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onClick={() => fileInputRef.current?.click()}
+      >
+        <Upload className={cn(
+          'h-12 w-12 mx-auto mb-4 transition-colors',
+          isDragOver ? 'text-primary' : 'text-neutral-medium'
+        )} />
+        <p className="text-lg font-medium text-neutral-dark mb-2">
+          Drop files here or click to upload
+        </p>
+        <p className="text-sm text-neutral-medium mb-4">
+          {accept.split(',').join(', ')} up to {Math.round(maxSize / (1024 * 1024))}MB
+        </p>
+        <Button variant="outline" size="sm" type="button">
+          Choose Files
+        </Button>
+      </div>
 
-// File List Component for displaying uploaded files
-interface FileListProps {
-  caseId?: number;
-  contractId?: number;
-  category?: string;
-  className?: string;
-}
+      {/* Hidden File Input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept={accept}
+        multiple={multiple}
+        onChange={handleFileInput}
+        className="hidden"
+      />
 
-export function FileList({ caseId, contractId, category, className = '' }: FileListProps) {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
+      {/* File List */}
+      {files.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h4 className="font-medium text-neutral-dark">
+              {files.length} file{files.length !== 1 ? 's' : ''} selected
+            </h4>
+            {files.length > 1 && (
+              <Button variant="ghost" size="sm" onClick={clearAll}>
+                Clear All
+              </Button>
+            )}
+          </div>
 
-  // Determine the query endpoint
-  let queryKey: string[];
-  if (caseId) {
-    queryKey = ['/api/files/case', caseId.toString()];
-  } else if (contractId) {
-    queryKey = ['/api/files/contract', contractId.toString()];
-  } else {
-    queryKey = ['/api/files/user', category].filter(Boolean);
-  }
+          <div className="space-y-2 max-h-64 overflow-y-auto">
+            {files.map((uploadFile) => (
+              <div
+                key={uploadFile.id}
+                className="flex items-center p-3 border border-gray-200 rounded-lg bg-white"
+              >
+                <i className={`${getFileIcon(uploadFile.file.name)} text-lg mr-3`} />
+                
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="text-sm font-medium text-neutral-dark truncate">
+                      {uploadFile.file.name}
+                    </p>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeFile(uploadFile.id)}
+                      className="h-6 w-6 p-0"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-neutral-medium">
+                      {formatFileSize(uploadFile.file.size)}
+                    </span>
+                    
+                    <div className="flex items-center">
+                      {uploadFile.status === 'uploading' && (
+                        <div className="flex items-center text-xs text-primary">
+                          <div className="animate-spin w-3 h-3 border border-primary border-t-transparent rounded-full mr-1" />
+                          Uploading...
+                        </div>
+                      )}
+                      
+                      {uploadFile.status === 'success' && (
+                        <div className="flex items-center text-xs text-success">
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          Uploaded
+                        </div>
+                      )}
+                      
+                      {uploadFile.status === 'error' && (
+                        <div className="flex items-center text-xs text-error">
+                          <AlertCircle className="h-3 w-3 mr-1" />
+                          Failed
+                        </div>
+                      )}
+                    </div>
+                  </div>
 
-  const deleteMutation = useMutation({
-    mutationFn: async (fileId: string) => {
-      await apiRequest('DELETE', `/api/files/${fileId}`);
-    },
-    onSuccess: () => {
-      toast({
-        title: "File Deleted",
-        description: "The file has been deleted successfully.",
-      });
-      queryClient.invalidateQueries({ queryKey });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Delete Failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
+                  {uploadFile.error && (
+                    <p className="text-xs text-error mt-1">{uploadFile.error}</p>
+                  )}
 
-  const downloadFile = async (fileId: string, fileName: string) => {
-    try {
-      const response = await apiRequest('GET', `/api/files/${fileId}/download`);
-      const data = await response.json();
-      
-      // Create a temporary link and trigger download
-      const link = document.createElement('a');
-      link.href = data.url;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch (error) {
-      toast({
-        title: "Download Failed",
-        description: "Failed to download the file.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  return (
-    <Card className={className}>
-      <CardHeader>
-        <CardTitle>Uploaded Files</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="text-center text-gray-500 py-8">
-          <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-          <p>File list functionality will be implemented once authentication is working properly</p>
+                  {uploadFile.status === 'uploading' && (
+                    <div className="w-full bg-gray-200 rounded-full h-1 mt-2">
+                      <div 
+                        className="bg-primary h-1 rounded-full transition-all duration-300"
+                        style={{ width: `${uploadFile.progress}%` }}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-      </CardContent>
-    </Card>
+      )}
+    </div>
   );
 }
