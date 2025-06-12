@@ -33,20 +33,51 @@ export function useAuth() {
 
   const logout = async () => {
     try {
+      console.log("Starting logout process...");
+      
+      // Sign out from Supabase
       const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase logout error:", error);
+        throw error;
+      }
       
       // Clear all cached queries
       queryClient.clear();
       
-      // Force redirect to landing page
-      window.location.href = '/';
+      // Clear local user state
+      setUser(null);
       
-      console.log("Logout successful");
+      // Show success message
+      toast({
+        title: "Logged out successfully",
+        description: "You have been signed out of your account.",
+      });
+      
+      console.log("Logout successful, redirecting...");
+      
+      // Small delay before redirect to allow toast to show
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 1000);
+      
     } catch (error) {
-      console.error("Error logging out:", error);
-      // Still redirect even if there's an error
-      window.location.href = '/';
+      console.error("Error during logout:", error);
+      
+      // Show error message
+      toast({
+        title: "Logout error",
+        description: "There was an issue logging out. Redirecting anyway...",
+        variant: "destructive",
+      });
+      
+      // Clear local state and redirect even if there's an error
+      setUser(null);
+      queryClient.clear();
+      
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 1500);
     }
   };
 
