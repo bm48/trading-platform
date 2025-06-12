@@ -1,13 +1,13 @@
 import type { Express } from "express";
 import { storage } from "./storage";
 import { insertCaseSchema } from "@shared/schema";
-import { authenticateToken } from "./auth-middleware";
+import { isAuthenticated } from "./replitAuth";
 
 export function registerCaseRoutes(app: Express) {
   // Create a new case
-  app.post("/api/cases", authenticateToken, async (req, res) => {
+  app.post("/api/cases", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.id;
+      const userId = req.user?.claims?.sub;
       if (!userId) {
         return res.status(401).json({ message: "User ID required" });
       }
