@@ -70,11 +70,12 @@ export const cases = pgTable("cases", {
   caseNumber: varchar("case_number").unique().notNull(),
   status: varchar("status").default("active"), // active, resolved, on_hold
   issueType: varchar("issue_type").notNull(),
-  amount: decimal("amount"),
+  amount: varchar("amount"),
   description: text("description"),
+  priority: varchar("priority").default("medium"),
   aiAnalysis: jsonb("ai_analysis"),
   strategyPack: jsonb("strategy_pack"),
-  nextAction: text("next_action"),
+  nextAction: varchar("next_action"),
   nextActionDue: timestamp("next_action_due"),
   progress: integer("progress").default(0), // 0-100
   createdAt: timestamp("created_at").defaultNow(),
