@@ -124,9 +124,9 @@ export const contracts = pgTable("contracts", {
   title: varchar("title").notNull(),
   contractNumber: varchar("contract_number").unique().notNull(),
   status: varchar("status").default("draft"), // draft, final, signed
-  clientName: varchar("client_name"),
-  projectDescription: text("project_description"),
-  value: decimal("value"),
+  clientName: varchar("client_name").notNull(),
+  projectDescription: text("project_description").notNull(),
+  value: varchar("value"),
   startDate: timestamp("start_date"),
   endDate: timestamp("end_date"),
   terms: jsonb("terms"),

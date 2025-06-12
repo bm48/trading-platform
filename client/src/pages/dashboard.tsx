@@ -9,7 +9,7 @@ import { useAuth } from '@/hooks/useAuth';
 import DashboardLayout from '@/components/dashboard-layout';
 import ApplicationForm from '@/components/application-form';
 import ValidatedCaseForm from '@/components/validated-case-form';
-import ContractForm from '@/components/contract-form';
+import ValidatedContractForm from '@/components/validated-contract-form';
 import { formatCurrency, formatDate, getStatusColor, calculateProgress } from '@/lib/utils';
 import { 
   FolderOpen, 
@@ -134,7 +134,7 @@ export default function Dashboard() {
   if (showNewContractForm) {
     return (
       <>
-        <ContractForm 
+        <ValidatedContractForm 
           onClose={() => setShowNewContractForm(false)}
           onSuccess={() => {
             // Refresh contracts data after successful creation
