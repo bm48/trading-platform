@@ -2,11 +2,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
+import { useToast } from "@/hooks/use-toast";
 
 export function useAuth() {
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   useEffect(() => {
     // Get initial session
@@ -31,11 +33,20 @@ export function useAuth() {
 
   const logout = async () => {
     try {
-      await supabase.auth.signOut();
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      // Clear all cached queries
       queryClient.clear();
+      
+      // Force redirect to landing page
+      window.location.href = '/';
+      
       console.log("Logout successful");
     } catch (error) {
       console.error("Error logging out:", error);
+      // Still redirect even if there's an error
+      window.location.href = '/';
     }
   };
 

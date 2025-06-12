@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -22,6 +22,7 @@ interface DashboardLayoutProps {
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { user, logout } = useAuth();
   const [location] = useLocation();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const urlParams = new URLSearchParams(window.location.search);
   const currentTab = urlParams.get('tab');
@@ -53,9 +54,21 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     },
   ];
 
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    console.log('Starting logout process...');
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
+
   const getUserInitials = () => {
-    if (user?.firstName && user?.lastName) {
-      return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
+    if (user?.user_metadata?.first_name && user?.user_metadata?.last_name) {
+      return `${user.user_metadata.first_name[0]}${user.user_metadata.last_name[0]}`.toUpperCase();
     }
     if (user?.email) {
       return user.email[0].toUpperCase();
@@ -77,11 +90,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             <div className="flex items-center space-x-4">
               <Button
                 variant="ghost"
-                onClick={logout}
+                onClick={handleLogout}
+                disabled={isLoggingOut}
                 className="text-neutral-medium hover:text-neutral-dark"
               >
                 <LogOut className="h-4 w-4 mr-2" />
-                Logout
+                {isLoggingOut ? 'Logging out...' : 'Logout'}
               </Button>
             </div>
           </div>
