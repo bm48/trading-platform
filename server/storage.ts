@@ -49,6 +49,7 @@ export interface IStorage {
   getCaseDocuments(caseId: number): Promise<Document[]>;
   getContractDocuments(contractId: number): Promise<Document[]>;
   getUserDocuments(userId: string): Promise<Document[]>;
+  deleteDocument(id: number): Promise<void>;
 
   // Timeline operations
   createTimelineEvent(event: InsertTimelineEvent): Promise<TimelineEvent>;
@@ -223,6 +224,10 @@ export class DatabaseStorage implements IStorage {
       .from(documents)
       .where(eq(documents.userId, userId))
       .orderBy(desc(documents.createdAt));
+  }
+
+  async deleteDocument(id: number): Promise<void> {
+    await db.delete(documents).where(eq(documents.id, id));
   }
 
   // Timeline operations
