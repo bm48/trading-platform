@@ -153,33 +153,11 @@ export default function Dashboard() {
           <div>
             <h1 className="text-3xl font-bold text-neutral-dark">Welcome!</h1>
             <p className="text-neutral-medium">Manage your cases and track your progress</p>
-            {!user && (
-              <Button 
-                size="sm" 
-                className="mt-2"
-                onClick={async () => {
-                  try {
-                    const response = await fetch('/api/auth/login', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ email: 'demo@example.com', password: 'demo123' })
-                    });
-                    if (response.ok) {
-                      window.location.reload();
-                    }
-                  } catch (error) {
-                    console.error('Login failed');
-                  }
-                }}
-              >
-                Demo Login
-              </Button>
-            )}
           </div>
           <div className="flex gap-3">
-            <Button onClick={handleNewCaseClick}>
+            <Button onClick={activeTab === 'contracts' ? () => setShowNewContractForm(true) : handleNewCaseClick}>
               <Plus className="h-4 w-4 mr-2" />
-              New Case
+              {activeTab === 'contracts' ? 'New Contract' : 'New Case'}
             </Button>
             {subscriptionStatus && !subscriptionStatus.canCreateCases && (
               <div className="text-sm text-neutral-medium">
@@ -278,18 +256,7 @@ export default function Dashboard() {
                     <Button size="sm" onClick={() => window.location.href = '/checkout'}>
                       Upgrade Plan
                     </Button>
-                    <Button size="sm" variant="outline" onClick={async () => {
-                      try {
-                        const response = await fetch('/api/subscription/grant-demo-pack', { method: 'POST' });
-                        if (response.ok) {
-                          window.location.reload();
-                        }
-                      } catch (error) {
-                        console.error('Failed to grant demo pack');
-                      }
-                    }}>
-                      Get Demo Pack
-                    </Button>
+
                   </div>
                 )}
               </div>

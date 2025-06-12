@@ -35,18 +35,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       current: (location === '/dashboard' || location === '/') && !currentTab,
     },
     {
-      name: 'Case Files',
-      href: '/dashboard?tab=cases',
-      icon: FolderOpen,
-      current: currentTab === 'cases',
-    },
-    {
-      name: 'Contract Files',
-      href: '/dashboard?tab=contracts',
-      icon: FileText,
-      current: currentTab === 'contracts',
-    },
-    {
       name: 'Settings',
       href: '/settings',
       icon: Settings,

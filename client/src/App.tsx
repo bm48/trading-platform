@@ -15,19 +15,54 @@ import Profile from "@/pages/profile";
 import TermsOfService from "@/pages/terms-of-service";
 import NotFound from "@/pages/not-found";
 
+function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
+  const { isAuthenticated, isLoading } = useAuth();
+  
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+  
+  if (!isAuthenticated) {
+    window.location.href = '/';
+    return null;
+  }
+  
+  return <Component />;
+}
+
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Landing} />
-      <Route path="/dashboard" component={Dashboard} />
-      <Route path="/demo-dashboard" component={DemoDashboard} />
-      <Route path="/admin" component={AdminDashboard} />
-      <Route path="/case/:id" component={CaseDetail} />
-      <Route path="/checkout" component={Checkout} />
-      <Route path="/settings" component={Settings} />
-      <Route path="/profile" component={Profile} />
+      <Route path="/dashboard">
+        <ProtectedRoute component={Dashboard} />
+      </Route>
+      <Route path="/demo-dashboard">
+        <ProtectedRoute component={DemoDashboard} />
+      </Route>
+      <Route path="/admin">
+        <ProtectedRoute component={AdminDashboard} />
+      </Route>
+      <Route path="/case/:id">
+        <ProtectedRoute component={CaseDetail} />
+      </Route>
+      <Route path="/checkout">
+        <ProtectedRoute component={Checkout} />
+      </Route>
+      <Route path="/settings">
+        <ProtectedRoute component={Settings} />
+      </Route>
+      <Route path="/profile">
+        <ProtectedRoute component={Profile} />
+      </Route>
       <Route path="/terms-of-service" component={TermsOfService} />
-      <Route path="/application/:id/complete" component={Checkout} />
+      <Route path="/application/:id/complete">
+        <ProtectedRoute component={Checkout} />
+      </Route>
       <Route component={NotFound} />
     </Switch>
   );
