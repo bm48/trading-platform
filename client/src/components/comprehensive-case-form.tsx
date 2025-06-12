@@ -17,6 +17,13 @@ import { FileText, X, User, Building, DollarSign, Scale, Target, AlertTriangle, 
 import FileUpload from '@/components/file-upload';
 
 const comprehensiveCaseSchema = z.object({
+  // Required case fields
+  title: z.string().min(1, 'Case title is required').max(200, 'Title must be less than 200 characters'),
+  issueType: z.string().min(1, 'Issue type is required'),
+  description: z.string().min(10, 'Description must be at least 10 characters').max(2000, 'Description too long'),
+  amount: z.string().min(1, 'Amount is required'),
+  nextActionDue: z.string().optional(),
+  
   // Section 1: Personal & Business Details
   fullName: z.string().min(2, 'Full name is required'),
   businessName: z.string().optional(),
@@ -29,19 +36,19 @@ const comprehensiveCaseSchema = z.object({
   // Section 2: Project Details
   projectAddress: z.string().min(5, 'Project address required'),
   clientBuilderName: z.string().min(2, 'Client/Builder name required'),
-  contractType: z.enum(['direct_owner', 'head_contractor']),
+  contractType: z.enum(['direct_owner', 'head_contractor'], { required_error: 'Contract type required' }),
   workScope: z.string().min(10, 'Work scope description required'),
-  projectType: z.enum(['domestic', 'commercial']),
+  projectType: z.enum(['domestic', 'commercial'], { required_error: 'Project type required' }),
   startDate: z.string().min(1, 'Start date required'),
   completionDate: z.string().optional(),
-  workCompleted: z.enum(['yes', 'no', 'partial']),
+  workCompleted: z.enum(['yes', 'no', 'partial'], { required_error: 'Work completion status required' }),
   incompleteDetails: z.string().optional(),
   
   // Section 3: Contractual Agreement
-  writtenContract: z.enum(['yes', 'no']),
-  scopeAgreement: z.enum(['written', 'email', 'verbal']),
-  quoteGiven: z.enum(['yes', 'no']),
-  variations: z.enum(['yes', 'no']),
+  writtenContract: z.enum(['yes', 'no'], { required_error: 'Written contract status required' }),
+  scopeAgreement: z.enum(['written', 'email', 'verbal'], { required_error: 'Scope agreement type required' }),
+  quoteGiven: z.enum(['yes', 'no'], { required_error: 'Quote status required' }),
+  variations: z.enum(['yes', 'no'], { required_error: 'Variations status required' }),
   variationsType: z.enum(['written', 'verbal']).optional(),
   
   // Section 4: Payment & Invoices

@@ -81,7 +81,7 @@ export const cases = pgTable("cases", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Documents
+// Documents (supports both documents and photos with versioning)
 export const documents = pgTable("documents", {
   id: serial("id").primaryKey(),
   caseId: integer("case_id"),
@@ -89,11 +89,17 @@ export const documents = pgTable("documents", {
   userId: varchar("user_id").notNull(),
   filename: varchar("filename").notNull(),
   originalName: varchar("original_name").notNull(),
-  fileType: varchar("file_type").notNull(),
+  fileType: varchar("file_type").notNull(), // document, photo, image
+  mimeType: varchar("mime_type").notNull(),
   fileSize: integer("file_size").notNull(),
   uploadPath: varchar("upload_path").notNull(),
+  thumbnailPath: varchar("thumbnail_path"), // for images/photos
   tags: jsonb("tags"),
-  category: varchar("category"), // evidence, contract, correspondence, generated
+  category: varchar("category"), // evidence, contract, correspondence, generated, photos
+  description: text("description"),
+  version: integer("version").default(1),
+  parentDocumentId: integer("parent_document_id"), // for versioned files
+  isLatestVersion: boolean("is_latest_version").default(true),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -144,6 +150,12 @@ export const insertCaseSchema = createInsertSchema(cases).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  title: z.string().min(1, "Title is required").max(200, "Title must be less than 200 characters"),
+  issueType: z.string().min(1, "Issue type is required"),
+  description: z.string().min(10, "Description must be at least 10 characters"),
+  amount: z.string().optional().transform((val) => val ? val : undefined),
+  nextActionDue: z.string().optional().transform((val) => val ? new Date(val) : undefined),
 });
 
 export const insertDocumentSchema = createInsertSchema(documents).omit({
@@ -160,6 +172,13 @@ export const insertContractSchema = createInsertSchema(contracts).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  title: z.string().min(1, "Title is required").max(200, "Title must be less than 200 characters"),
+  clientName: z.string().min(1, "Client name is required").max(100, "Client name must be less than 100 characters"),
+  projectDescription: z.string().min(10, "Project description must be at least 10 characters"),
+  value: z.string().optional().transform((val) => val ? val : undefined),
+  startDate: z.string().optional().transform((val) => val ? new Date(val) : undefined),
+  endDate: z.string().optional().transform((val) => val ? new Date(val) : undefined),
 });
 
 // Types

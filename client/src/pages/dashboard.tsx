@@ -163,7 +163,7 @@ export default function Dashboard() {
               <div className="text-sm text-neutral-medium">
                 {subscriptionStatus.message}
               </div>
-            )}
+            )}    
           </div>
         </div>
 
