@@ -18,6 +18,15 @@ import { promises as fs } from "fs";
 // Stripe is optional for development
 const STRIPE_ENABLED = !!process.env.STRIPE_SECRET_KEY;
 
+function getFileType(mimetype: string): string {
+  if (mimetype.startsWith('image/')) return 'image';
+  if (mimetype.includes('pdf')) return 'pdf';
+  if (mimetype.includes('word') || mimetype.includes('document')) return 'document';
+  if (mimetype.includes('text')) return 'text';
+  if (mimetype.includes('spreadsheet') || mimetype.includes('excel')) return 'spreadsheet';
+  return 'other';
+}
+
 const stripe = STRIPE_ENABLED ? new Stripe(process.env.STRIPE_SECRET_KEY!) : null;
 
 // Configure multer for file uploads
