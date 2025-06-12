@@ -156,9 +156,13 @@ export function registerContractRoutes(app: Express) {
       
       // Create new version with incremented version number
       const newVersion = await storage.createContract({
-        ...existingContract,
+        userId,
+        title: existingContract.title,
+        contractNumber: existingContract.contractNumber,
+        clientName: existingContract.clientName || '',
+        projectDescription: existingContract.projectDescription || '',
         ...validatedData,
-        version: existingContract.version + 1,
+        version: (existingContract.version || 0) + 1,
         status: "draft"
       });
 

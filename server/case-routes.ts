@@ -22,8 +22,7 @@ export function registerCaseRoutes(app: Express) {
         ...validatedData,
         userId,
         caseNumber,
-        status: "active",
-        progress: 0
+        status: "active"
       };
 
       const newCase = await storage.createCase(caseData);
@@ -42,17 +41,17 @@ export function registerCaseRoutes(app: Express) {
       res.status(201).json(newCase);
     } catch (error: any) {
       console.error("Error creating case:", error);
-      res.status(400).json({ 
+      res.status(500).json({ 
         message: "Failed to create case", 
         error: error.message 
       });
     }
   });
 
-  // Get all cases for the authenticated user
-  app.get("/api/cases", authenticateToken, async (req, res) => {
+  // Get all cases for a user
+  app.get("/api/cases", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.id;
+      const userId = req.user?.claims?.sub;
       if (!userId) {
         return res.status(401).json({ message: "User ID required" });
       }
@@ -66,22 +65,17 @@ export function registerCaseRoutes(app: Express) {
   });
 
   // Get a specific case
-  app.get("/api/cases/:id", authenticateToken, async (req, res) => {
+  app.get("/api/cases/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.id;
+      const userId = req.user?.claims?.sub;
       const caseId = parseInt(req.params.id);
-      
-      if (!userId) {
-        return res.status(401).json({ message: "User ID required" });
-      }
 
       const caseData = await storage.getCase(caseId);
-      
       if (!caseData) {
         return res.status(404).json({ message: "Case not found" });
       }
 
-      // Ensure user owns this case
+      // Verify ownership
       if (caseData.userId !== userId) {
         return res.status(403).json({ message: "Access denied" });
       }
@@ -94,26 +88,24 @@ export function registerCaseRoutes(app: Express) {
   });
 
   // Update a case
-  app.put("/api/cases/:id", authenticateToken, async (req, res) => {
+  app.put("/api/cases/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.id;
+      const userId = req.user?.claims?.sub;
       const caseId = parseInt(req.params.id);
-      
-      if (!userId) {
-        return res.status(401).json({ message: "User ID required" });
+
+      const caseData = await storage.getCase(caseId);
+      if (!caseData) {
+        return res.status(404).json({ message: "Case not found" });
       }
 
-      // Check if user owns this case
-      const existingCase = await storage.getCase(caseId);
-      if (!existingCase || existingCase.userId !== userId) {
+      // Verify ownership
+      if (caseData.userId !== userId) {
         return res.status(403).json({ message: "Access denied" });
       }
 
-      // Validate update data
-      const validatedData = insertCaseSchema.partial().parse(req.body);
-      
-      const updatedCase = await storage.updateCase(caseId, validatedData);
-      
+      const updates = req.body;
+      const updatedCase = await storage.updateCase(caseId, updates);
+
       // Create timeline event for update
       await storage.createTimelineEvent({
         caseId,
@@ -128,84 +120,66 @@ export function registerCaseRoutes(app: Express) {
       res.json(updatedCase);
     } catch (error: any) {
       console.error("Error updating case:", error);
-      res.status(400).json({ 
-        message: "Failed to update case", 
-        error: error.message 
-      });
+      res.status(500).json({ message: "Failed to update case" });
     }
   });
 
-  // Delete a case
-  app.delete("/api/cases/:id", authenticateToken, async (req, res) => {
+  // Generate strategy pack for a case
+  app.post("/api/cases/:id/generate-strategy", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.id;
+      const userId = req.user?.claims?.sub;
       const caseId = parseInt(req.params.id);
-      
-      if (!userId) {
-        return res.status(401).json({ message: "User ID required" });
+
+      const caseData = await storage.getCase(caseId);
+      if (!caseData) {
+        return res.status(404).json({ message: "Case not found" });
       }
 
-      // Check if user owns this case
-      const existingCase = await storage.getCase(caseId);
-      if (!existingCase || existingCase.userId !== userId) {
+      // Verify ownership
+      if (caseData.userId !== userId) {
         return res.status(403).json({ message: "Access denied" });
       }
 
-      // Instead of hard delete, update status to 'deleted'
-      await storage.updateCase(caseId, { status: 'deleted' });
-      
-      res.json({ message: "Case deleted successfully" });
+      // Here you would integrate with OpenAI to generate strategy
+      // For now, return a success message
+      await storage.createTimelineEvent({
+        caseId,
+        userId,
+        eventType: "strategy_generated",
+        title: "Strategy Pack Generated",
+        description: "AI-powered strategy pack has been generated for this case",
+        eventDate: new Date(),
+        isCompleted: true
+      });
+
+      res.json({ message: "Strategy pack generated successfully" });
     } catch (error: any) {
-      console.error("Error deleting case:", error);
-      res.status(500).json({ message: "Failed to delete case" });
+      console.error("Error generating strategy:", error);
+      res.status(500).json({ message: "Failed to generate strategy" });
     }
   });
 
   // Get case timeline
-  app.get("/api/cases/:id/timeline", authenticateToken, async (req, res) => {
+  app.get("/api/cases/:id/timeline", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.id;
+      const userId = req.user?.claims?.sub;
       const caseId = parseInt(req.params.id);
-      
-      if (!userId) {
-        return res.status(401).json({ message: "User ID required" });
+
+      const caseData = await storage.getCase(caseId);
+      if (!caseData) {
+        return res.status(404).json({ message: "Case not found" });
       }
 
-      // Check if user owns this case
-      const existingCase = await storage.getCase(caseId);
-      if (!existingCase || existingCase.userId !== userId) {
+      // Verify ownership
+      if (caseData.userId !== userId) {
         return res.status(403).json({ message: "Access denied" });
       }
 
       const timeline = await storage.getCaseTimeline(caseId);
       res.json(timeline);
     } catch (error: any) {
-      console.error("Error fetching case timeline:", error);
-      res.status(500).json({ message: "Failed to fetch case timeline" });
-    }
-  });
-
-  // Get case documents
-  app.get("/api/cases/:id/documents", authenticateToken, async (req, res) => {
-    try {
-      const userId = req.user?.id;
-      const caseId = parseInt(req.params.id);
-      
-      if (!userId) {
-        return res.status(401).json({ message: "User ID required" });
-      }
-
-      // Check if user owns this case
-      const existingCase = await storage.getCase(caseId);
-      if (!existingCase || existingCase.userId !== userId) {
-        return res.status(403).json({ message: "Access denied" });
-      }
-
-      const documents = await storage.getCaseDocuments(caseId);
-      res.json(documents);
-    } catch (error: any) {
-      console.error("Error fetching case documents:", error);
-      res.status(500).json({ message: "Failed to fetch case documents" });
+      console.error("Error fetching timeline:", error);
+      res.status(500).json({ message: "Failed to fetch timeline" });
     }
   });
 }

@@ -7,6 +7,9 @@ import { analyzeCase, generateStrategyPack } from "./openai";
 import { sendWelcomeEmail, sendApprovalEmail, sendRejectionEmail } from "./email";
 import { generateStrategyPackPDF, generateAIStrategyPackPDF } from "./pdf";
 import { checkSubscriptionStatus, consumeStrategyPack, grantStrategyPack } from "./subscription";
+import { registerCaseRoutes } from "./case-routes";
+import { storage } from "./storage";
+import { setupAuth, isAuthenticated } from "./replitAuth";
 import Stripe from "stripe";
 import multer from "multer";
 import path from "path";
@@ -806,6 +809,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to disconnect calendar: " + error.message });
     }
   });
+
+  // Register case routes
+  registerCaseRoutes(app);
 
   const httpServer = createServer(app);
   return httpServer;
