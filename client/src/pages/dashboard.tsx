@@ -8,7 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/hooks/useAuth';
 import DashboardLayout from '@/components/dashboard-layout';
 import ApplicationForm from '@/components/application-form';
-import ComprehensiveCaseForm from '@/components/comprehensive-case-form';
+import ValidatedCaseForm from '@/components/validated-case-form';
 import ContractForm from '@/components/contract-form';
 import { formatCurrency, formatDate, getStatusColor, calculateProgress } from '@/lib/utils';
 import { 
@@ -120,7 +120,7 @@ export default function Dashboard() {
   if (showNewCaseForm) {
     return (
       <>
-        <ComprehensiveCaseForm 
+        <ValidatedCaseForm 
           onClose={() => setShowNewCaseForm(false)}
           onSuccess={() => {
             // Refresh cases data after successful creation

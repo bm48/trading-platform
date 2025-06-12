@@ -51,12 +51,13 @@ export default function ValidatedCaseForm({ onClose, onSuccess }: ValidatedCaseF
     mutationFn: async (data: CaseFormData) => {
       return await apiRequest('POST', '/api/cases', data);
     },
-    onSuccess: (newCase) => {
+    onSuccess: (data) => {
+      const newCase = typeof data === 'object' && data !== null ? data : {};
       toast({
         title: "Case Created Successfully",
         description: "Your case has been created. You can now upload supporting documents.",
       });
-      setCreatedCaseId(newCase.id);
+      setCreatedCaseId((newCase as any).id);
       setShowFileUpload(true);
       queryClient.invalidateQueries({ queryKey: ['/api/cases'] });
     },

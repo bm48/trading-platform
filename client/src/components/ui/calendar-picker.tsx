@@ -1,40 +1,20 @@
-import { useState } from "react";
-import Calendar from "react-calendar";
-import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
-import "react-calendar/dist/Calendar.css";
-
-type ValuePiece = Date | null;
-type Value = ValuePiece | [ValuePiece, ValuePiece];
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 interface CalendarPickerProps {
-  value?: string;
-  onChange: (value: string) => void;
+  value?: Date;
+  onChange?: (date: Date | undefined) => void;
   placeholder?: string;
-  className?: string;
   disabled?: boolean;
 }
 
-export function CalendarPicker({ 
-  value, 
-  onChange, 
-  placeholder = "Select date", 
-  className,
-  disabled = false 
-}: CalendarPickerProps) {
+export function CalendarPicker({ value, onChange, placeholder = "Pick a date", disabled }: CalendarPickerProps) {
   const [open, setOpen] = useState(false);
-  
-  const selectedDate = value ? new Date(value) : null;
-
-  const handleDateChange = (date: Value) => {
-    if (date && !Array.isArray(date)) {
-      onChange(format(date, "yyyy-MM-dd"));
-      setOpen(false);
-    }
-  };
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -43,23 +23,24 @@ export function CalendarPicker({
           variant="outline"
           className={cn(
             "w-full justify-start text-left font-normal",
-            !selectedDate && "text-muted-foreground",
-            className
+            !value && "text-muted-foreground"
           )}
           disabled={disabled}
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
-          {selectedDate ? format(selectedDate, "PPP") : placeholder}
+          {value ? format(value, "PPP") : <span>{placeholder}</span>}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">
-        <div className="p-3">
-          <Calendar
-            onChange={handleDateChange}
-            value={selectedDate}
-            className="react-calendar-custom"
-          />
-        </div>
+        <Calendar
+          mode="single"
+          selected={value}
+          onSelect={(date) => {
+            onChange?.(date);
+            setOpen(false);
+          }}
+          initialFocus
+        />
       </PopoverContent>
     </Popover>
   );
