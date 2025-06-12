@@ -594,7 +594,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         updatedAt: new Date(),
         applicationId: null,
         nextActionDue: null,
-        progress: 0
+        progress: 0,
+        aiAnalysis: null,
+        strategyPack: null,
+        nextAction: null
       };
 
       const pdfPath = await generateResolvePDF(formattedCaseData);
