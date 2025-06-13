@@ -24,13 +24,14 @@ export const sessions = pgTable(
   (table) => [index("IDX_session_expire").on(table.expire)],
 );
 
-// User storage table for Replit Auth
+// User storage table for Supabase Auth
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().notNull(),
   email: varchar("email").unique(),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
+  role: varchar("role").default("user"), // user, moderator, admin
   stripeCustomerId: varchar("stripe_customer_id"),
   stripeSubscriptionId: varchar("stripe_subscription_id"),
   subscriptionStatus: varchar("subscription_status").default("none"), // none, active, past_due, canceled

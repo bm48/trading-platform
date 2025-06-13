@@ -22,7 +22,7 @@ import { db } from "./db";
 import { eq, desc, and } from "drizzle-orm";
 
 export interface IStorage {
-  // User operations (mandatory for Replit Auth)
+  // User operations (mandatory for Supabase Auth)
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
   updateUserStripeInfo(userId: string, stripeCustomerId: string, stripeSubscriptionId?: string): Promise<User>;
