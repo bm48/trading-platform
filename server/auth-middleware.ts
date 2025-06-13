@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { supabaseAdmin } from "./supabase";
+import { supabase } from "./db";
 
 // Define user interface for authentication
 interface AuthUser {
@@ -28,15 +28,15 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
     }
 
     // Verify the JWT token with Supabase
-    const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
+    const { data: { user }, error } = await supabase.auth.getUser(token);
 
     if (error || !user) {
       return res.status(401).json({ message: "Invalid or expired token" });
     }
 
     // Get user profile for role information
-    const { data: profile } = await supabaseAdmin
-      .from('profiles')
+    const { data: profile } = await supabase
+      .from('users')
       .select('role')
       .eq('id', user.id)
       .single();
@@ -82,11 +82,11 @@ export const optionalAuth = async (req: Request, res: Response, next: NextFuncti
     const token = authHeader && authHeader.split(' ')[1];
 
     if (token) {
-      const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
+      const { data: { user }, error } = await supabase.auth.getUser(token);
       
       if (!error && user) {
-        const { data: profile } = await supabaseAdmin
-          .from('profiles')
+        const { data: profile } = await supabase
+          .from('users')
           .select('role')
           .eq('id', user.id)
           .single();
