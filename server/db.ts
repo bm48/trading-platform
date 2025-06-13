@@ -15,19 +15,16 @@ export const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-// Extract project reference from Supabase URL
-const supabaseUrl = process.env.VITE_SUPABASE_URL;
-const projectRef = supabaseUrl.match(/https:\/\/([^.]+)\.supabase\.co/)?.[1];
+// Create direct database connection for Drizzle ORM using DATABASE_URL
+// This allows the project to work with both Supabase and other PostgreSQL providers
+const connectionString = process.env.DATABASE_URL || process.env.VITE_SUPABASE_URL;
 
-if (!projectRef) {
-  throw new Error("Invalid SUPABASE_URL format");
+if (!connectionString) {
+  throw new Error("DATABASE_URL or VITE_SUPABASE_URL must be set");
 }
 
-// Create direct database connection for Drizzle ORM using Supabase's connection pooler
-const connectionString = `postgresql://postgres.${projectRef}:${process.env.SUPABASE_SERVICE_ROLE_KEY}@aws-0-us-west-1.pooler.supabase.com:6543/postgres`;
-
 const client = postgres(connectionString, {
-  ssl: 'require',
+  ssl: connectionString.includes('supabase') ? 'require' : false,
   max: 10,
   idle_timeout: 20,
   connect_timeout: 10,
