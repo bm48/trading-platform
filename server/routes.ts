@@ -284,6 +284,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         fileType: getFileType(req.file.mimetype),
         mimeType: req.file.mimetype,
         fileSize: req.file.size,
+        uploadPath: req.file.path,
         category,
         description
       });

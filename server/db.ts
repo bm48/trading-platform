@@ -9,22 +9,22 @@ if (!process.env.VITE_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
   );
 }
 
-// Create Supabase client for admin operations
+// Create Supabase client for authentication operations only
 export const supabase = createClient(
   process.env.VITE_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-// Create direct database connection for Drizzle ORM using DATABASE_URL
-// This allows the project to work with both Supabase and other PostgreSQL providers
-const connectionString = process.env.DATABASE_URL || process.env.VITE_SUPABASE_URL;
+// Use direct PostgreSQL connection for Drizzle ORM
+const connectionString = process.env.DATABASE_URL;
 
 if (!connectionString) {
-  throw new Error("DATABASE_URL or VITE_SUPABASE_URL must be set");
+  throw new Error("DATABASE_URL must be set for direct database connection");
 }
 
+// Configure postgres client for Drizzle
 const client = postgres(connectionString, {
-  ssl: connectionString.includes('supabase') ? 'require' : false,
+  ssl: 'require',
   max: 10,
   idle_timeout: 20,
   connect_timeout: 10,
