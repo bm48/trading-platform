@@ -1,13 +1,13 @@
 import type { Express } from "express";
 import { storage } from "./storage";
 import { insertCaseSchema } from "@shared/schema";
-import { isAuthenticated } from "./replitAuth";
+import { authenticateToken } from "./auth-middleware";
 
 export function registerCaseRoutes(app: Express) {
   // Create a new case
-  app.post("/api/cases", isAuthenticated, async (req: any, res) => {
+  app.post("/api/cases", authenticateToken, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       if (!userId) {
         return res.status(401).json({ message: "User ID required" });
       }
@@ -49,9 +49,9 @@ export function registerCaseRoutes(app: Express) {
   });
 
   // Get all cases for a user
-  app.get("/api/cases", isAuthenticated, async (req: any, res) => {
+  app.get("/api/cases", authenticateToken, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       if (!userId) {
         return res.status(401).json({ message: "User ID required" });
       }
@@ -65,9 +65,9 @@ export function registerCaseRoutes(app: Express) {
   });
 
   // Get a specific case
-  app.get("/api/cases/:id", isAuthenticated, async (req: any, res) => {
+  app.get("/api/cases/:id", authenticateToken, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       const caseId = parseInt(req.params.id);
 
       const caseData = await storage.getCase(caseId);
@@ -88,9 +88,9 @@ export function registerCaseRoutes(app: Express) {
   });
 
   // Update a case
-  app.put("/api/cases/:id", isAuthenticated, async (req: any, res) => {
+  app.put("/api/cases/:id", authenticateToken, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       const caseId = parseInt(req.params.id);
 
       const caseData = await storage.getCase(caseId);
@@ -125,9 +125,9 @@ export function registerCaseRoutes(app: Express) {
   });
 
   // Generate strategy pack for a case
-  app.post("/api/cases/:id/generate-strategy", isAuthenticated, async (req: any, res) => {
+  app.post("/api/cases/:id/generate-strategy", authenticateToken, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       const caseId = parseInt(req.params.id);
 
       const caseData = await storage.getCase(caseId);
@@ -160,9 +160,9 @@ export function registerCaseRoutes(app: Express) {
   });
 
   // Get case timeline
-  app.get("/api/cases/:id/timeline", isAuthenticated, async (req: any, res) => {
+  app.get("/api/cases/:id/timeline", authenticateToken, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       const caseId = parseInt(req.params.id);
 
       const caseData = await storage.getCase(caseId);
