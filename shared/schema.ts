@@ -141,6 +141,8 @@ export const insertApplicationSchema = createInsertSchema(applications).omit({
 
 export const insertCaseSchema = createInsertSchema(cases).omit({
   id: true,
+  userId: true,
+  caseNumber: true,
   createdAt: true,
   updatedAt: true,
 }).extend({
