@@ -104,6 +104,7 @@ The application follows a modern full-stack architecture:
 
 Changelog:
 - June 15, 2025. Initial setup
+- June 15, 2025. Completed Supabase migration and fixed 403 authentication errors in case/contract creation
 
 ## User Preferences
 
