@@ -105,6 +105,7 @@ The application follows a modern full-stack architecture:
 Changelog:
 - June 15, 2025. Initial setup
 - June 15, 2025. Completed Supabase migration and fixed 403 authentication errors in case/contract creation
+- June 17, 2025. Completely resolved 403 authentication errors by implementing direct database storage layer, fixing timestamp handling in Drizzle ORM, and updating validation schemas. System now successfully creates cases and contracts with proper user authentication.
 
 ## User Preferences
 
