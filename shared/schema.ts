@@ -165,6 +165,8 @@ export const insertTimelineEventSchema = createInsertSchema(timelineEvents).omit
 
 export const insertContractSchema = createInsertSchema(contracts).omit({
   id: true,
+  userId: true,
+  contractNumber: true,
   createdAt: true,
   updatedAt: true,
 }).extend({

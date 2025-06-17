@@ -49,14 +49,13 @@ export async function registerCleanRoutes(app: Express): Promise<Server> {
         caseNumber
       });
 
-      // Create timeline event
+      // Create timeline event  
       await directStorage.createTimelineEvent({
         caseId: caseData.id,
         userId,
         eventType: "case_created",
         title: "Case Created",
         description: `Case ${caseNumber} has been created`,
-        eventDate: new Date(),
         isCompleted: true
       });
 
@@ -114,9 +113,8 @@ export async function registerCleanRoutes(app: Express): Promise<Server> {
         contractId: contractData.id,
         userId,
         eventType: "contract_created",
-        title: "Contract Created",
+        title: "Contract Created", 
         description: `Contract ${contractNumber} has been created`,
-        eventDate: new Date(),
         isCompleted: true
       });
 

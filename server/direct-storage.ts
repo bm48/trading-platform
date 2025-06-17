@@ -41,11 +41,7 @@ export class DirectStorage {
     try {
       const [newCase] = await db
         .insert(cases)
-        .values({
-          ...caseData,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        })
+        .values(caseData)
         .returning();
       return newCase;
     } catch (error) {
