@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { supabase } from "./db";
+import { storage } from "./storage";
 
 // Define user interface for authentication
 interface AuthUser {
@@ -34,12 +35,22 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
       return res.status(401).json({ message: "Invalid or expired token" });
     }
 
+    // Ensure user profile exists in our users table with default subscription
+    await storage.upsertUser({
+      id: user.id,
+      email: user.email || null,
+      firstName: user.user_metadata?.first_name || user.user_metadata?.username || null,
+      lastName: user.user_metadata?.last_name || null,
+      profileImageUrl: user.user_metadata?.avatar_url || null,
+      role: user.user_metadata?.role || 'user',
+      subscriptionStatus: 'active',
+      planType: 'strategy_pack',
+      strategyPacksRemaining: 5,
+      hasInitialStrategyPack: true
+    });
+
     // Get user profile for role information
-    const { data: profile } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single();
+    const profile = await storage.getUser(user.id);
 
     req.user = {
       id: user.id,
