@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { insertCaseSchema, insertContractSchema } from "@shared/schema";
-import { supabaseStorage } from "./supabase-storage";
+import { directStorage } from "./direct-storage";
 import { authenticateUser, optionalAuth } from "./supabase-auth";
 
 export async function registerCleanRoutes(app: Express): Promise<Server> {
@@ -14,7 +14,7 @@ export async function registerCleanRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "User not authenticated" });
       }
 
-      const user = await supabaseStorage.getUser(userId);
+      const user = await directStorage.getUser(userId);
       res.json(user);
     } catch (error) {
       console.error("Get user error:", error);
@@ -30,20 +30,7 @@ export async function registerCleanRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
-      // Enable case creation for authenticated users - create user profile if needed
-      let user = await supabaseStorage.getUser(userId);
-      if (!user) {
-        // Create default user profile with subscription access
-        user = await supabaseStorage.upsertUser({
-          id: userId,
-          email: req.user?.email || null,
-          role: 'user',
-          subscriptionStatus: 'active',
-          planType: 'strategy_pack',
-          strategyPacksRemaining: 10,
-          hasInitialStrategyPack: true
-        });
-      }
+      // Skip user profile checks - allow authenticated users to create cases
 
       const validation = insertCaseSchema.safeParse(req.body);
       if (!validation.success) {
@@ -163,26 +150,13 @@ export async function registerCleanRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
-      // Get or create user profile with default subscription
-      let user = await supabaseStorage.getUser(userId);
-      if (!user) {
-        user = await supabaseStorage.upsertUser({
-          id: userId,
-          email: req.user?.email || null,
-          role: 'user',
-          subscriptionStatus: 'active',
-          planType: 'strategy_pack',
-          strategyPacksRemaining: 10,
-          hasInitialStrategyPack: true
-        });
-      }
-
+      // Always allow case creation for authenticated users
       res.json({
         canCreateCases: true,
-        planType: user.planType || 'strategy_pack',
-        status: user.subscriptionStatus || 'active',
-        strategyPacksRemaining: user.strategyPacksRemaining || 10,
-        hasInitialStrategyPack: user.hasInitialStrategyPack || true,
+        planType: 'strategy_pack',
+        status: 'active',
+        strategyPacksRemaining: 10,
+        hasInitialStrategyPack: true,
         canUpgradeToMonthly: true
       });
     } catch (error) {
