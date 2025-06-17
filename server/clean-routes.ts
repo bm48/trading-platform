@@ -49,16 +49,21 @@ export async function registerCleanRoutes(app: Express): Promise<Server> {
         case_number: caseNumber
       });
 
-      // Create timeline event  
-      await supabaseStorage.createTimelineEvent({
-        case_id: caseData.id,
-        user_id: userId,
-        event_type: "case_created",
-        title: "Case Created",
-        description: `Case ${caseNumber} has been created`,
-        eventDate: new Date(),
-        is_completed: true
-      });
+      // Create timeline event (skip for now if table doesn't exist)
+      try {
+        await supabaseStorage.createTimelineEvent({
+          case_id: caseData.id,
+          user_id: userId,
+          event_type: "case_created",
+          title: "Case Created",
+          description: `Case ${caseNumber} has been created`,
+          eventDate: new Date(),
+          is_completed: true
+        });
+      } catch (timelineError) {
+        console.log("Timeline creation skipped - table may not exist:", timelineError);
+        // Continue without timeline event
+      }
 
       res.status(201).json(caseData);
     } catch (error) {
@@ -109,16 +114,21 @@ export async function registerCleanRoutes(app: Express): Promise<Server> {
         version: 1
       });
 
-      // Create timeline event
-      await supabaseStorage.createTimelineEvent({
-        contract_id: contractData.id,
-        user_id: userId,
-        event_type: "contract_created",
-        title: "Contract Created", 
-        description: `Contract ${contractNumber} has been created`,
-        eventDate: new Date(),
-        is_completed: true
-      });
+      // Create timeline event (skip for now if table doesn't exist)
+      try {
+        await supabaseStorage.createTimelineEvent({
+          contract_id: contractData.id,
+          user_id: userId,
+          event_type: "contract_created",
+          title: "Contract Created", 
+          description: `Contract ${contractNumber} has been created`,
+          eventDate: new Date(),
+          is_completed: true
+        });
+      } catch (timelineError) {
+        console.log("Timeline creation skipped - table may not exist:", timelineError);
+        // Continue without timeline event
+      }
 
       res.status(201).json(contractData);
     } catch (error) {

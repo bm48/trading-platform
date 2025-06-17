@@ -155,14 +155,14 @@ export class SupabaseStorage {
   // Contract operations
   async createContract(contractData: any): Promise<Contract> {
     try {
-      // Map camelCase to snake_case for database
+      // Map camelCase to exact database column names
       const dbData = {
         user_id: contractData.user_id,
         title: contractData.title,
-        contract_number: contractData.contract_number,
+        contract_num: contractData.contract_number, // Updated to match DB column
         status: contractData.status || "draft",
         client_name: contractData.clientName,
-        project_description: contractData.projectDescription,
+        project_descr: contractData.projectDescription, // Updated to match DB column
         value: contractData.value,
         start_date: contractData.startDate,
         end_date: contractData.endDate,
@@ -270,6 +270,13 @@ export class SupabaseStorage {
         created_at: new Date().toISOString()
       };
 
+      // Remove undefined/null fields to avoid issues
+      Object.keys(dbData).forEach(key => {
+        if ((dbData as any)[key] === undefined || (dbData as any)[key] === null) {
+          delete (dbData as any)[key];
+        }
+      });
+
       const { data, error } = await supabase
         .from('timeline_events')
         .insert(dbData)
@@ -278,13 +285,13 @@ export class SupabaseStorage {
 
       if (error) {
         console.error('Error creating timeline event:', error);
-        throw new Error(`Failed to create timeline event: ${error.message}`);
+        throw new Error(`Failed to create timeline event: ${error.message || 'Unknown error'}`);
       }
 
       return data as TimelineEvent;
     } catch (error) {
       console.error('Error creating timeline event:', error);
-      throw new Error(`Failed to create timeline event: ${error.message}`);
+      throw new Error(`Failed to create timeline event: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 

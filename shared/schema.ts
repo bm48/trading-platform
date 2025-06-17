@@ -115,11 +115,11 @@ export const contracts = pgTable("contracts", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id").notNull(),
   title: varchar("title").notNull(),
-  contractNumber: varchar("contract_number").unique().notNull(),
+  contractNumber: varchar("contract_num").unique().notNull(), // Updated to match DB
   status: varchar("status").default("draft"), // draft, final, signed
   clientName: varchar("client_name").notNull(),
-  projectDescription: text("project_description").notNull(),
-  value: varchar("value"),
+  projectDescription: text("project_descr").notNull(), // Updated to match DB
+  value: decimal("value"), // Updated to numeric type to match DB
   startDate: timestamp("start_date"),
   endDate: timestamp("end_date"),
   terms: jsonb("terms"),
