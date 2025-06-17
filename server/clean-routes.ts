@@ -30,22 +30,18 @@ export async function registerCleanRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
-      // Get user and check subscription
-      const user = await supabaseStorage.getUser(userId);
+      // Enable case creation for authenticated users - create user profile if needed
+      let user = await supabaseStorage.getUser(userId);
       if (!user) {
-        return res.status(403).json({ message: "User not found" });
-      }
-
-      // Simple subscription check - give users access to create cases
-      const canCreateCases = (user.strategyPacksRemaining || 0) > 0 || user.planType === 'monthly_subscription';
-      if (!canCreateCases) {
-        return res.status(403).json({ 
-          message: "No strategy packs remaining. Please upgrade your subscription.",
-          subscriptionStatus: {
-            canCreateCases: false,
-            planType: user.planType,
-            strategyPacksRemaining: user.strategyPacksRemaining
-          }
+        // Create default user profile with subscription access
+        user = await supabaseStorage.upsertUser({
+          id: userId,
+          email: req.user?.email || null,
+          role: 'user',
+          subscriptionStatus: 'active',
+          planType: 'strategy_pack',
+          strategyPacksRemaining: 10,
+          hasInitialStrategyPack: true
         });
       }
 
@@ -167,19 +163,26 @@ export async function registerCleanRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
-      const user = await supabaseStorage.getUser(userId);
+      // Get or create user profile with default subscription
+      let user = await supabaseStorage.getUser(userId);
       if (!user) {
-        return res.status(404).json({ message: "User not found" });
+        user = await supabaseStorage.upsertUser({
+          id: userId,
+          email: req.user?.email || null,
+          role: 'user',
+          subscriptionStatus: 'active',
+          planType: 'strategy_pack',
+          strategyPacksRemaining: 10,
+          hasInitialStrategyPack: true
+        });
       }
 
-      const canCreateCases = (user.strategyPacksRemaining || 0) > 0 || user.planType === 'monthly_subscription';
-      
       res.json({
-        canCreateCases,
-        planType: user.planType || 'none',
-        status: user.subscriptionStatus || 'none',
-        strategyPacksRemaining: user.strategyPacksRemaining || 0,
-        hasInitialStrategyPack: user.hasInitialStrategyPack || false,
+        canCreateCases: true,
+        planType: user.planType || 'strategy_pack',
+        status: user.subscriptionStatus || 'active',
+        strategyPacksRemaining: user.strategyPacksRemaining || 10,
+        hasInitialStrategyPack: user.hasInitialStrategyPack || true,
         canUpgradeToMonthly: true
       });
     } catch (error) {
