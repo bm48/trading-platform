@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { insertCaseSchema, insertContractSchema } from "@shared/schema";
-import { directStorage } from "./direct-storage";
+import { supabaseStorage } from "./supabase-storage";
 import { authenticateUser, optionalAuth } from "./supabase-auth";
 
 export async function registerCleanRoutes(app: Express): Promise<Server> {
@@ -14,7 +14,7 @@ export async function registerCleanRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "User not authenticated" });
       }
 
-      const user = await directStorage.getUser(userId);
+      const user = await supabaseStorage.getUser(userId);
       res.json(user);
     } catch (error) {
       console.error("Get user error:", error);
@@ -43,21 +43,21 @@ export async function registerCleanRoutes(app: Express): Promise<Server> {
       // Generate case number
       const caseNumber = `CASE-${Date.now()}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
 
-      const caseData = await directStorage.createCase({
+      const caseData = await supabaseStorage.createCase({
         ...validation.data,
-        userId,
-        caseNumber
+        user_id: userId,
+        case_number: caseNumber
       });
 
       // Create timeline event  
-      await directStorage.createTimelineEvent({
-        caseId: caseData.id,
-        userId,
-        eventType: "case_created",
+      await supabaseStorage.createTimelineEvent({
+        case_id: caseData.id,
+        user_id: userId,
+        event_type: "case_created",
         title: "Case Created",
         description: `Case ${caseNumber} has been created`,
         eventDate: new Date(),
-        isCompleted: true
+        is_completed: true
       });
 
       res.status(201).json(caseData);
@@ -74,7 +74,7 @@ export async function registerCleanRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
-      const cases = await directStorage.getUserCases(userId);
+      const cases = await supabaseStorage.getUserCases(userId);
       res.json(cases);
     } catch (error) {
       console.error("Error fetching cases:", error);
@@ -101,23 +101,23 @@ export async function registerCleanRoutes(app: Express): Promise<Server> {
       // Generate contract number
       const contractNumber = `CONTRACT-${Date.now()}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
 
-      const contractData = await directStorage.createContract({
+      const contractData = await supabaseStorage.createContract({
         ...validation.data,
-        userId,
-        contractNumber,
+        user_id: userId,
+        contract_number: contractNumber,
         status: "draft",
         version: 1
       });
 
       // Create timeline event
-      await directStorage.createTimelineEvent({
-        contractId: contractData.id,
-        userId,
-        eventType: "contract_created",
+      await supabaseStorage.createTimelineEvent({
+        contract_id: contractData.id,
+        user_id: userId,
+        event_type: "contract_created",
         title: "Contract Created", 
         description: `Contract ${contractNumber} has been created`,
         eventDate: new Date(),
-        isCompleted: true
+        is_completed: true
       });
 
       res.status(201).json(contractData);
