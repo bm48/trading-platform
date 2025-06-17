@@ -43,14 +43,14 @@ export async function registerCleanRoutes(app: Express): Promise<Server> {
       // Generate case number
       const caseNumber = `CASE-${Date.now()}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
 
-      const caseData = await supabaseStorage.createCase({
+      const caseData = await directStorage.createCase({
         ...validation.data,
         userId,
         caseNumber
       });
 
       // Create timeline event
-      await supabaseStorage.createTimelineEvent({
+      await directStorage.createTimelineEvent({
         caseId: caseData.id,
         userId,
         eventType: "case_created",
@@ -74,7 +74,7 @@ export async function registerCleanRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
-      const cases = await supabaseStorage.getUserCases(userId);
+      const cases = await directStorage.getUserCases(userId);
       res.json(cases);
     } catch (error) {
       console.error("Error fetching cases:", error);
@@ -101,7 +101,7 @@ export async function registerCleanRoutes(app: Express): Promise<Server> {
       // Generate contract number
       const contractNumber = `CONTRACT-${Date.now()}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
 
-      const contractData = await supabaseStorage.createContract({
+      const contractData = await directStorage.createContract({
         ...validation.data,
         userId,
         contractNumber,
@@ -110,7 +110,7 @@ export async function registerCleanRoutes(app: Express): Promise<Server> {
       });
 
       // Create timeline event
-      await supabaseStorage.createTimelineEvent({
+      await directStorage.createTimelineEvent({
         contractId: contractData.id,
         userId,
         eventType: "contract_created",
@@ -134,7 +134,7 @@ export async function registerCleanRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
-      const contracts = await supabaseStorage.getUserContracts(userId);
+      const contracts = await directStorage.getUserContracts(userId);
       res.json(contracts);
     } catch (error) {
       console.error("Error fetching contracts:", error);
@@ -174,7 +174,7 @@ export async function registerCleanRoutes(app: Express): Promise<Server> {
         status: 'pending'
       };
 
-      const application = await supabaseStorage.createApplication(applicationData);
+      const application = await directStorage.createApplication(applicationData);
       res.status(201).json(application);
     } catch (error) {
       console.error("Error creating application:", error);
@@ -189,7 +189,7 @@ export async function registerCleanRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
-      const applications = await supabaseStorage.getUserApplications(userId);
+      const applications = await directStorage.getUserApplications(userId);
       res.json(applications);
     } catch (error) {
       console.error("Error fetching applications:", error);
