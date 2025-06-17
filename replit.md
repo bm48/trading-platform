@@ -10,8 +10,8 @@ The application follows a modern full-stack architecture:
 
 - **Frontend**: React 18 with TypeScript, using Vite as the build tool
 - **Backend**: Express.js server with TypeScript
-- **Database**: PostgreSQL with Drizzle ORM
-- **Authentication**: Supabase Auth with custom middleware
+- **Database**: Supabase PostgreSQL with direct Supabase client
+- **Authentication**: Supabase Auth with JWT middleware
 - **Styling**: Tailwind CSS with shadcn/ui components
 - **File Storage**: Local file system with multer for uploads
 - **External Services**: Optional integrations for OpenAI, Stripe, and email services
@@ -106,6 +106,7 @@ Changelog:
 - June 15, 2025. Initial setup
 - June 15, 2025. Completed Supabase migration and fixed 403 authentication errors in case/contract creation
 - June 17, 2025. Completely resolved 403 authentication errors by implementing direct database storage layer, fixing timestamp handling in Drizzle ORM, and updating validation schemas. System now successfully creates cases and contracts with proper user authentication.
+- June 17, 2025. Completed full Supabase migration - converted entire database architecture from hybrid PostgreSQL/Drizzle to pure Supabase client implementation. All database operations now use Supabase directly with proper field name mapping between frontend camelCase and database snake_case. Authentication and database operations are now unified under Supabase.
 
 ## User Preferences
 

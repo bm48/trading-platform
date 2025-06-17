@@ -134,7 +134,7 @@ export async function registerCleanRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
-      const contracts = await directStorage.getUserContracts(userId);
+      const contracts = await supabaseStorage.getUserContracts(userId);
       res.json(contracts);
     } catch (error) {
       console.error("Error fetching contracts:", error);
@@ -174,7 +174,7 @@ export async function registerCleanRoutes(app: Express): Promise<Server> {
         status: 'pending'
       };
 
-      const application = await directStorage.createApplication(applicationData);
+      const application = await supabaseStorage.createApplication(applicationData);
       res.status(201).json(application);
     } catch (error) {
       console.error("Error creating application:", error);
@@ -189,7 +189,7 @@ export async function registerCleanRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
-      const applications = await directStorage.getUserApplications(userId);
+      const applications = await supabaseStorage.getUserApplications(userId);
       res.json(applications);
     } catch (error) {
       console.error("Error fetching applications:", error);
