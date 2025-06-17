@@ -50,13 +50,29 @@ export class SupabaseStorage {
   // Case operations
   async createCase(caseData: any): Promise<Case> {
     try {
+      // Map camelCase to snake_case for database
+      const dbData = {
+        user_id: caseData.user_id,
+        application_id: caseData.applicationId,
+        title: caseData.title,
+        case_number: caseData.case_number,
+        status: caseData.status || "active",
+        issue_type: caseData.issueType || caseData.category, // Handle both field names
+        amount: caseData.amount,
+        description: caseData.description,
+        priority: caseData.priority || "medium",
+        ai_analysis: caseData.aiAnalysis,
+        strategy_pack: caseData.strategyPack,
+        next_action: caseData.nextAction,
+        next_action_due: caseData.nextActionDue,
+        progress: caseData.progress || 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
       const { data, error } = await supabase
         .from('cases')
-        .insert({
-          ...caseData,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
+        .insert(dbData)
         .select()
         .single();
 
@@ -139,13 +155,26 @@ export class SupabaseStorage {
   // Contract operations
   async createContract(contractData: any): Promise<Contract> {
     try {
+      // Map camelCase to snake_case for database
+      const dbData = {
+        user_id: contractData.user_id,
+        title: contractData.title,
+        contract_number: contractData.contract_number,
+        status: contractData.status || "draft",
+        client_name: contractData.clientName,
+        project_description: contractData.projectDescription,
+        value: contractData.value,
+        start_date: contractData.startDate,
+        end_date: contractData.endDate,
+        terms: contractData.terms,
+        version: contractData.version || 1,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
       const { data, error } = await supabase
         .from('contracts')
-        .insert({
-          ...contractData,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
+        .insert(dbData)
         .select()
         .single();
 
@@ -228,13 +257,22 @@ export class SupabaseStorage {
   // Timeline operations
   async createTimelineEvent(eventData: any): Promise<TimelineEvent> {
     try {
+      // Map camelCase to snake_case for database
+      const dbData = {
+        case_id: eventData.case_id,
+        contract_id: eventData.contract_id,
+        user_id: eventData.user_id,
+        event_type: eventData.event_type,
+        title: eventData.title,
+        description: eventData.description,
+        event_date: eventData.eventDate?.toISOString() || new Date().toISOString(),
+        is_completed: eventData.is_completed || false,
+        created_at: new Date().toISOString()
+      };
+
       const { data, error } = await supabase
         .from('timeline_events')
-        .insert({
-          ...eventData,
-          event_date: eventData.eventDate?.toISOString() || new Date().toISOString(),
-          created_at: new Date().toISOString()
-        })
+        .insert(dbData)
         .select()
         .single();
 
@@ -414,13 +452,27 @@ export class SupabaseStorage {
   // Application operations
   async createApplication(application: any): Promise<Application> {
     try {
+      // Map camelCase to snake_case for database
+      const dbData = {
+        user_id: application.userId,
+        full_name: application.fullName,
+        phone: application.phone,
+        email: application.email,
+        trade: application.trade,
+        state: application.state,
+        issue_type: application.issueType,
+        amount: application.amount,
+        start_date: application.startDate,
+        description: application.description,
+        status: application.status || "pending",
+        ai_analysis: application.aiAnalysis,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
       const { data, error } = await supabase
         .from('applications')
-        .insert({
-          ...application,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
+        .insert(dbData)
         .select()
         .single();
 
