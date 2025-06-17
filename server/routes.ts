@@ -8,8 +8,8 @@ import { sendWelcomeEmail, sendApprovalEmail, sendRejectionEmail } from "./email
 import { generateStrategyPackPDF, generateAIStrategyPackPDF } from "./pdf";
 import { checkSubscriptionStatus, consumeStrategyPack, grantStrategyPack } from "./subscription";
 import { registerCaseRoutes } from "./case-routes";
-import { storage } from "./storage";
-import { authenticateToken, requireAdmin, requireModerator, optionalAuth } from "./auth-middleware";
+import { supabaseStorage } from "./supabase-storage";
+import { authenticateUser, optionalAuth } from "./supabase-auth";
 import Stripe from "stripe";
 import multer from "multer";
 import path from "path";
