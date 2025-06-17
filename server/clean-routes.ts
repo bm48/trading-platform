@@ -56,7 +56,7 @@ export async function registerCleanRoutes(app: Express): Promise<Server> {
         eventType: "case_created",
         title: "Case Created",
         description: `Case ${caseNumber} has been created`,
-        eventDate: new Date().toISOString(),
+        eventDate: new Date(),
         isCompleted: true
       });
 
@@ -116,7 +116,7 @@ export async function registerCleanRoutes(app: Express): Promise<Server> {
         eventType: "contract_created",
         title: "Contract Created",
         description: `Contract ${contractNumber} has been created`,
-        eventDate: new Date().toISOString(),
+        eventDate: new Date(),
         isCompleted: true
       });
 

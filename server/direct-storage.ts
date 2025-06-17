@@ -20,10 +20,7 @@ export class DirectStorage {
     try {
       const [user] = await db
         .insert(users)
-        .values({
-          ...userData,
-          updatedAt: new Date()
-        })
+        .values(userData)
         .onConflictDoUpdate({
           target: users.id,
           set: {
@@ -162,10 +159,7 @@ export class DirectStorage {
     try {
       const [event] = await db
         .insert(timelineEvents)
-        .values({
-          ...eventData,
-          createdAt: new Date()
-        })
+        .values(eventData)
         .returning();
       return event;
     } catch (error) {
