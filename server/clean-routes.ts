@@ -276,7 +276,7 @@ export async function registerCleanRoutes(app: Express): Promise<Server> {
 
       // Verify user owns the contract
       const contractData = await supabaseStorage.getContract(contractId);
-      if (!contractData || contractData.user_id !== userId) {
+      if (!contractData || contractData.userId !== userId) {
         return res.status(403).json({ message: "Access denied" });
       }
 
@@ -304,7 +304,7 @@ export async function registerCleanRoutes(app: Express): Promise<Server> {
 
       // Verify user owns the case
       const caseData = await supabaseStorage.getCase(caseId);
-      if (!caseData || caseData.user_id !== userId) {
+      if (!caseData || caseData.userId !== userId) {
         return res.status(403).json({ message: "Access denied" });
       }
 
@@ -360,7 +360,7 @@ export async function registerCleanRoutes(app: Express): Promise<Server> {
 
       // Verify user owns the contract
       const contractData = await supabaseStorage.getContract(contractId);
-      if (!contractData || contractData.user_id !== userId) {
+      if (!contractData || contractData.userId !== userId) {
         return res.status(403).json({ message: "Access denied" });
       }
 

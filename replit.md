@@ -107,6 +107,7 @@ Changelog:
 - June 15, 2025. Completed Supabase migration and fixed 403 authentication errors in case/contract creation
 - June 17, 2025. Completely resolved 403 authentication errors by implementing direct database storage layer, fixing timestamp handling in Drizzle ORM, and updating validation schemas. System now successfully creates cases and contracts with proper user authentication.
 - June 17, 2025. Completed full Supabase migration - converted entire database architecture from hybrid PostgreSQL/Drizzle to pure Supabase client implementation. All database operations now use Supabase directly with proper field name mapping between frontend camelCase and database snake_case. Authentication and database operations are now unified under Supabase.
+- June 17, 2025. Fixed document upload workflow - created comprehensive SQL setup for missing tables (timeline_events, documents, applications), implemented complete file upload endpoints with proper user authentication and field mapping, added multer configuration for secure file handling. Created supabase_timeline_events_table.sql for database table creation.
 
 ## User Preferences
 
