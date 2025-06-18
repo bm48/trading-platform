@@ -34,9 +34,13 @@ declare global {
 export const authenticateUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const authHeader = req.headers.authorization;
+    console.log('Auth header received:', authHeader ? 'Present' : 'Missing');
+    
     const token = authHeader?.split(' ')[1];
+    console.log('Token extracted:', token ? 'Present' : 'Missing');
 
     if (!token) {
+      console.log('No token found in request');
       return res.status(401).json({ message: "Access token required" });
     }
 
@@ -44,9 +48,12 @@ export const authenticateUser = async (req: Request, res: Response, next: NextFu
     const { data: { user }, error } = await supabase.auth.getUser(token);
 
     if (error || !user) {
+      console.log('Token verification failed:', error?.message || 'No user found');
       return res.status(401).json({ message: "Invalid or expired token" });
     }
 
+    console.log('Authentication successful for user:', user.id);
+    
     // Bypass complex profile creation - use existing user or default values
     req.user = {
       id: user.id,
