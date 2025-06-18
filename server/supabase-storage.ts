@@ -261,13 +261,13 @@ export class SupabaseStorage {
       const dbData = {
         caseid: eventData.caseid || eventData.caseId || eventData.case_id,
         contractid: eventData.contractid || eventData.contractId || eventData.contract_id,
-        userid: eventData.userid || eventData.userId || eventData.user_id,
-        eventType: eventData.eventType || eventData.event_type || 'general',
+        user_id: eventData.userid || eventData.userId || eventData.user_id,
+        event_type: eventData.eventType || eventData.event_type || 'general',
         title: eventData.title,
         description: eventData.description,
-        eventDate: eventData.eventDate?.toISOString() || new Date().toISOString(),
-        isCompleted: eventData.isCompleted || eventData.is_completed || false,
-        createdAt: new Date().toISOString()
+        event_date: eventData.eventDate?.toISOString() || new Date().toISOString(),
+        is_completed: eventData.isCompleted || eventData.is_completed || false,
+        created_at: new Date().toISOString()
       };
 
       // Remove undefined/null fields to avoid issues
