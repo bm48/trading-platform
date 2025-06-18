@@ -307,10 +307,12 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
   // Contract management routes
   app.post('/api/contracts', authenticateUser, async (req: Request, res: Response) => {
     try {
+      console.log('Contract creation request body:', JSON.stringify(req.body, null, 2));
+      
       // Generate contract number
       const contractNumber = `CONTRACT-${Date.now()}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
       
-      // Map frontend camelCase to exact database column names from screenshot
+      // Map frontend fields to exact database column names from screenshot
       const contractData = {
         user_id: req.user!.id,
         title: req.body.title,
@@ -320,15 +322,26 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
         value: parseFloat(req.body.value) || 0,
         start_date: req.body.startDate ? new Date(req.body.startDate).toISOString() : null,
         end_date: req.body.endDate ? new Date(req.body.endDate).toISOString() : null,
-        terms: req.body.terms || {},
-        status: 'draft',
+        // Map frontend form fields to terms JSON object for database
+        terms: {
+          contractType: req.body.contractType,
+          paymentTerms: req.body.paymentTerms,
+          scope: req.body.scope,
+          specialConditions: req.body.specialConditions
+        },
+        status: req.body.status || 'draft',
         version: 1,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
 
+      console.log('Mapped contract data for database:', JSON.stringify(contractData, null, 2));
+
       const { data: newContract, error } = await database.createContract(contractData);
-      if (error) throw error;
+      if (error) {
+        console.error('Database error creating contract:', error);
+        throw error;
+      }
 
       res.status(201).json(newContract);
     } catch (error) {
