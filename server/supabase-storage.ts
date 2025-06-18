@@ -300,7 +300,7 @@ export class SupabaseStorage {
       const { data, error } = await supabase
         .from('timeline_events')
         .select('*')
-        .eq('case_id', caseId)
+        .eq('caseid', caseId)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -320,7 +320,7 @@ export class SupabaseStorage {
       const { data, error } = await supabase
         .from('timeline_events')
         .select('*')
-        .eq('contract_id', contractId)
+        .eq('contractid', contractId)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -340,8 +340,8 @@ export class SupabaseStorage {
     try {
       // Map frontend field names to exact database column names from Supabase
       const dbData = {
-        case_id: documentData.caseid || documentData.caseId || documentData.case_id,
-        contract_id: documentData.contractid || documentData.contractId || documentData.contract_id,
+        caseid: documentData.caseid || documentData.caseId || documentData.case_id,
+        contractid: documentData.contractid || documentData.contractId || documentData.contract_id,
         user_id: documentData.userid || documentData.userId || documentData.user_id,
         filename: documentData.filename,
         original_name: documentData.originalName || documentData.original_name,
@@ -409,7 +409,7 @@ export class SupabaseStorage {
       const { data, error } = await supabase
         .from('documents')
         .select('*')
-        .eq('case_id', caseId)
+        .eq('caseid', caseId)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -429,7 +429,7 @@ export class SupabaseStorage {
       const { data, error } = await supabase
         .from('documents')
         .select('*')
-        .eq('contract_id', contractId)
+        .eq('contractid', contractId)
         .order('created_at', { ascending: false });
 
       if (error) {
