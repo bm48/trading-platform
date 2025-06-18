@@ -115,8 +115,12 @@ export default function CaseDetail() {
 
   const downloadDocument = async (documentId: number, filename: string) => {
     try {
+      const session = await supabase.auth.getSession();
       const response = await fetch(`/api/documents/${documentId}/download`, {
         credentials: 'include',
+        headers: {
+          'Authorization': `Bearer ${session.data.session?.access_token}`
+        }
       });
       
       if (!response.ok) throw new Error('Download failed');
@@ -576,17 +580,17 @@ export default function CaseDetail() {
                           key={doc.id}
                           className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50"
                         >
-                          <i className={`${getFileIcon(doc.fileType)} text-lg mr-3`} />
+                          <i className={`${getFileIcon(doc.file_type || doc.fileType)} text-lg mr-3`} />
                           <div className="flex-1">
-                            <div className="text-sm font-medium text-neutral-dark">{doc.originalName}</div>
+                            <div className="text-sm font-medium text-neutral-dark">{doc.original_name || doc.originalName}</div>
                             <div className="text-xs text-neutral-medium">
-                              Uploaded {formatDate(doc.createdAt)}
+                              Uploaded {formatDate(doc.created_at || doc.createdAt)}
                             </div>
                           </div>
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => downloadDocument(doc.id, doc.originalName)}
+                            onClick={() => downloadDocument(doc.id, doc.original_name || doc.originalName)}
                           >
                             <Download className="h-4 w-4" />
                           </Button>

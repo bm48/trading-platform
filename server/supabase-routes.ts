@@ -585,6 +585,29 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get documents for a specific case
+  app.get('/api/documents/case/:caseId', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const caseId = parseInt(req.params.caseId);
+      const userId = req.user?.id;
+
+      if (!caseId || isNaN(caseId)) {
+        return res.status(400).json({ message: "Invalid case ID" });
+      }
+
+      // Get documents for this case
+      const documents = await supabaseStorage.getCaseDocuments(caseId);
+      
+      // Filter to only documents the user has access to
+      const userDocuments = documents.filter(doc => doc.user_id === userId || req.user?.role === 'admin');
+      
+      res.json(userDocuments);
+    } catch (error) {
+      console.error("Error fetching case documents:", error);
+      res.status(500).json({ message: "Failed to fetch documents" });
+    }
+  });
+
   // Document download endpoint
   app.get('/api/documents/:id/download', authenticateUser, async (req: Request, res: Response) => {
     try {
@@ -611,16 +634,16 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
       const fs = require('fs');
       const path = require('path');
       
-      const filePath = document.upload_path || document.uploadPath;
+      const filePath = document.upload_path;
       if (!filePath || !fs.existsSync(filePath)) {
         return res.status(404).json({ message: "File not found on disk" });
       }
 
-      const fileName = document.original_name || document.originalName || 'download';
+      const fileName = document.original_name || 'download';
       const fileExtension = path.extname(fileName);
       
       res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
-      res.setHeader('Content-Type', document.mime_type || document.mimeType || 'application/octet-stream');
+      res.setHeader('Content-Type', document.mime_type || 'application/octet-stream');
       
       const fileStream = fs.createReadStream(filePath);
       fileStream.pipe(res);
