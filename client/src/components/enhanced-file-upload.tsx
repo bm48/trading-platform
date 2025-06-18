@@ -51,6 +51,14 @@ export default function EnhancedFileUpload({
       formData.append('file', file);
       formData.append('category', category);
       formData.append('description', `${category} - ${file.name}`);
+      
+      // Add case or contract ID to form data
+      if (caseId) {
+        formData.append('case_id', caseId.toString());
+      }
+      if (contractId) {
+        formData.append('contract_id', contractId.toString());
+      }
 
       const endpoint = caseId 
         ? `/api/cases/${caseId}/upload`
@@ -58,20 +66,22 @@ export default function EnhancedFileUpload({
         ? `/api/contracts/${contractId}/upload`
         : `/api/documents/upload`;
 
-      // Get auth token using the same method as other API requests
-      const { data: { session } } = await supabase.auth.getSession();
+      // Get fresh auth token
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
-      if (!session?.access_token) {
-        throw new Error('No authentication session found. Please log in again.');
+      if (sessionError || !session?.access_token) {
+        console.error('Session error:', sessionError);
+        throw new Error('Authentication required. Please log in again.');
       }
 
-      const headers: Record<string, string> = {
-        'Authorization': `Bearer ${session.access_token}`
-      };
+      console.log('Making upload request to:', endpoint);
+      console.log('Auth token present:', !!session.access_token);
 
       const response = await fetch(endpoint, {
         method: 'POST',
-        headers,
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        },
         body: formData,
         credentials: 'include',
       });

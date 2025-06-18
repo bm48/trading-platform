@@ -277,8 +277,13 @@ export default function Dashboard() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-neutral-medium">Active Cases</p>
-                  <p className="text-2xl font-bold text-neutral-dark animate-pulse-hover">{activeCases.length}</p>
+                  <p className="text-sm text-neutral-medium">
+                    {activeTab === 'cases' ? 'Active Cases' : 'Active Contracts'}
+                  </p>
+                  <p className="text-2xl font-bold text-neutral-dark animate-pulse-hover">
+                    {activeTab === 'cases' ? activeCases.length : 
+                     (contracts as any[])?.filter((c: any) => c.status === 'draft' || c.status === 'active')?.length || 0}
+                  </p>
                 </div>
                 <FolderOpen className="h-8 w-8 text-primary animate-bounce-hover" />
               </div>
@@ -291,9 +296,10 @@ export default function Dashboard() {
                 <div>
                   <p className="text-sm text-neutral-medium">Total Value</p>
                   <p className="text-2xl font-bold text-neutral-dark animate-pulse-hover">
-                    {formatCurrency(
-                      cases.reduce((total: number, c: any) => total + (parseFloat(c.amount) || 0), 0)
-                    )}
+                    {activeTab === 'cases' ? 
+                      formatCurrency(cases.reduce((total: number, c: any) => total + (parseFloat(c.amount) || 0), 0)) :
+                      formatCurrency((contracts as any[])?.reduce((total: number, c: any) => total + (parseFloat(c.value) || 0), 0) || 0)
+                    }
                   </p>
                 </div>
                 <DollarSign className="h-8 w-8 text-success animate-bounce-hover" />
@@ -305,8 +311,13 @@ export default function Dashboard() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-neutral-medium">Resolved Cases</p>
-                  <p className="text-2xl font-bold text-neutral-dark animate-pulse-hover">{resolvedCases.length}</p>
+                  <p className="text-sm text-neutral-medium">
+                    {activeTab === 'cases' ? 'Resolved Cases' : 'Completed Contracts'}
+                  </p>
+                  <p className="text-2xl font-bold text-neutral-dark animate-pulse-hover">
+                    {activeTab === 'cases' ? resolvedCases.length : 
+                     (contracts as any[])?.filter((c: any) => c.status === 'completed')?.length || 0}
+                  </p>
                 </div>
                 <Shield className="h-8 w-8 text-success" />
               </div>
@@ -516,11 +527,11 @@ export default function Dashboard() {
                       <div className="grid md:grid-cols-3 gap-4">
                         <div>
                           <p className="text-sm text-neutral-medium">Contract Number</p>
-                          <p className="font-medium text-neutral-dark">{contract.contractNumber}</p>
+                          <p className="font-medium text-neutral-dark">{contract.contract_number || contract.contractNumber}</p>
                         </div>
                         <div>
                           <p className="text-sm text-neutral-medium">Client</p>
-                          <p className="font-medium text-neutral-dark">{contract.clientName || 'N/A'}</p>
+                          <p className="font-medium text-neutral-dark">{contract.client_name || contract.clientName || 'N/A'}</p>
                         </div>
                         <div>
                           <p className="text-sm text-neutral-medium">Value</p>
