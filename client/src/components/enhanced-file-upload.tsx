@@ -58,10 +58,22 @@ export default function EnhancedFileUpload({
       const response = await fetch(endpoint, {
         method: 'POST',
         body: formData,
+        credentials: 'include', // Include cookies for authentication
       });
 
       if (!response.ok) {
-        throw new Error('Upload failed');
+        let errorMessage = 'Upload failed';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+        } catch {
+          // If we can't parse JSON, it might be an HTML error page
+          const text = await response.text();
+          if (text.includes('<!DOCTYPE')) {
+            errorMessage = 'Authentication error - please refresh and try again';
+          }
+        }
+        throw new Error(errorMessage);
       }
 
       return response.json();
