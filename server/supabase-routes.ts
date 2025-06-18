@@ -337,7 +337,12 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
 
       console.log('Mapped contract data for database:', JSON.stringify(contractData, null, 2));
 
-      const { data: newContract, error } = await database.createContract(contractData);
+      const { data: newContract, error } = await supabaseAdmin
+        .from('contracts')
+        .insert(contractData)
+        .select()
+        .single();
+        
       if (error) {
         console.error('Database error creating contract:', error);
         throw error;
