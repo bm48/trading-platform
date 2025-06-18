@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import DashboardLayout from '@/components/dashboard-layout';
-import FileUpload from '@/components/file-upload';
+import EnhancedFileUpload from '@/components/enhanced-file-upload';
 import { 
   formatCurrency, 
   formatDate, 

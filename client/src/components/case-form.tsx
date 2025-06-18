@@ -15,7 +15,7 @@ import { CalendarPicker } from '@/components/ui/calendar-picker';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { FileText, X, AlertCircle, CheckCircle, User, Building, DollarSign, Scale, Target, AlertTriangle, Upload, FileIcon } from 'lucide-react';
-import FileUpload from '@/components/file-upload';
+import EnhancedFileUpload from '@/components/enhanced-file-upload';
 
 const caseFormSchema = z.object({
   // Basic case info

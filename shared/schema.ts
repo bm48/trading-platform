@@ -77,37 +77,37 @@ export const cases = pgTable("cases", {
 // Documents (supports both documents and photos with versioning)
 export const documents = pgTable("documents", {
   id: serial("id").primaryKey(),
-  caseId: integer("case_id"),
-  contractId: integer("contract_id"),
-  userId: varchar("user_id").notNull(),
-  filename: varchar("filename").notNull(),
-  originalName: varchar("original_name").notNull(),
-  fileType: varchar("file_type").notNull(), // document, photo, image
-  mimeType: varchar("mime_type").notNull(),
-  fileSize: integer("file_size").notNull(),
-  uploadPath: varchar("upload_path").notNull(),
-  thumbnailPath: varchar("thumbnail_path"), // for images/photos
+  case_id: integer("case_id"),
+  contract_id: integer("contract_id"),
+  user_id: varchar("user_id").notNull(),
+  file_name: varchar("file_name").notNull(),
+  original_name: varchar("original_name").notNull(),
+  file_type: varchar("file_type").notNull(), // document, photo, image
+  mime_type: varchar("mime_type").notNull(),
+  file_size: integer("file_size").notNull(),
+  file_path: varchar("file_path").notNull(),
+  thumbnail_path: varchar("thumbnail_path"), // for images/photos
   tags: jsonb("tags"),
   category: varchar("category"), // evidence, contract, correspondence, generated, photos
   description: text("description"),
   version: integer("version").default(1),
-  parentDocumentId: integer("parent_document_id"), // for versioned files
-  isLatestVersion: boolean("is_latest_version").default(true),
-  createdAt: timestamp("created_at").defaultNow(),
+  parent_document_id: integer("parent_document_id"), // for versioned files
+  is_latest_version: boolean("is_latest_version").default(true),
+  created_at: timestamp("created_at").defaultNow(),
 });
 
 // Timeline events
 export const timelineEvents = pgTable("timeline_events", {
   id: serial("id").primaryKey(),
-  caseId: integer("case_id"),
-  contractId: integer("contract_id"),
-  userId: varchar("user_id").notNull(),
-  eventType: varchar("event_type").notNull(), // action_completed, document_uploaded, deadline_set
+  case_id: integer("case_id"),
+  contract_id: integer("contract_id"),
+  user_id: varchar("user_id").notNull(),
+  event_type: varchar("event_type").notNull(), // action_completed, document_uploaded, deadline_set
   title: varchar("title").notNull(),
   description: text("description"),
-  eventDate: timestamp("event_date").notNull(),
-  isCompleted: boolean("is_completed").default(false),
-  createdAt: timestamp("created_at").defaultNow(),
+  event_date: timestamp("event_date").notNull(),
+  is_completed: boolean("is_completed").default(false),
+  created_at: timestamp("created_at").defaultNow(),
 });
 
 // Contracts (for future work prevention)
