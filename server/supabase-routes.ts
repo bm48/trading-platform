@@ -194,18 +194,18 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
       // Generate case number
       const caseNumber = `CASE-${Date.now()}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
       
-      // Map frontend camelCase to exact database schema
+      // Map frontend camelCase to database snake_case
       const caseData = {
         user_id: req.user!.id,
-        case_number: caseNumber,
         title: req.body.title,
+        case_number: caseNumber,
         issue_type: req.body.issueType,
         description: req.body.description,
         amount: req.body.amount,
         status: 'active',
         priority: 'medium',
         progress: 0,
-        next_action: null,
+        next_action_due: req.body.nextActionDue ? new Date(req.body.nextActionDue).toISOString() : null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };

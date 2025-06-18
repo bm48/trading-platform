@@ -11,7 +11,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { supabase } from '@/lib/supabase';
 import { FileText, X, Building } from 'lucide-react';
 import EnhancedFileUpload from '@/components/enhanced-file-upload';
 

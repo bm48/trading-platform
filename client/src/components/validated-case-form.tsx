@@ -12,7 +12,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { CalendarPicker } from '@/components/ui/calendar-picker';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { supabase } from '@/lib/supabase';
 import { FileText, X, Scale } from 'lucide-react';
 import EnhancedFileUpload from '@/components/enhanced-file-upload';
 
