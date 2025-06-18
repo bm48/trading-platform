@@ -113,6 +113,44 @@ export const database = {
     return { data, error }
   },
 
+  // Contracts
+  createContract: async (contractData: any) => {
+    const { data, error } = await supabaseAdmin
+      .from('contracts')
+      .insert(contractData)
+      .select()
+      .single()
+    return { data, error }
+  },
+
+  getContracts: async (userId?: string) => {
+    let query = supabaseAdmin.from('contracts').select('*')
+    if (userId) {
+      query = query.eq('user_id', userId)
+    }
+    const { data, error } = await query.order('created_at', { ascending: false })
+    return { data, error }
+  },
+
+  getContract: async (id: number) => {
+    const { data, error } = await supabaseAdmin
+      .from('contracts')
+      .select('*')
+      .eq('id', id)
+      .single()
+    return { data, error }
+  },
+
+  updateContract: async (id: number, updates: any) => {
+    const { data, error } = await supabaseAdmin
+      .from('contracts')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single()
+    return { data, error }
+  },
+
   // Documents
   createDocument: async (documentData: any) => {
     const { data, error } = await supabaseAdmin

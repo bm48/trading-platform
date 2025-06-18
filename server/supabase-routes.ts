@@ -191,10 +191,23 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
   // Case management routes
   app.post('/api/cases', authenticateUser, async (req: Request, res: Response) => {
     try {
+      // Generate case number
+      const caseNumber = `CASE-${Date.now()}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
+      
+      // Map frontend camelCase to database snake_case
       const caseData = {
-        ...req.body,
         user_id: req.user!.id,
-        created_at: new Date().toISOString()
+        title: req.body.title,
+        case_number: caseNumber,
+        issue_type: req.body.issueType,
+        description: req.body.description,
+        amount: req.body.amount,
+        status: 'active',
+        priority: 'medium',
+        progress: 0,
+        next_action_due: req.body.nextActionDue ? new Date(req.body.nextActionDue).toISOString() : null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       };
 
       const { data: newCase, error } = await database.createCase(caseData);
@@ -288,6 +301,76 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error generating strategy pack:", error);
       res.status(500).json({ message: "Failed to generate strategy pack" });
+    }
+  });
+
+  // Contract management routes
+  app.post('/api/contracts', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      // Generate contract number
+      const contractNumber = `CONTRACT-${Date.now()}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
+      
+      // Map frontend camelCase to database snake_case
+      const contractData = {
+        user_id: req.user!.id,
+        title: req.body.title,
+        contract_num: contractNumber,
+        client_name: req.body.clientName,
+        project_descr: req.body.projectDescription,
+        value: parseFloat(req.body.value) || 0,
+        start_date: req.body.startDate ? new Date(req.body.startDate).toISOString() : null,
+        end_date: req.body.endDate ? new Date(req.body.endDate).toISOString() : null,
+        terms: req.body.terms || {},
+        status: 'draft',
+        version: 1,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      const { data: newContract, error } = await database.createContract(contractData);
+      if (error) throw error;
+
+      res.status(201).json(newContract);
+    } catch (error) {
+      console.error("Error creating contract:", error);
+      res.status(500).json({ message: "Failed to create contract" });
+    }
+  });
+
+  app.get('/api/contracts', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const isAdmin = req.user!.role === 'admin';
+      const userId = isAdmin ? undefined : req.user!.id;
+      
+      const { data: contracts, error } = await database.getContracts(userId);
+      if (error) throw error;
+
+      res.json(contracts);
+    } catch (error) {
+      console.error("Error fetching contracts:", error);
+      res.status(500).json({ message: "Failed to fetch contracts" });
+    }
+  });
+
+  app.get('/api/contracts/:id', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { data: contract, error } = await database.getContract(parseInt(id));
+      
+      if (error) throw error;
+      if (!contract) {
+        return res.status(404).json({ message: "Contract not found" });
+      }
+
+      // Check ownership
+      if (contract.user_id !== req.user!.id && req.user!.role !== 'admin') {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      res.json(contract);
+    } catch (error) {
+      console.error("Error fetching contract:", error);
+      res.status(500).json({ message: "Failed to fetch contract" });
     }
   });
 

@@ -155,17 +155,17 @@ export class SupabaseStorage {
   // Contract operations
   async createContract(contractData: any): Promise<Contract> {
     try {
-      // Map camelCase to exact database column names
+      // Map to exact database column names from screenshots
       const dbData = {
         user_id: contractData.user_id,
         title: contractData.title,
-        contract_number: contractData.contract_number, // Use contract_number not contract_num
+        contract_num: contractData.contract_num, // Database uses contract_num
         status: contractData.status || "draft",
-        client_name: contractData.clientName,
-        project_description: contractData.projectDescription, // Use project_description not project_descr
+        client_name: contractData.client_name,
+        project_descr: contractData.project_descr, // Database uses project_descr
         value: contractData.value,
-        start_date: contractData.startDate,
-        end_date: contractData.endDate,
+        start_date: contractData.start_date,
+        end_date: contractData.end_date,
         terms: contractData.terms,
         version: contractData.version || 1,
         created_at: new Date().toISOString(),
