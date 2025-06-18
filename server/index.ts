@@ -1,22 +1,22 @@
 import express, { type Request, Response, NextFunction } from "express";
-import session from "express-session";
-import { registerCleanRoutes } from "./clean-routes";
+import { registerSupabaseRoutes } from "./supabase-routes";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Session configuration
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'demo-secret-key-for-development',
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    secure: false, // Set to true in production with HTTPS
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+// CORS headers for Supabase
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Headers', 'Authorization, Content-Type');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(200);
+  } else {
+    next();
   }
-}));
+});
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -49,7 +49,7 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  const server = await registerCleanRoutes(app);
+  const server = await registerSupabaseRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;

@@ -1,7 +1,7 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { supabaseAdmin, userManagement, database } from "./supabase";
-import { authenticateToken, requireAdmin, requireModerator, optionalAuth } from "./auth-middleware";
+import { authenticateUser, optionalAuth } from "./supabase-auth";
 import { analyzeCase, generateStrategyPack } from "./openai";
 import { sendWelcomeEmail, sendApprovalEmail, sendRejectionEmail } from "./email";
 import { generateStrategyPackPDF, generateAIStrategyPackPDF } from "./pdf";
@@ -36,7 +36,7 @@ const upload = multer({
 
 export async function registerSupabaseRoutes(app: Express): Promise<Server> {
   // User profile routes
-  app.get('/api/user/profile', authenticateToken, async (req: Request, res: Response) => {
+  app.get('/api/user/profile', authenticateUser, async (req: Request, res: Response) => {
     try {
       const { data: profile, error } = await supabaseAdmin
         .from('profiles')
@@ -52,7 +52,7 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/user/profile', authenticateToken, async (req: Request, res: Response) => {
+  app.put('/api/user/profile', authenticateUser, async (req: Request, res: Response) => {
     try {
       const { first_name, last_name, full_name } = req.body;
       
