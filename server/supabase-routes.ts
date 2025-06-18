@@ -205,7 +205,6 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
         status: 'active',
         priority: 'medium',
         progress: 0,
-        next_action_due: req.body.nextActionDue ? new Date(req.body.nextActionDue).toISOString() : null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };

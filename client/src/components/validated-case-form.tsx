@@ -49,7 +49,22 @@ export default function ValidatedCaseForm({ onClose, onSuccess }: ValidatedCaseF
 
   const createCaseMutation = useMutation({
     mutationFn: async (data: CaseFormData) => {
-      return await apiRequest('POST', '/api/cases', data);
+      const { data: { session } } = await supabase.auth.getSession();
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-case`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`,
+        },
+        body: JSON.stringify(data),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to create case');
+      }
+      
+      return await response.json();
     },
     onSuccess: (data) => {
       const newCase = typeof data === 'object' && data !== null ? data : {};
