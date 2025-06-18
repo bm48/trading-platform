@@ -111,5 +111,40 @@ export const database = {
       .select()
       .single()
     return { data, error }
+  },
+
+  // Documents
+  createDocument: async (documentData: any) => {
+    const { data, error } = await supabaseAdmin
+      .from('documents')
+      .insert(documentData)
+      .select()
+      .single()
+    return { data, error }
+  },
+
+  getDocuments: async (userId?: string, caseId?: number, contractId?: number) => {
+    let query = supabaseAdmin.from('documents').select('*')
+    if (userId) {
+      query = query.eq('user_id', userId)
+    }
+    if (caseId) {
+      query = query.eq('case_id', caseId)
+    }
+    if (contractId) {
+      query = query.eq('contract_id', contractId)
+    }
+    const { data, error } = await query.order('created_at', { ascending: false })
+    return { data, error }
+  },
+
+  deleteDocument: async (id: number) => {
+    const { data, error } = await supabaseAdmin
+      .from('documents')
+      .delete()
+      .eq('id', id)
+      .select()
+      .single()
+    return { data, error }
   }
 }

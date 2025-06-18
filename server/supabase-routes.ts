@@ -329,6 +329,128 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // File upload endpoints
+  app.post('/api/documents/upload', authenticateUser, upload.single('file'), async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      const file = req.file;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      if (!file) {
+        return res.status(400).json({ message: "No file provided" });
+      }
+
+      const category = req.body.category || 'general';
+      const description = req.body.description || file.originalname;
+      
+      const { data: document, error } = await database.createDocument({
+        user_id: userId,
+        file_name: file.filename,
+        original_name: file.originalname,
+        file_path: file.path,
+        file_size: file.size,
+        mime_type: file.mimetype,
+        category: category,
+        description: description
+      });
+
+      if (error) throw error;
+
+      res.status(201).json({
+        message: "File uploaded successfully", 
+        document
+      });
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      res.status(500).json({ message: "Failed to upload file" });
+    }
+  });
+
+  app.post('/api/cases/:caseId/upload', authenticateUser, upload.single('file'), async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      const caseId = parseInt(req.params.caseId);
+      const file = req.file;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      if (!file) {
+        return res.status(400).json({ message: "No file provided" });
+      }
+
+      const category = req.body.category || 'general';
+      const description = req.body.description || file.originalname;
+      
+      const { data: document, error } = await database.createDocument({
+        user_id: userId,
+        case_id: caseId,
+        file_name: file.filename,
+        original_name: file.originalname,
+        file_path: file.path,
+        file_size: file.size,
+        mime_type: file.mimetype,
+        category: category,
+        description: description
+      });
+
+      if (error) throw error;
+
+      res.status(201).json({
+        message: "File uploaded successfully",
+        document
+      });
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      res.status(500).json({ message: "Failed to upload file" });
+    }
+  });
+
+  app.post('/api/contracts/:contractId/upload', authenticateUser, upload.single('file'), async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      const contractId = parseInt(req.params.contractId);
+      const file = req.file;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      if (!file) {
+        return res.status(400).json({ message: "No file provided" });
+      }
+
+      const category = req.body.category || 'general';
+      const description = req.body.description || file.originalname;
+      
+      const { data: document, error } = await database.createDocument({
+        user_id: userId,
+        contract_id: contractId,
+        file_name: file.filename,
+        original_name: file.originalname,
+        file_path: file.path,
+        file_size: file.size,
+        mime_type: file.mimetype,
+        category: category,
+        description: description
+      });
+
+      if (error) throw error;
+
+      res.status(201).json({
+        message: "File uploaded successfully",
+        document
+      });
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      res.status(500).json({ message: "Failed to upload file" });
+    }
+  });
+
   // Role management routes
   app.get('/api/admin/roles', authenticateUser, async (req: Request, res: Response) => {
     try {
