@@ -409,8 +409,8 @@ export class SupabaseStorage {
       const { data, error } = await supabase
         .from('documents')
         .select('*')
-        .eq('caseid', caseId)
-        .order('createdAt', { ascending: false });
+        .eq('case_id', caseId)
+        .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Error fetching case documents:', error);
@@ -429,8 +429,8 @@ export class SupabaseStorage {
       const { data, error } = await supabase
         .from('documents')
         .select('*')
-        .eq('contractid', contractId)
-        .order('createdAt', { ascending: false });
+        .eq('contract_id', contractId)
+        .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Error fetching contract documents:', error);

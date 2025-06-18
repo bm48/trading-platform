@@ -115,11 +115,20 @@ export default function CaseDetail() {
 
   const downloadDocument = async (documentId: number, filename: string) => {
     try {
-      const session = await supabase.auth.getSession();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        toast({
+          title: "Authentication Required",
+          description: "Please log in to download documents.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const response = await fetch(`/api/documents/${documentId}/download`, {
         credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${session.data.session?.access_token}`
+          'Authorization': `Bearer ${session.access_token}`
         }
       });
       
