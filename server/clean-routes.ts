@@ -3,6 +3,28 @@ import { createServer, type Server } from "http";
 import { insertCaseSchema, insertContractSchema } from "@shared/schema";
 import { supabaseStorage } from "./supabase-storage";
 import { authenticateUser, optionalAuth } from "./supabase-auth";
+
+// Session-based authentication middleware for file uploads
+const authenticateSession = (req: any, res: any, next: any) => {
+  if (!req.isAuthenticated || !req.isAuthenticated()) {
+    return res.status(401).json({ message: "Authentication required" });
+  }
+  
+  // Extract user ID from session
+  const userId = req.user?.claims?.sub || req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ message: "User ID not found in session" });
+  }
+  
+  // Set user for downstream middleware
+  req.user = { 
+    id: userId,
+    email: req.user?.claims?.email || req.user?.email,
+    role: 'user'
+  };
+  
+  next();
+};
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -401,7 +423,7 @@ export async function registerCleanRoutes(app: Express): Promise<Server> {
   });
 
   // Generic document upload endpoint
-  app.post('/api/documents/upload', authenticateUser, upload.single('file'), async (req, res) => {
+  app.post('/api/documents/upload', authenticateSession, upload.single('file'), async (req, res) => {
     try {
       const userId = req.user?.id;
       
