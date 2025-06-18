@@ -149,13 +149,16 @@ export default function Dashboard() {
     <DashboardLayout>
       <div className="space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between animate-fade-in">
           <div>
             <h1 className="text-3xl font-bold text-neutral-dark">Welcome!</h1>
             <p className="text-neutral-medium">Manage your cases and track your progress</p>
           </div>
           <div className="flex gap-3">
-            <Button onClick={activeTab === 'contracts' ? () => setShowNewContractForm(true) : handleNewCaseClick}>
+            <Button 
+              onClick={activeTab === 'contracts' ? () => setShowNewContractForm(true) : handleNewCaseClick}
+              className="btn-hover-lift animate-pulse-hover"
+            >
               <Plus className="h-4 w-4 mr-2" />
               {activeTab === 'contracts' ? 'New Contract' : 'New Case'}
             </Button>
@@ -169,17 +172,21 @@ export default function Dashboard() {
 
         {/* Central Timeline */}
         {timelineEvents.length > 0 && (
-          <Card className="border-l-4 border-l-primary bg-blue-50">
+          <Card className="border-l-4 border-l-primary bg-blue-50 animate-fade-in card-hover">
             <CardHeader className="pb-4">
               <div className="flex items-center gap-2">
-                <Bell className="h-5 w-5 text-primary" />
+                <Bell className="h-5 w-5 text-primary animate-glow" />
                 <CardTitle className="text-lg text-primary">Upcoming Actions & Deadlines</CardTitle>
               </div>
               <p className="text-sm text-neutral-medium">Stay on top of your cases and contracts - never miss a deadline</p>
             </CardHeader>
             <CardContent className="space-y-3">
-              {timelineEvents.slice(0, 5).map((event: any) => (
-                <div key={event.id} className="flex items-center justify-between p-3 bg-white rounded-lg border">
+              {timelineEvents.slice(0, 5).map((event: any, index: number) => (
+                <div 
+                  key={event.id} 
+                  className="flex items-center justify-between p-3 bg-white rounded-lg border smooth-transition btn-hover-scale"
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
                   <div className="flex items-center gap-3">
                     <div className={`p-2 rounded-full ${
                       event.priority === 'high' ? 'bg-red-100 text-red-600' :
@@ -265,57 +272,57 @@ export default function Dashboard() {
         )}
 
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 animate-fade-in">
+          <Card className="card-hover smooth-transition" style={{ animationDelay: '0.1s' }}>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-neutral-medium">Active Cases</p>
-                  <p className="text-2xl font-bold text-neutral-dark">{activeCases.length}</p>
+                  <p className="text-2xl font-bold text-neutral-dark animate-pulse-hover">{activeCases.length}</p>
                 </div>
-                <FolderOpen className="h-8 w-8 text-primary" />
+                <FolderOpen className="h-8 w-8 text-primary animate-bounce-hover" />
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="card-hover smooth-transition" style={{ animationDelay: '0.2s' }}>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-neutral-medium">Total Value</p>
-                  <p className="text-2xl font-bold text-neutral-dark">
+                  <p className="text-2xl font-bold text-neutral-dark animate-pulse-hover">
                     {formatCurrency(
                       cases.reduce((total: number, c: any) => total + (parseFloat(c.amount) || 0), 0)
                     )}
                   </p>
                 </div>
-                <DollarSign className="h-8 w-8 text-success" />
+                <DollarSign className="h-8 w-8 text-success animate-bounce-hover" />
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="card-hover smooth-transition" style={{ animationDelay: '0.3s' }}>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-neutral-medium">Resolved Cases</p>
-                  <p className="text-2xl font-bold text-neutral-dark">{resolvedCases.length}</p>
+                  <p className="text-2xl font-bold text-neutral-dark animate-pulse-hover">{resolvedCases.length}</p>
                 </div>
                 <Shield className="h-8 w-8 text-success" />
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="card-hover smooth-transition" style={{ animationDelay: '0.4s' }}>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-neutral-medium">Success Rate</p>
-                  <p className="text-2xl font-bold text-neutral-dark">
+                  <p className="text-2xl font-bold text-neutral-dark animate-pulse-hover">
                     {cases.length > 0 ? Math.round((resolvedCases.length / cases.length) * 100) : 0}%
                   </p>
                 </div>
-                <AlertCircle className="h-8 w-8 text-warning" />
+                <AlertCircle className="h-8 w-8 text-warning animate-bounce-hover" />
               </div>
             </CardContent>
           </Card>
@@ -328,13 +335,13 @@ export default function Dashboard() {
           const url = new URL(window.location.href);
           url.searchParams.set('tab', value);
           window.history.pushState({}, '', url.toString());
-        }} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="cases" className="flex items-center gap-2">
+        }} className="space-y-6 animate-fade-in">
+          <TabsList className="grid w-full grid-cols-2 smooth-transition">
+            <TabsTrigger value="cases" className="flex items-center gap-2 smooth-transition btn-hover-scale">
               <FolderOpen className="h-4 w-4" />
               Case Files
             </TabsTrigger>
-            <TabsTrigger value="contracts" className="flex items-center gap-2">
+            <TabsTrigger value="contracts" className="flex items-center gap-2 smooth-transition btn-hover-scale">
               <FileText className="h-4 w-4" />
               Contract Files
             </TabsTrigger>
