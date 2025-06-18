@@ -159,10 +159,10 @@ export class SupabaseStorage {
       const dbData = {
         user_id: contractData.user_id,
         title: contractData.title,
-        contract_num: contractData.contract_number, // Updated to match DB column
+        contract_number: contractData.contract_number, // Use contract_number not contract_num
         status: contractData.status || "draft",
         client_name: contractData.clientName,
-        project_descr: contractData.projectDescription, // Updated to match DB column
+        project_description: contractData.projectDescription, // Use project_description not project_descr
         value: contractData.value,
         start_date: contractData.startDate,
         end_date: contractData.endDate,
