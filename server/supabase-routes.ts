@@ -194,7 +194,7 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
       // Generate case number
       const caseNumber = `CASE-${Date.now()}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
       
-      // Map frontend camelCase to database snake_case
+      // Map frontend camelCase to database snake_case (matching exact schema)
       const caseData = {
         user_id: req.user!.id,
         title: req.body.title,
@@ -205,7 +205,7 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
         status: 'active',
         priority: 'medium',
         progress: 0,
-        next_action_due: req.body.nextActionDue ? new Date(req.body.nextActionDue).toISOString() : null,
+        next_action: req.body.nextAction || null, // Database uses 'next_action' not 'next_action_due'
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
@@ -310,7 +310,7 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
       // Generate contract number
       const contractNumber = `CONTRACT-${Date.now()}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
       
-      // Map frontend camelCase to database snake_case
+      // Map frontend camelCase to exact database column names from screenshot
       const contractData = {
         user_id: req.user!.id,
         title: req.body.title,
