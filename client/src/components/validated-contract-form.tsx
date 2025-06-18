@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
+import { supabase } from '@/lib/supabase';
 import { FileText, X, Building } from 'lucide-react';
 import EnhancedFileUpload from '@/components/enhanced-file-upload';
 
@@ -60,7 +61,22 @@ export default function ValidatedContractForm({ onClose, onSuccess }: ValidatedC
 
   const createContractMutation = useMutation({
     mutationFn: async (data: ContractFormData) => {
-      return await apiRequest('POST', '/api/contracts', data);
+      const { data: { session } } = await supabase.auth.getSession();
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-contract`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`,
+        },
+        body: JSON.stringify(data),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to create contract');
+      }
+      
+      return await response.json();
     },
     onSuccess: (data) => {
       const newContract = typeof data === 'object' && data !== null ? data : {};
