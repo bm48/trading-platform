@@ -338,12 +338,34 @@ export class SupabaseStorage {
   // Document operations
   async createDocument(documentData: any): Promise<Document> {
     try {
+      // Map frontend field names to actual database column names
+      const dbData = {
+        case_id: documentData.case_id || documentData.caseId,
+        contract_id: documentData.contract_id || documentData.contractId,
+        user_id: documentData.user_id || documentData.userId,
+        filename: documentData.filename || documentData.fileName,
+        original_name: documentData.original_name || documentData.originalName,
+        file_type: documentData.file_type || documentData.fileType,
+        mime_type: documentData.mime_type || documentData.mimeType,
+        file_size: documentData.file_size || documentData.fileSize,
+        upload_path: documentData.upload_path || documentData.uploadPath || documentData.filePath,
+        description: documentData.description,
+        category: documentData.category || 'general',
+        version: documentData.version || 1,
+        is_latest_version: documentData.is_latest_version !== undefined ? documentData.is_latest_version : true,
+        created_at: new Date().toISOString()
+      };
+
+      // Remove undefined/null fields
+      Object.keys(dbData).forEach(key => {
+        if ((dbData as any)[key] === undefined || (dbData as any)[key] === null) {
+          delete (dbData as any)[key];
+        }
+      });
+
       const { data, error } = await supabase
         .from('documents')
-        .insert({
-          ...documentData,
-          created_at: new Date().toISOString()
-        })
+        .insert(dbData)
         .select()
         .single();
 

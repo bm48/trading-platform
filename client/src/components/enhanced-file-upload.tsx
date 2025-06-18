@@ -12,7 +12,7 @@ interface EnhancedFileUploadProps {
   contractId?: number;
   onUploadSuccess?: () => void;
   accept?: string;
-  maxSize?: number;
+  maxSize?: number;handleFile
   multiple?: boolean;
   category?: string;
   className?: string;

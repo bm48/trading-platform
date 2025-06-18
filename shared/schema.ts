@@ -80,18 +80,15 @@ export const documents = pgTable("documents", {
   case_id: integer("case_id"),
   contract_id: integer("contract_id"),
   user_id: varchar("user_id").notNull(),
-  file_name: varchar("file_name").notNull(),
+  filename: varchar("filename").notNull(),
   original_name: varchar("original_name").notNull(),
   file_type: varchar("file_type").notNull(), // document, photo, image
   mime_type: varchar("mime_type").notNull(),
   file_size: integer("file_size").notNull(),
-  file_path: varchar("file_path").notNull(),
-  thumbnail_path: varchar("thumbnail_path"), // for images/photos
-  tags: jsonb("tags"),
-  category: varchar("category"), // evidence, contract, correspondence, generated, photos
+  upload_path: varchar("upload_path").notNull(),
   description: text("description"),
+  category: varchar("category"), // evidence, contract, correspondence, generated, photos
   version: integer("version").default(1),
-  parent_document_id: integer("parent_document_id"), // for versioned files
   is_latest_version: boolean("is_latest_version").default(true),
   created_at: timestamp("created_at").defaultNow(),
 });
