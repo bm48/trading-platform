@@ -77,20 +77,23 @@ export const cases = pgTable("cases", {
 // Documents (supports both documents and photos with versioning)
 export const documents = pgTable("documents", {
   id: serial("id").primaryKey(),
-  case_id: integer("case_id"),
-  contract_id: integer("contract_id"),
-  user_id: varchar("user_id").notNull(),
+  caseid: integer("caseid"),
+  contractid: integer("contractid"),
+  userid: varchar("userid").notNull(),
   filename: varchar("filename").notNull(),
-  original_name: varchar("original_name").notNull(),
-  file_type: varchar("file_type").notNull(), // document, photo, image
-  mime_type: varchar("mime_type").notNull(),
-  file_size: integer("file_size").notNull(),
-  upload_path: varchar("upload_path").notNull(),
-  description: text("description"),
+  originalName: varchar("originalName").notNull(),
+  fileType: varchar("fileType").notNull(), // document, photo, image
+  mimeType: varchar("mimeType").notNull(),
+  fileSize: integer("fileSize").notNull(),
+  uploadPath: varchar("uploadPath").notNull(),
+  thumbnailPath: varchar("thumbnailPath"),
+  tags: jsonb("tags"),
   category: varchar("category"), // evidence, contract, correspondence, generated, photos
+  description: text("description"),
   version: integer("version").default(1),
-  is_latest_version: boolean("is_latest_version").default(true),
-  created_at: timestamp("created_at").defaultNow(),
+  parentDocument: integer("parentDocument"),
+  isLatestVersion: boolean("isLatestVersion").default(true),
+  createdAt: timestamp("createdAt").defaultNow(),
 });
 
 // Timeline events

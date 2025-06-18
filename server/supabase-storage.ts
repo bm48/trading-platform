@@ -338,22 +338,25 @@ export class SupabaseStorage {
   // Document operations
   async createDocument(documentData: any): Promise<Document> {
     try {
-      // Map frontend field names to actual database column names
+      // Map frontend field names to exact database column names from Supabase
       const dbData = {
-        case_id: documentData.case_id || documentData.caseId,
-        contract_id: documentData.contract_id || documentData.contractId,
-        user_id: documentData.user_id || documentData.userId,
-        filename: documentData.filename || documentData.fileName,
-        original_name: documentData.original_name || documentData.originalName,
-        file_type: documentData.file_type || documentData.fileType,
-        mime_type: documentData.mime_type || documentData.mimeType,
-        file_size: documentData.file_size || documentData.fileSize,
-        upload_path: documentData.upload_path || documentData.uploadPath || documentData.filePath,
+        caseid: documentData.caseid || documentData.caseId || documentData.case_id,
+        contractid: documentData.contractid || documentData.contractId || documentData.contract_id,
+        userid: documentData.userid || documentData.userId || documentData.user_id,
+        filename: documentData.filename,
+        originalName: documentData.originalName || documentData.original_name,
+        fileType: documentData.fileType || documentData.file_type,
+        mimeType: documentData.mimeType || documentData.mime_type,
+        fileSize: documentData.fileSize || documentData.file_size,
+        uploadPath: documentData.uploadPath || documentData.upload_path || documentData.filePath,
+        thumbnailPath: documentData.thumbnailPath,
+        tags: documentData.tags,
         description: documentData.description,
         category: documentData.category || 'general',
         version: documentData.version || 1,
-        is_latest_version: documentData.is_latest_version !== undefined ? documentData.is_latest_version : true,
-        created_at: new Date().toISOString()
+        parentDocument: documentData.parentDocument,
+        isLatestVersion: documentData.isLatestVersion !== undefined ? documentData.isLatestVersion : true,
+        createdAt: new Date().toISOString()
       };
 
       // Remove undefined/null fields
@@ -406,8 +409,8 @@ export class SupabaseStorage {
       const { data, error } = await supabase
         .from('documents')
         .select('*')
-        .eq('case_id', caseId)
-        .order('created_at', { ascending: false });
+        .eq('caseid', caseId)
+        .order('createdAt', { ascending: false });
 
       if (error) {
         console.error('Error fetching case documents:', error);
@@ -426,8 +429,8 @@ export class SupabaseStorage {
       const { data, error } = await supabase
         .from('documents')
         .select('*')
-        .eq('contract_id', contractId)
-        .order('created_at', { ascending: false });
+        .eq('contractid', contractId)
+        .order('createdAt', { ascending: false });
 
       if (error) {
         console.error('Error fetching contract documents:', error);
@@ -446,8 +449,8 @@ export class SupabaseStorage {
       const { data, error } = await supabase
         .from('documents')
         .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
+        .eq('userid', userId)
+        .order('createdAt', { ascending: false });
 
       if (error) {
         console.error('Error fetching user documents:', error);

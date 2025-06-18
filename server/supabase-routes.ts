@@ -518,14 +518,14 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
       const description = req.body.description || file.originalname;
       
       const document = await supabaseStorage.createDocument({
-        user_id: userId,
-        case_id: caseId,
+        userid: userId,
+        caseid: caseId,
         filename: file.filename,
-        original_name: file.originalname,
-        upload_path: file.path,
-        file_type: 'document',
-        file_size: file.size,
-        mime_type: file.mimetype,
+        originalName: file.originalname,
+        uploadPath: file.path,
+        fileType: 'document',
+        fileSize: file.size,
+        mimeType: file.mimetype,
         category: category,
         description: description
       });
@@ -564,14 +564,14 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
       const description = req.body.description || file.originalname;
       
       const document = await supabaseStorage.createDocument({
-        user_id: userId,
-        contract_id: contractId,
+        userid: userId,
+        contractid: contractId,
         filename: file.filename,
-        original_name: file.originalname,
-        upload_path: file.path,
-        file_type: 'document',
-        file_size: file.size,
-        mime_type: file.mimetype,
+        originalName: file.originalname,
+        uploadPath: file.path,
+        fileType: 'document',
+        fileSize: file.size,
+        mimeType: file.mimetype,
         category: category,
         description: description
       });
