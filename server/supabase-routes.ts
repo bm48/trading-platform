@@ -8,6 +8,7 @@ import { sendWelcomeEmail, sendApprovalEmail, sendRejectionEmail } from "./email
 import { generateStrategyPackPDF, generateAIStrategyPackPDF } from "./pdf";
 import multer from 'multer';
 import path from 'path';
+import fs from 'fs';
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -631,9 +632,6 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
       }
 
       // Send file
-      const fs = require('fs');
-      const path = require('path');
-      
       const filePath = document.upload_path;
       if (!filePath || !fs.existsSync(filePath)) {
         return res.status(404).json({ message: "File not found on disk" });
