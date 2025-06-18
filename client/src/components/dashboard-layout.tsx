@@ -67,11 +67,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-40 animate-fade-in">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <Plus className="h-8 w-8 text-primary mr-3" />
+            <div className="flex items-center animate-slide-in">
+              <Plus className="h-8 w-8 text-primary mr-3 animate-bounce-hover" />
               <span className="text-xl font-bold text-neutral-dark">Project Resolve AI</span>
             </div>
             
@@ -80,7 +80,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 variant="ghost"
                 onClick={handleLogout}
                 disabled={isLoggingOut}
-                className="text-neutral-medium hover:text-neutral-dark"
+                className="text-neutral-medium hover:text-neutral-dark btn-hover-scale smooth-transition"
               >
                 <LogOut className="h-4 w-4 mr-2" />
                 {isLoggingOut ? 'Logging out...' : 'Logout'}
@@ -94,12 +94,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Sidebar */}
           <div className="lg:w-1/4">
-            <Card className="sticky top-24">
+            <Card className="sticky top-24 animate-fade-in card-hover">
               <CardContent className="p-6">
                 {/* User Profile */}
-                <div className="flex items-center mb-6">
+                <div className="flex items-center mb-6 animate-slide-in">
                   <Link href="/dashboard">
-                    <Avatar className="h-10 w-10 mr-3 cursor-pointer hover:ring-2 hover:ring-primary hover:ring-offset-2 transition-all">
+                    <Avatar className="h-10 w-10 mr-3 cursor-pointer hover:ring-2 hover:ring-primary hover:ring-offset-2 transition-all btn-hover-scale">
                       <AvatarImage src={user?.profileImageUrl} />
                       <AvatarFallback className="bg-primary text-white">
                         {getUserInitials()}
@@ -119,19 +119,20 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
                 {/* Navigation */}
                 <nav className="space-y-2">
-                  {navigation.map((item) => {
+                  {navigation.map((item, index) => {
                     const Icon = item.icon;
                     return (
                       <Link key={item.name} href={item.href}>
                         <div
                           className={cn(
-                            'flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer',
+                            'flex items-center px-3 py-2 rounded-lg text-sm font-medium smooth-transition btn-hover-scale animate-fade-in',
                             item.current
                               ? 'bg-primary text-white'
                               : 'text-neutral-medium hover:bg-gray-100 hover:text-neutral-dark'
                           )}
+                          style={{ animationDelay: `${index * 0.1}s` }}
                         >
-                          <Icon className="h-4 w-4 mr-3" />
+                          <Icon className="h-4 w-4 mr-3 animate-bounce-hover" />
                           {item.name}
                         </div>
                       </Link>
@@ -140,7 +141,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 </nav>
 
                 {/* Subscription Status */}
-                <div className="mt-6 pt-6 border-t border-gray-200">
+                <div className="mt-6 pt-6 border-t border-gray-200 animate-fade-in">
                   <div className="text-sm">
                     <div className="text-neutral-medium mb-1">Plan</div>
                     <div className="font-semibold text-neutral-dark">
@@ -151,7 +152,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className="w-full mt-3"
+                      className="w-full mt-3 btn-hover-lift animate-pulse-hover"
                       onClick={() => window.location.href = '/checkout?plan=subscription'}
                     >
                       Upgrade Plan
@@ -163,7 +164,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
 
           {/* Main Content */}
-          <div className="lg:w-3/4">
+          <div className="lg:w-3/4 animate-fade-in">
             {children}
           </div>
         </div>

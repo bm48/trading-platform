@@ -254,15 +254,19 @@ export default function EnhancedFileUpload({
 
       {/* Uploaded Files */}
       {uploadedFiles.length > 0 && (
-        <Card>
+        <Card className="animate-fade-in">
           <CardContent className="p-4">
             <h4 className="font-medium mb-3">Uploaded Files</h4>
             <div className="space-y-2">
-              {uploadedFiles.map((file) => (
-                <div key={file.id} className="flex items-center justify-between p-2 bg-green-50 rounded">
+              {uploadedFiles.map((file, index) => (
+                <div 
+                  key={file.id} 
+                  className="flex items-center justify-between p-2 bg-green-50 rounded smooth-transition card-hover"
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
                   <div className="flex items-center gap-2">
                     {isImage(file.mimeType) ? (
-                      <ImageIcon className="h-4 w-4 text-green-600" />
+                      <ImageIcon className="h-4 w-4 text-green-600 animate-bounce-hover" />
                     ) : (
                       <FileIcon className="h-4 w-4 text-green-600" />
                     )}
