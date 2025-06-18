@@ -2,6 +2,7 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { supabaseAdmin, userManagement, database } from "./supabase";
 import { authenticateUser, optionalAuth } from "./supabase-auth";
+import { supabaseStorage } from "./supabase-storage";
 import { analyzeCase, generateStrategyPack } from "./openai";
 import { sendWelcomeEmail, sendApprovalEmail, sendRejectionEmail } from "./email";
 import { generateStrategyPackPDF, generateAIStrategyPackPDF } from "./pdf";
@@ -562,19 +563,18 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
       const category = req.body.category || 'general';
       const description = req.body.description || file.originalname;
       
-      const { data: document, error } = await database.createDocument({
+      const document = await supabaseStorage.createDocument({
         user_id: userId,
         contract_id: contractId,
-        file_name: file.filename,
+        filename: file.filename,
         original_name: file.originalname,
-        file_path: file.path,
+        upload_path: file.path,
+        file_type: 'document',
         file_size: file.size,
         mime_type: file.mimetype,
         category: category,
         description: description
       });
-
-      if (error) throw error;
 
       res.status(201).json({
         message: "File uploaded successfully",
