@@ -54,7 +54,9 @@ export default function EnhancedFileUpload({
 
       const endpoint = caseId 
         ? `/api/cases/${caseId}/upload`
-        : `/api/contracts/${contractId}/upload`;
+        : contractId 
+        ? `/api/contracts/${contractId}/upload`
+        : `/api/documents/upload`;
 
       // Get auth token for the request
       const { data: { session } } = await supabase.auth.getSession();
@@ -62,6 +64,9 @@ export default function EnhancedFileUpload({
       
       if (session?.access_token) {
         headers.Authorization = `Bearer ${session.access_token}`;
+        console.log('Upload request with auth token to:', endpoint);
+      } else {
+        console.log('No session or access token found for upload');
       }
 
       const response = await fetch(endpoint, {
