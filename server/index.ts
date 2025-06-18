@@ -6,11 +6,22 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// CORS headers for Supabase
+// CORS headers for Supabase with proper Authorization header support
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Headers', 'Authorization, Content-Type');
+  res.header('Access-Control-Allow-Headers', 'Authorization, Content-Type, X-Requested-With, Accept, Origin');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Expose-Headers', 'Authorization');
+  
+  // Log incoming headers for debugging
+  if (req.path.includes('/upload')) {
+    console.log('Upload request headers:', {
+      authorization: req.headers.authorization ? 'Present' : 'Missing',
+      contentType: req.headers['content-type'],
+      method: req.method
+    });
+  }
+  
   if (req.method === 'OPTIONS') {
     res.sendStatus(200);
   } else {
