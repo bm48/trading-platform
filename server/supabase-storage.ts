@@ -342,21 +342,21 @@ export class SupabaseStorage {
       const dbData = {
         caseid: documentData.caseid || documentData.caseId || documentData.case_id,
         contractid: documentData.contractid || documentData.contractId || documentData.contract_id,
-        userid: documentData.userid || documentData.userId || documentData.user_id,
+        user_id: documentData.userid || documentData.userId || documentData.user_id,
         filename: documentData.filename,
-        originalName: documentData.originalName || documentData.original_name,
-        fileType: documentData.fileType || documentData.file_type,
-        mimeType: documentData.mimeType || documentData.mime_type,
-        fileSize: documentData.fileSize || documentData.file_size,
-        uploadPath: documentData.uploadPath || documentData.upload_path || documentData.filePath,
-        thumbnailPath: documentData.thumbnailPath,
+        original_name: documentData.originalName || documentData.original_name,
+        file_type: documentData.fileType || documentData.file_type,
+        mime_type: documentData.mimeType || documentData.mime_type,
+        file_size: documentData.fileSize || documentData.file_size,
+        upload_path: documentData.uploadPath || documentData.upload_path || documentData.filePath,
+        thumbnail_path: documentData.thumbnailPath,
         tags: documentData.tags,
         description: documentData.description,
         category: documentData.category || 'general',
         version: documentData.version || 1,
-        parentDocument: documentData.parentDocument,
-        isLatestVersion: documentData.isLatestVersion !== undefined ? documentData.isLatestVersion : true,
-        createdAt: new Date().toISOString()
+        parent_document: documentData.parentDocument,
+        is_latest_version: documentData.isLatestVersion !== undefined ? documentData.isLatestVersion : true,
+        created_at: new Date().toISOString()
       };
 
       // Remove undefined/null fields
