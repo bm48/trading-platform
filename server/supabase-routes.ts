@@ -446,8 +446,15 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // File upload endpoints
-  app.post('/api/documents/upload', authenticateUser, upload.single('file'), async (req: Request, res: Response) => {
+  // File upload endpoints - authenticate BEFORE multer processes the request
+  app.post('/api/documents/upload', (req, res, next) => {
+    // Log all headers before any processing
+    console.log('Raw request headers before auth:', {
+      authorization: req.headers.authorization ? 'Present' : 'Missing',
+      contentType: req.headers['content-type']
+    });
+    next();
+  }, authenticateUser, upload.single('file'), async (req: Request, res: Response) => {
     try {
       const userId = req.user?.id;
       const file = req.file;
@@ -486,7 +493,13 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/cases/:caseId/upload', authenticateUser, upload.single('file'), async (req: Request, res: Response) => {
+  app.post('/api/cases/:caseId/upload', (req, res, next) => {
+    console.log('Case upload - Raw headers:', {
+      authorization: req.headers.authorization ? 'Present' : 'Missing',
+      contentType: req.headers['content-type']
+    });
+    next();
+  }, authenticateUser, upload.single('file'), async (req: Request, res: Response) => {
     try {
       const userId = req.user?.id;
       const caseId = parseInt(req.params.caseId);
@@ -527,7 +540,13 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/contracts/:contractId/upload', authenticateUser, upload.single('file'), async (req: Request, res: Response) => {
+  app.post('/api/contracts/:contractId/upload', (req, res, next) => {
+    console.log('Contract upload - Raw headers:', {
+      authorization: req.headers.authorization ? 'Present' : 'Missing',
+      contentType: req.headers['content-type']
+    });
+    next();
+  }, authenticateUser, upload.single('file'), async (req: Request, res: Response) => {
     try {
       const userId = req.user?.id;
       const contractId = parseInt(req.params.contractId);
