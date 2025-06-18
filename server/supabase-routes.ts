@@ -77,7 +77,11 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
   });
 
   // Admin user management routes
-  app.get('/api/admin/users', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+  app.get('/api/admin/users', authenticateUser, async (req: Request, res: Response) => {
+    // Check admin role
+    if (req.user?.role !== 'admin') {
+      return res.status(403).json({ message: "Admin access required" });
+    }
     try {
       const { data: users, error } = await supabaseAdmin
         .from('profiles')
@@ -92,7 +96,11 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/admin/users/:id/role', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+  app.put('/api/admin/users/:id/role', authenticateUser, async (req: Request, res: Response) => {
+    // Check admin role
+    if (req.user?.role !== 'admin') {
+      return res.status(403).json({ message: "Admin access required" });
+    }
     try {
       const { id } = req.params;
       const { role } = req.body;
@@ -135,7 +143,7 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/applications', authenticateToken, async (req: Request, res: Response) => {
+  app.get('/api/applications', authenticateUser, async (req: Request, res: Response) => {
     try {
       const isAdmin = req.user!.role === 'admin';
       const userId = isAdmin ? undefined : req.user!.id;
@@ -150,7 +158,11 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/applications/:id/status', authenticateToken, requireModerator, async (req: Request, res: Response) => {
+  app.put('/api/applications/:id/status', authenticateUser, async (req: Request, res: Response) => {
+    // Check moderator or admin role
+    if (!req.user?.role || !['admin', 'moderator'].includes(req.user.role)) {
+      return res.status(403).json({ message: "Moderator access required" });
+    }
     try {
       const { id } = req.params;
       const { status, reason } = req.body;
@@ -177,7 +189,7 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
   });
 
   // Case management routes
-  app.post('/api/cases', authenticateToken, async (req: Request, res: Response) => {
+  app.post('/api/cases', authenticateUser, async (req: Request, res: Response) => {
     try {
       const caseData = {
         ...req.body,
@@ -206,7 +218,7 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/cases', authenticateToken, async (req: Request, res: Response) => {
+  app.get('/api/cases', authenticateUser, async (req: Request, res: Response) => {
     try {
       const isAdmin = req.user!.role === 'admin';
       const userId = isAdmin ? undefined : req.user!.id;
@@ -221,7 +233,7 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/cases/:id', authenticateToken, async (req: Request, res: Response) => {
+  app.get('/api/cases/:id', authenticateUser, async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
       
@@ -245,7 +257,7 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/cases/:id/generate-strategy', authenticateToken, async (req: Request, res: Response) => {
+  app.post('/api/cases/:id/generate-strategy', authenticateUser, async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
       
@@ -280,7 +292,7 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
   });
 
   // File upload routes
-  app.post('/api/upload', authenticateToken, upload.single('file'), async (req: Request, res: Response) => {
+  app.post('/api/upload', authenticateUser, upload.single('file'), async (req: Request, res: Response) => {
     try {
       if (!req.file) {
         return res.status(400).json({ message: "No file uploaded" });
@@ -318,7 +330,7 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
   });
 
   // Role management routes
-  app.get('/api/admin/roles', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+  app.get('/api/admin/roles', authenticateUser, async (req: Request, res: Response) => {
     try {
       const roles = [
         { value: 'user', label: 'User', description: 'Standard user with basic access' },
