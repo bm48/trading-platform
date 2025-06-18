@@ -471,18 +471,17 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
       const category = req.body.category || 'general';
       const description = req.body.description || file.originalname;
       
-      const { data: document, error } = await database.createDocument({
-        user_id: userId,
-        file_name: file.filename,
-        original_name: file.originalname,
-        file_path: file.path,
-        file_size: file.size,
-        mime_type: file.mimetype,
+      const document = await supabaseStorage.createDocument({
+        userid: userId,
+        filename: file.filename,
+        originalName: file.originalname,
+        uploadPath: file.path,
+        fileType: 'document',
+        fileSize: file.size,
+        mimeType: file.mimetype,
         category: category,
         description: description
       });
-
-      if (error) throw error;
 
       res.status(201).json({
         message: "File uploaded successfully", 

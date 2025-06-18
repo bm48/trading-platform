@@ -257,17 +257,17 @@ export class SupabaseStorage {
   // Timeline operations
   async createTimelineEvent(eventData: any): Promise<TimelineEvent> {
     try {
-      // Map camelCase to snake_case for database
+      // Map frontend field names to actual database column names from Supabase
       const dbData = {
-        case_id: eventData.case_id,
-        contract_id: eventData.contract_id,
-        user_id: eventData.user_id,
-        event_type: eventData.event_type,
+        caseid: eventData.caseid || eventData.caseId || eventData.case_id,
+        contractid: eventData.contractid || eventData.contractId || eventData.contract_id,
+        userid: eventData.userid || eventData.userId || eventData.user_id,
+        eventType: eventData.eventType || eventData.event_type || 'general',
         title: eventData.title,
         description: eventData.description,
-        event_date: eventData.eventDate?.toISOString() || new Date().toISOString(),
-        is_completed: eventData.is_completed || false,
-        created_at: new Date().toISOString()
+        eventDate: eventData.eventDate?.toISOString() || new Date().toISOString(),
+        isCompleted: eventData.isCompleted || eventData.is_completed || false,
+        createdAt: new Date().toISOString()
       };
 
       // Remove undefined/null fields to avoid issues
@@ -300,8 +300,8 @@ export class SupabaseStorage {
       const { data, error } = await supabase
         .from('timeline_events')
         .select('*')
-        .eq('case_id', caseId)
-        .order('created_at', { ascending: false });
+        .eq('caseid', caseId)
+        .order('createdAt', { ascending: false });
 
       if (error) {
         console.error('Error fetching case timeline:', error);
@@ -320,8 +320,8 @@ export class SupabaseStorage {
       const { data, error } = await supabase
         .from('timeline_events')
         .select('*')
-        .eq('contract_id', contractId)
-        .order('created_at', { ascending: false });
+        .eq('contractid', contractId)
+        .order('createdAt', { ascending: false });
 
       if (error) {
         console.error('Error fetching contract timeline:', error);
