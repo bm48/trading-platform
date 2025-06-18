@@ -349,16 +349,16 @@ export default function Dashboard() {
 
           {/* Case Files Tab */}
           <TabsContent value="cases" className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between animate-slide-in">
               <h2 className="text-xl font-semibold text-neutral-dark">Case Files</h2>
-              <Button variant="outline" onClick={handleNewCaseClick}>
+              <Button variant="outline" onClick={handleNewCaseClick} className="btn-hover-lift">
                 <Plus className="h-4 w-4 mr-2" />
                 New Case
               </Button>
             </div>
 
             {casesLoading ? (
-              <div className="grid gap-6">
+              <div className="grid gap-6 animate-fade-in">
                 {[1, 2, 3].map((i) => (
                   <Card key={i} className="animate-pulse">
                     <CardContent className="p-6">
@@ -370,23 +370,27 @@ export default function Dashboard() {
                 ))}
               </div>
             ) : cases.length === 0 ? (
-              <Card>
+              <Card className="animate-fade-in">
                 <CardContent className="p-12 text-center">
-                  <FolderOpen className="h-12 w-12 text-neutral-medium mx-auto mb-4" />
+                  <FolderOpen className="h-12 w-12 text-neutral-medium mx-auto mb-4 animate-bounce-hover" />
                   <h3 className="text-lg font-semibold text-neutral-dark mb-2">No cases yet</h3>
                   <p className="text-neutral-medium mb-6">Start by creating your first case to get legal support</p>
-                  <Button onClick={handleNewCaseClick}>
+                  <Button onClick={handleNewCaseClick} className="btn-hover-lift animate-pulse-hover">
                     <Plus className="h-4 w-4 mr-2" />
                     Create First Case
                   </Button>
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid gap-6">
-                {cases.map((caseItem: any) => {
+              <div className="grid gap-6 animate-fade-in">
+                {cases.map((caseItem: any, index: number) => {
                   const progress = calculateProgress(caseItem);
                   return (
-                    <Card key={caseItem.id} className="hover:shadow-lg transition-shadow">
+                    <Card 
+                      key={caseItem.id} 
+                      className="card-hover smooth-transition" 
+                      style={{ animationDelay: `${index * 0.1}s` }}
+                    >
                       <CardContent className="p-6">
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-3">
@@ -458,16 +462,16 @@ export default function Dashboard() {
 
           {/* Contract Files Tab */}
           <TabsContent value="contracts" className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between animate-slide-in">
               <h2 className="text-xl font-semibold text-neutral-dark">Contract Files</h2>
-              <Button variant="outline" onClick={() => setShowNewContractForm(true)}>
+              <Button variant="outline" onClick={() => setShowNewContractForm(true)} className="btn-hover-lift">
                 <Plus className="h-4 w-4 mr-2" />
                 New Contract
               </Button>
             </div>
 
             {contractsLoading ? (
-              <div className="grid gap-6">
+              <div className="grid gap-6 animate-fade-in">
                 {[1, 2].map((i) => (
                   <Card key={i} className="animate-pulse">
                     <CardContent className="p-6">
@@ -479,9 +483,9 @@ export default function Dashboard() {
                 ))}
               </div>
             ) : contracts.length === 0 ? (
-              <Card>
+              <Card className="animate-fade-in">
                 <CardContent className="p-12 text-center">
-                  <FileText className="h-12 w-12 text-neutral-medium mx-auto mb-4" />
+                  <FileText className="h-12 w-12 text-neutral-medium mx-auto mb-4 animate-bounce-hover" />
                   <h3 className="text-lg font-semibold text-neutral-dark mb-2">No contracts yet</h3>
                   <p className="text-neutral-medium mb-6">
                     Protect your future work by creating professional contracts

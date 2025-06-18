@@ -171,18 +171,18 @@ export default function EnhancedFileUpload({
   const isImage = (mimeType: string) => mimeType.startsWith('image/');
 
   return (
-    <div className={`space-y-4 ${className}`}>
+    <div className={`space-y-4 ${className} animate-fade-in`}>
       {/* Upload Area */}
       <Card 
-        className={`border-2 border-dashed transition-colors ${
-          dragOver ? 'border-primary bg-primary/5' : 'border-gray-300'
+        className={`border-2 border-dashed smooth-transition card-hover ${
+          dragOver ? 'border-primary bg-primary/5 animate-glow' : 'border-gray-300'
         }`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
         <CardContent className="p-6 text-center">
-          <Upload className="h-8 w-8 mx-auto mb-4 text-gray-400" />
+          <Upload className="h-8 w-8 mx-auto mb-4 text-gray-400 animate-bounce-hover" />
           <p className="text-sm text-gray-600 mb-4">
             Drag and drop files here, or click to browse
           </p>
@@ -197,6 +197,7 @@ export default function EnhancedFileUpload({
           <Button 
             variant="outline" 
             onClick={() => document.getElementById(`file-upload-${Math.random()}`)?.click()}
+            className="btn-hover-lift animate-pulse-hover"
           >
             Choose Files
           </Button>
@@ -208,15 +209,19 @@ export default function EnhancedFileUpload({
 
       {/* Selected Files */}
       {files.length > 0 && (
-        <Card>
+        <Card className="animate-slide-in">
           <CardContent className="p-4">
             <h4 className="font-medium mb-3">Selected Files</h4>
             <div className="space-y-2">
               {files.map((file, index) => (
-                <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                <div 
+                  key={index} 
+                  className="flex items-center justify-between p-2 bg-gray-50 rounded smooth-transition btn-hover-scale"
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
                   <div className="flex items-center gap-2">
                     {file.type.startsWith('image/') ? (
-                      <ImageIcon className="h-4 w-4" />
+                      <ImageIcon className="h-4 w-4 animate-bounce-hover" />
                     ) : (
                       <FileIcon className="h-4 w-4" />
                     )}
@@ -229,6 +234,7 @@ export default function EnhancedFileUpload({
                     variant="ghost"
                     size="sm"
                     onClick={() => removeFile(index)}
+                    className="btn-hover-scale smooth-transition"
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -238,7 +244,7 @@ export default function EnhancedFileUpload({
             <Button 
               onClick={handleUpload} 
               disabled={uploadMutation.isPending}
-              className="w-full mt-4"
+              className="w-full mt-4 btn-hover-lift animate-pulse-hover"
             >
               {uploadMutation.isPending ? 'Uploading...' : `Upload ${files.length} File${files.length > 1 ? 's' : ''}`}
             </Button>
