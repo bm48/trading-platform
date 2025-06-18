@@ -1,0 +1,179 @@
+Here is a new overview of the new software - Project Overview for Bert
+Platform Name: Resolve AI — For Tradies
+Purpose: A smart, AI-powered platform built specifically to help tradespeople and subcontractors across Australia manage legal and contractual issues without needing a lawyer.
+What’s Already Been Completed / Mapped Out
+Platform Concept
+- Built for trades facing common issues like unpaid work, contract disputes, variation disagreements, and more.
+- Uses AI + automation to deliver actionable legal plans, generate letters/contracts, and guide users through resolution — without legal fees.
+- Split between Case Files (disputes/issues) and Contract Files (new projects and protections).
+- AI trained agent who knows and understands, all the Australian Legislation, Acts, Building Codes and other relevant documents for air tight advice.
+User Flow (Frontend)
+1. Landing Page:
+- Speaks directly to trade pain points.
+- Converts interest into action via “Apply for Help” form or “Create a Contract”.
+2. Application Form (Step 1):
+- Captures basic info: name, location, issue summary.
+3. AI-Generated Response (Step 2):
+- Within 24 hours, user gets a YES/ACCEPTED reply with:
+- $299 payment link
+- Link to complete detailed intake form
+- Details of what they’ll receive
+4. Payment + Intake Form (Step 3):
+- They pay $299 for one-time access
+- Complete a detailed questionnaire to generate a case strategy or contract
+5. PDF + Dashboard Access (Step 4):
+- Custom AI-generated PDF is reviewed/admin-approved
+- Client receives login access to their dashboard
+- Option to subscribe monthly ($49) for unlimited use
+Deliverables to the User
+- A custom-branded PDF with:
+- Case strategy
+- Timeline with legal steps + calendar dates
+- Editable legal letter templates
+- Risk overview
+- Laws and acts that support their rights (e.g. SOPA)
+- Access to The Dashboard, including:
+- Case Files & Contract Files (split)
+- Timeline Tracker on main screen
+- Document & photo storage per file
+- Calendar integration with Gmail/Outlook
+- Email logging/tracking
+- Message assistant for support
+What I Need Help With
+Backend Infrastructure
+- Supabase:
+- Set up for user authentication (email/password + Google login)
+- Secure storage for: PDF case files, Contract versions, Uploaded photos, documents, and timelines
+- Admin access layer to:
+- Review/edit PDF outputs before sending
+- Monitor user signups, case activity, and subscriptions
+Email & Calendar Integration
+- Auto0 / OAuth:
+- Gmail/Outlook login support
+- Calendar event creation based on PDF timeline
+- Email syncing for timeline tracking and inbox-based case tagging
+AI & PDF Generation
+- AI generates PDF documents based on:
+- Pre-set templates (I'll provide the .docx layout)
+- User input from intake form
+- PDF must:
+- Match my brand design
+- Be editable in the backend before being sent
+- Include clickable links for Word doc downloads and key steps
+Frontend Functionality
+- Clean, powerful UI for trades (not tech-savvy)
+- Buttons and flows:
+- “Create New Case”
+- “Create New Contract”
+- Dashboard views: Timeline, Documents, Next Steps
+- Notification bar for admin actions (review needed, client replied, etc.)
+Extras
+- First 20 users will have access code-based early access (no free trial)
+- Stripe for:
+- One-off payments ($299)
+- Monthly subscriptions ($49/mo)
+- Auto lockout if payment fails
+Ready for Handoff
+I’ve already completed:
+- Platform architecture
+- User journey mapping
+- Copywriting for landing page and dashboard
+- Case study structure and PDF samples
+
+
+
+What I need now is the build and technical integrations to bring it all together.
+
+I would like to work in stages - so I can see the work being completed before we move to the next stage.
+Hi Bert,
+
+I think I am nearly ready for you to you start working on my program. Just to confirm you have experience in integrating and doing the following - What I Need Help With
+Backend Infrastructure
+- Supabase:
+- Set up for user authentication (email/password + Google login)
+- Secure storage for: PDF case files, Contract versions, Uploaded photos, documents, and timelines
+- Admin access layer to:
+- Review/edit PDF outputs before sending
+- Monitor user signups, case activity, and subscriptions
+Email & Calendar Integration
+- Auto0 / OAuth:
+- Gmail/Outlook login support
+- Calendar event creation based on PDF timeline
+- Email syncing for timeline tracking and inbox-based case tagging
+AI & PDF Generation
+- AI generates PDF documents based on:
+- Pre-set templates (I'll provide the .docx layout)
+- User input from intake form
+- PDF must:
+- Match my brand design
+- Be editable in the backend before being sent
+- Include clickable links for Word doc downloads and key steps
+Frontend Functionality
+- Clean, powerful UI for trades (not tech-savvy)
+- Buttons and flows:
+- “Create New Case”
+- “Create New Contract”
+- Dashboard views: Timeline, Documents, Next Steps
+- Notification bar for admin actions (review needed, client replied, etc.)
+Extras
+
+I have build the system in replit, I have a Open Ai API, as well as set up a Supabase account, Can you please break what I need from you down into 4 steps to ensure each step is complteed before moving onto the next
+
+My approach:
+Here are steps that I am going to take for project.
+Step 1: Foundation-Authentication and UI skeleton
+Backend: Set up supabase project including User authentication, role management and Configure RLS and storage buckets
+Frontend: Enhance UI that was built by Replit like modifying structure.
+
+Step 2:Case management and File storage
+Frontend:
+-“Create New Case” and “Create New Contract” flows
+-File uploader for photos, documents
+-Documents list with download + preview options
+
+Backend: CRUD APIs for:
+-Creating/editing cases and contracts
+-Uploading documents/photos
+-Handling versioned files (e.g., contract drafts)
+
+Step 3: AI PDF Generator & Email/Calendar Sync
+Backend:
+-Intake form → AI fills out .docx template
+-Render branded, clickable PDF
+-Editable in admin panel before sending
+-Sync emails and tag to case
+-Calendar event creation from timeline data
+
+Frontend:
+-Intake form UX (autosave, validation)
+-Word/PDF download & email send UI
+-Email inbox view (case-tagged)
+-Calendar preview + sync UI for timeline events
+
+
+
+Step4 :Final😀 -Admin, notification and Full dashboard
+Backend:
+-Admin tools:
+Review dashboard for activity, signups, subscriptions
+Edit/send AI documents
+-Notification service
+Frontend:
+-Notification bar and badges (admin and client)
+-Final polish of dashboards:
+Timeline view
+Document list
+Next steps/action panel
+-Responsive styling, tooltips, error states
+-User onboarding/help modals 👍
+
+I wanna your feedback about this plan.
+Thanks Samantha. Thanks for your time.
+
+Supabase service role: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVvZmZ5endyaWxsd3l0bGdpa3djIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0OTE2NzczMiwiZXhwIjoyMDY0NzQzNzMyfQ.9MNXoAt9Wun_foXZtqZXeGcFepY3zn3hgkPOLCheYyw
+vite_supabase_url:
+https://uoffyzwrillwytlgikwc.supabase.co
+VITE_SUPABASE_ANON_KEY:
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVvZmZ5endyaWxsd3l0bGdpa3djIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkxNjc3MzIsImV4cCI6MjA2NDc0MzczMn0.ffzikKrbPpOe0nf92V__3r7Kj-NHa-ncnBXKHYUo86o
+
+hello@projectresolveai.com

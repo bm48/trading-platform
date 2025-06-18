@@ -12,7 +12,7 @@ interface EnhancedFileUploadProps {
   contractId?: number;
   onUploadSuccess?: () => void;
   accept?: string;
-  maxSize?: number;handleFile
+  maxSize?: number;
   multiple?: boolean;
   category?: string;
   className?: string;
@@ -178,7 +178,7 @@ export default function EnhancedFileUpload({
     window.open(`/api/documents/${fileId}/preview`, '_blank');
   };
 
-  const isImage = (mimeType: string) => mimeType.startsWith('image/');
+  const isImage = (mimeType: string | undefined) => mimeType && mimeType.startsWith('image/');
 
   return (
     <div className={`space-y-4 ${className} animate-fade-in`}>
