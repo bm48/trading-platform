@@ -202,11 +202,11 @@ export default function EnhancedFileUpload({
             multiple={multiple}
             onChange={(e) => handleFileSelect(e.target.files)}
             className="hidden"
-            id={`file-upload-${Math.random()}`}
+            id="file-upload-input"
           />
           <Button 
             variant="outline" 
-            onClick={() => document.getElementById(`file-upload-${Math.random()}`)?.click()}
+            onClick={() => document.getElementById('file-upload-input')?.click()}
             className="btn-hover-lift animate-pulse-hover"
           >
             Choose Files

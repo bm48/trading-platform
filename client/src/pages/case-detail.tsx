@@ -9,6 +9,7 @@ import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/lib/supabase';
 import DashboardLayout from '@/components/dashboard-layout';
 import EnhancedFileUpload from '@/components/enhanced-file-upload';
 import { 
@@ -50,6 +51,16 @@ export default function CaseDetail() {
 
   const { data: documents = [] } = useQuery({
     queryKey: ['/api/documents/case', id],
+    queryFn: async () => {
+      const response = await fetch(`/api/documents/case/${id}`, {
+        credentials: 'include',
+        headers: {
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+        }
+      });
+      if (!response.ok) throw new Error('Failed to fetch documents');
+      return response.json();
+    },
     enabled: !!id,
   });
 

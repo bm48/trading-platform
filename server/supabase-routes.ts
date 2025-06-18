@@ -585,6 +585,52 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Document download endpoint
+  app.get('/api/documents/:id/download', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const documentId = parseInt(req.params.id);
+      const userId = req.user?.id;
+
+      if (!documentId || isNaN(documentId)) {
+        return res.status(400).json({ message: "Invalid document ID" });
+      }
+
+      // Get document from database
+      const document = await supabaseStorage.getDocument(documentId);
+      
+      if (!document) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+
+      // Check if user has access to this document
+      if (document.user_id !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      // Send file
+      const fs = require('fs');
+      const path = require('path');
+      
+      const filePath = document.upload_path || document.uploadPath;
+      if (!filePath || !fs.existsSync(filePath)) {
+        return res.status(404).json({ message: "File not found on disk" });
+      }
+
+      const fileName = document.original_name || document.originalName || 'download';
+      const fileExtension = path.extname(fileName);
+      
+      res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+      res.setHeader('Content-Type', document.mime_type || document.mimeType || 'application/octet-stream');
+      
+      const fileStream = fs.createReadStream(filePath);
+      fileStream.pipe(res);
+      
+    } catch (error) {
+      console.error("Error downloading document:", error);
+      res.status(500).json({ message: "Failed to download document" });
+    }
+  });
+
   // Role management routes
   app.get('/api/admin/roles', authenticateUser, async (req: Request, res: Response) => {
     try {
