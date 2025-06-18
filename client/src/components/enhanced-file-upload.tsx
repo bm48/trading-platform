@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Upload, FileIcon, ImageIcon, X, Download, Eye } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 interface EnhancedFileUploadProps {
   caseId?: number;
@@ -55,10 +56,19 @@ export default function EnhancedFileUpload({
         ? `/api/cases/${caseId}/upload`
         : `/api/contracts/${contractId}/upload`;
 
+      // Get auth token for the request
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers: Record<string, string> = {};
+      
+      if (session?.access_token) {
+        headers.Authorization = `Bearer ${session.access_token}`;
+      }
+
       const response = await fetch(endpoint, {
         method: 'POST',
+        headers,
         body: formData,
-        credentials: 'include', // Include cookies for authentication
+        credentials: 'include',
       });
 
       if (!response.ok) {

@@ -423,7 +423,7 @@ export async function registerCleanRoutes(app: Express): Promise<Server> {
   });
 
   // Generic document upload endpoint
-  app.post('/api/documents/upload', authenticateSession, upload.single('file'), async (req, res) => {
+  app.post('/api/documents/upload', authenticateUser, upload.single('file'), async (req, res) => {
     try {
       const userId = req.user?.id;
       
