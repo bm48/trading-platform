@@ -400,6 +400,74 @@ export async function registerCleanRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Generic document upload endpoint
+  app.post('/api/documents/upload', authenticateUser, upload.single('file'), async (req, res) => {
+    try {
+      const userId = req.user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+
+      const { caseId, contractId, category = 'evidence', description = '' } = req.body;
+
+      // Verify user owns the case or contract
+      if (caseId) {
+        const caseData = await supabaseStorage.getCase(parseInt(caseId));
+        if (!caseData || caseData.userId !== userId) {
+          return res.status(403).json({ message: "Access denied" });
+        }
+      } else if (contractId) {
+        const contractData = await supabaseStorage.getContract(parseInt(contractId));
+        if (!contractData || contractData.userId !== userId) {
+          return res.status(403).json({ message: "Access denied" });
+        }
+      } else {
+        return res.status(400).json({ message: "Either caseId or contractId must be provided" });
+      }
+
+      const documentData = {
+        user_id: userId,
+        case_id: caseId ? parseInt(caseId) : null,
+        contract_id: contractId ? parseInt(contractId) : null,
+        title: req.file.originalname,
+        file_path: req.file.path,
+        file_type: req.file.mimetype,
+        file_size: req.file.size,
+        document_type: category || 'upload',
+        category: category || 'evidence',
+        description: description || ''
+      };
+
+      const document = await supabaseStorage.createDocument(documentData);
+      
+      // Create timeline event (skip if table doesn't exist)
+      try {
+        await supabaseStorage.createTimelineEvent({
+          case_id: caseId ? parseInt(caseId) : null,
+          contract_id: contractId ? parseInt(contractId) : null,
+          user_id: userId,
+          event_type: "document_uploaded",
+          title: "Document Uploaded",
+          description: `${req.file.originalname} has been uploaded`,
+          eventDate: new Date(),
+          is_completed: true
+        });
+      } catch (timelineError) {
+        console.log("Timeline creation skipped - table may not exist:", timelineError);
+      }
+
+      res.status(201).json(document);
+    } catch (error) {
+      console.error("Error uploading document:", error);
+      res.status(500).json({ message: "Failed to upload document" });
+    }
+  });
+
   // Timeline endpoints  
   app.get('/api/timeline/case/:caseId', authenticateUser, async (req, res) => {
     try {
