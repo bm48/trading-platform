@@ -61,22 +61,7 @@ export default function ValidatedContractForm({ onClose, onSuccess }: ValidatedC
 
   const createContractMutation = useMutation({
     mutationFn: async (data: ContractFormData) => {
-      const { data: { session } } = await supabase.auth.getSession();
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-contract`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session?.access_token}`,
-        },
-        body: JSON.stringify(data),
-      });
-      
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to create contract');
-      }
-      
-      return await response.json();
+      return await apiRequest('POST', '/api/contracts', data);
     },
     onSuccess: (data) => {
       const newContract = typeof data === 'object' && data !== null ? data : {};
