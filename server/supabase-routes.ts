@@ -305,6 +305,23 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
   });
 
   // Contract management routes
+  // Debug endpoint to check actual table schema
+  app.get('/api/debug/contracts-schema', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      // Try to get existing contracts to see actual column names
+      const { data: existingContracts, error } = await supabaseAdmin
+        .from('contracts')
+        .select('*')
+        .limit(1);
+        
+      console.log('Existing contracts data structure:', existingContracts);
+      res.json({ contracts: existingContracts, error });
+    } catch (error) {
+      console.error("Error checking schema:", error);
+      res.status(500).json({ message: "Failed to check schema" });
+    }
+  });
+
   app.post('/api/contracts', authenticateUser, async (req: Request, res: Response) => {
     try {
       console.log('Contract creation request body:', JSON.stringify(req.body, null, 2));
@@ -312,17 +329,16 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
       // Generate contract number
       const contractNumber = `CONTRACT-${Date.now()}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
       
-      // Map frontend fields to exact database column names from screenshot
+      // Use EXACT column names from actual database structure
       const contractData = {
         user_id: req.user!.id,
         title: req.body.title,
-        contract_num: contractNumber,
+        contract_number: contractNumber, // Database uses 'contract_number' not 'contract_num'
         client_name: req.body.clientName,
-        project_descr: req.body.projectDescription,
+        project_description: req.body.projectDescription, // Database uses 'project_description' not 'project_descr'
         value: parseFloat(req.body.value) || 0,
         start_date: req.body.startDate ? new Date(req.body.startDate).toISOString() : null,
         end_date: req.body.endDate ? new Date(req.body.endDate).toISOString() : null,
-        // Map frontend form fields to terms JSON object for database
         terms: {
           contractType: req.body.contractType,
           paymentTerms: req.body.paymentTerms,
@@ -335,7 +351,7 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
         updated_at: new Date().toISOString()
       };
 
-      console.log('Mapped contract data for database:', JSON.stringify(contractData, null, 2));
+      console.log('Contract data with correct column names:', JSON.stringify(contractData, null, 2));
 
       const { data: newContract, error } = await supabaseAdmin
         .from('contracts')

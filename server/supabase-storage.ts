@@ -162,7 +162,7 @@ export class SupabaseStorage {
         contract_num: contractData.contract_num, // Database uses contract_num
         status: contractData.status || "draft",
         client_name: contractData.client_name,
-        project_descr: contractData.project_descr, // Database uses project_descr
+        project_description: contractData.project_descri, // Database uses project_descr
         value: contractData.value,
         start_date: contractData.start_date,
         end_date: contractData.end_date,
