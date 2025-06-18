@@ -124,8 +124,8 @@ export const contracts = pgTable("contracts", {
   endDate: timestamp("end_date"),
   terms: jsonb("terms"),
   version: integer("version").default(1),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
 });
 
 // Schema validation
@@ -155,20 +155,20 @@ export const insertCaseSchema = createInsertSchema(cases).omit({
 
 export const insertDocumentSchema = createInsertSchema(documents).omit({
   id: true,
-  createdAt: true,
+  created_at: true,
 });
 
 export const insertTimelineEventSchema = createInsertSchema(timelineEvents).omit({
   id: true,
-  createdAt: true,
+  created_at: true,
 });
 
 export const insertContractSchema = createInsertSchema(contracts).omit({
   id: true,
   userId: true,
   contractNumber: true,
-  createdAt: true,
-  updatedAt: true,
+  created_at: true,
+  updated_at: true,
 }).extend({
   title: z.string().min(1, "Title is required").max(200, "Title must be less than 200 characters"),
   clientName: z.string().min(1, "Client name is required").max(100, "Client name must be less than 100 characters"),

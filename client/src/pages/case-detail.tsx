@@ -535,11 +535,11 @@ export default function CaseDetail() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <FileUpload
+                  <EnhancedFileUpload
+                    caseId={parseInt(id!)}
                     onUploadSuccess={handleFileUpload}
                     accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
                     maxSize={10 * 1024 * 1024}
-                    additionalData={{ caseId: id }}
                   />
                 </CardContent>
               </Card>
