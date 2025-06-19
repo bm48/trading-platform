@@ -1,4 +1,5 @@
 import { supabase } from "./db";
+import { Pool } from 'pg';
 import type { User, Case, Contract, Document, TimelineEvent, Application, CalendarIntegration, CalendarEvent } from '@shared/schema';
 
 // Supabase-based storage implementation
@@ -484,39 +485,53 @@ export class SupabaseStorage {
   // Application operations
   async createApplication(application: any): Promise<Application> {
     try {
-      // Map camelCase to snake_case for database
-      const dbData = {
-        user_id: application.userId,
-        full_name: application.fullName,
-        phone: application.phone,
-        email: application.email,
-        trade: application.trade,
-        state: application.state,
-        issue_type: application.issueType,
-        amount: application.amount,
-        start_date: application.startDate,
-        description: application.description,
-        status: application.status || "pending",
-        ai_analysis: application.aiAnalysis,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-
-      const { data, error } = await supabase
-        .from('applications')
-        .insert(dbData)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error creating application:', error);
-        throw new Error(`Failed to create application: ${error.message}`);
+      console.log('Creating application with data:', application);
+      
+      // Clean and validate required fields
+      if (!application.fullName || !application.phone || !application.email || 
+          !application.trade || !application.state || !application.issueType || 
+          !application.description) {
+        throw new Error('Missing required fields for application');
       }
 
+      // Use direct SQL insertion to bypass Supabase client issues
+      const pool = new Pool({
+        connectionString: process.env.DATABASE_URL
+      });
+
+      const query = `
+        INSERT INTO applications (
+          user_id, full_name, phone, email, trade, state, 
+          issue_type, amount, description, status, created_at, updated_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        RETURNING *
+      `;
+
+      const values = [
+        application.user_id || application.userId || null,
+        application.fullName,
+        application.phone,
+        application.email,
+        application.trade,
+        application.state,
+        application.issueType,
+        application.amount ? parseFloat(application.amount.toString()) : null,
+        application.description,
+        'pending',
+        new Date().toISOString(),
+        new Date().toISOString()
+      ];
+
+      console.log('Executing SQL with values:', values);
+      const result = await pool.query(query, values);
+      await pool.end();
+
+      const data = result.rows[0];
+      console.log('Application created successfully:', data);
       return data as Application;
     } catch (error) {
       console.error('Error creating application:', error);
-      throw new Error(`Failed to create application: ${error.message}`);
+      throw error;
     }
   }
 

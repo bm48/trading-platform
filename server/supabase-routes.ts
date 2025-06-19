@@ -125,24 +125,52 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
   // Application routes
   app.post('/api/applications', optionalAuth, async (req: Request, res: Response) => {
     try {
+      console.log('Received application data:', req.body);
+      
+      // Validate required fields
+      const requiredFields = ['fullName', 'phone', 'email', 'trade', 'state', 'issueType', 'description'];
+      const missingFields = requiredFields.filter(field => !req.body[field]);
+      
+      if (missingFields.length > 0) {
+        return res.status(400).json({ 
+          message: `Missing required fields: ${missingFields.join(', ')}` 
+        });
+      }
+
       const applicationData = {
         ...req.body,
         user_id: req.user?.id || null,
         created_at: new Date().toISOString()
       };
 
-      const { data: application, error } = await database.createApplication(applicationData);
-      if (error) throw error;
+      console.log('Creating application with supabaseStorage...');
+      const application = await supabaseStorage.createApplication(applicationData);
+      console.log('Application created successfully:', application);
 
-      // Send welcome email
-      if (application.email) {
-        await sendWelcomeEmail(application.email, application.full_name);
+      // Send welcome email (non-blocking)
+      if (application.email && (application.fullName || application.full_name)) {
+        try {
+          const name = application.fullName || application.full_name;
+          await sendWelcomeEmail(application.email, name);
+          console.log('Welcome email sent successfully');
+        } catch (emailError) {
+          console.warn('Failed to send welcome email:', emailError);
+          // Don't fail the entire request for email issues
+        }
       }
 
       res.status(201).json(application);
     } catch (error) {
       console.error("Error creating application:", error);
-      res.status(500).json({ message: "Failed to create application" });
+      console.error("Error details:", {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        error: error
+      });
+      res.status(500).json({ 
+        message: "Failed to create application",
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   });
 
