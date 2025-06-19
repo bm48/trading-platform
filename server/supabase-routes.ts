@@ -7,6 +7,7 @@ import { analyzeCase, generateStrategyPack } from "./openai";
 import { sendWelcomeEmail, sendApprovalEmail, sendRejectionEmail, sendStrategyPackEmail } from "./email";
 import { generateStrategyPackPDF, generateAIStrategyPackPDF } from "./pdf";
 import { calendarService } from "./calendar-service";
+import { adminService } from "./admin-service";
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -788,22 +789,72 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Admin document management routes
+  // Admin dashboard and management routes
+  app.get('/api/admin/stats', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      if (req.user?.role !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+
+      const stats = await adminService.getAdminStats();
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching admin stats:', error);
+      res.status(500).json({ message: 'Failed to fetch admin statistics' });
+    }
+  });
+
+  app.get('/api/admin/notifications', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      if (req.user?.role !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+
+      const notifications = await adminService.getAdminNotifications();
+      res.json(notifications);
+    } catch (error) {
+      console.error('Error fetching admin notifications:', error);
+      res.status(500).json({ message: 'Failed to fetch notifications' });
+    }
+  });
+
+  app.get('/api/admin/activity', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      if (req.user?.role !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+
+      const limit = parseInt(req.query.limit as string) || 50;
+      const activity = await adminService.getUserActivity(limit);
+      res.json(activity);
+    } catch (error) {
+      console.error('Error fetching user activity:', error);
+      res.status(500).json({ message: 'Failed to fetch user activity' });
+    }
+  });
+
+  app.get('/api/admin/applications', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      if (req.user?.role !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+
+      const applications = await adminService.getAllApplications();
+      res.json(applications);
+    } catch (error) {
+      console.error('Error fetching applications:', error);
+      res.status(500).json({ message: 'Failed to fetch applications' });
+    }
+  });
+
   app.get('/api/admin/pending-documents', authenticateUser, async (req: Request, res: Response) => {
     try {
       if (req.user?.role !== 'admin') {
         return res.status(403).json({ message: 'Admin access required' });
       }
 
-      const { data: pendingDocs, error } = await supabaseAdmin
-        .from('ai_generations')
-        .select('*')
-        .in('status', ['draft', 'reviewed'])
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      res.json(pendingDocs || []);
+      const pendingDocs = await adminService.getPendingDocuments();
+      res.json(pendingDocs);
     } catch (error) {
       console.error('Error fetching pending documents:', error);
       res.status(500).json({ message: 'Failed to fetch pending documents' });
@@ -839,32 +890,67 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
       }
 
       const documentId = parseInt(req.params.id);
-      const { content, type } = req.body;
+      const { content, status } = req.body;
 
-      let updateData: any = {
-        updated_at: new Date().toISOString(),
-        reviewed_by: req.user.id,
-        reviewed_at: new Date().toISOString(),
-        status: 'reviewed'
-      };
+      const success = await adminService.updateDocument(documentId, {
+        content,
+        status,
+        reviewedBy: req.user.id
+      });
 
-      if (type === 'ai_content') {
-        updateData.ai_content = JSON.parse(content);
+      if (success) {
+        res.json({ message: 'Document updated successfully' });
+      } else {
+        res.status(500).json({ message: 'Failed to update document' });
       }
-
-      const { data: updatedDoc, error } = await supabaseAdmin
-        .from('ai_generations')
-        .update(updateData)
-        .eq('id', documentId)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      res.json(updatedDoc);
     } catch (error) {
       console.error('Error updating document:', error);
       res.status(500).json({ message: 'Failed to update document' });
+    }
+  });
+
+  app.post('/api/admin/documents/:id/send', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      if (req.user?.role !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+
+      const documentId = parseInt(req.params.id);
+      
+      const success = await adminService.updateDocument(documentId, {
+        status: 'sent',
+        reviewedBy: req.user.id
+      });
+
+      if (success) {
+        // TODO: Implement actual document sending via email
+        res.json({ message: 'Document sent successfully' });
+      } else {
+        res.status(500).json({ message: 'Failed to send document' });
+      }
+    } catch (error) {
+      console.error('Error sending document:', error);
+      res.status(500).json({ message: 'Failed to send document' });
+    }
+  });
+
+  app.post('/api/admin/users/:id/promote', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      if (req.user?.role !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+
+      const userId = req.params.id;
+      const success = await adminService.promoteUserToAdmin(userId);
+
+      if (success) {
+        res.json({ message: 'User promoted to admin successfully' });
+      } else {
+        res.status(500).json({ message: 'Failed to promote user' });
+      }
+    } catch (error) {
+      console.error('Error promoting user:', error);
+      res.status(500).json({ message: 'Failed to promote user' });
     }
   });
 
