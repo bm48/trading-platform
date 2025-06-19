@@ -10,6 +10,7 @@ import { apiRequest } from '@/lib/queryClient';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import CalendarIntegration from '@/components/calendar-integration';
 import CalendarEventForm from '@/components/calendar-event-form';
+import CalendarSyncDashboard from '@/components/calendar-sync-dashboard';
 
 interface CalendarEvent {
   id: number;
@@ -35,24 +36,66 @@ export default function CalendarPage() {
     queryKey: ['/api/calendar/events'],
   });
 
-  // Sync all cases mutation
+  // Enhanced sync mutations for full calendar integration
   const syncAllCasesMutation = useMutation({
     mutationFn: async () => {
-      // This would sync all cases - for now we'll create a notification
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      return { message: 'All cases synced successfully' };
+      const response = await apiRequest('POST', '/api/calendar/sync/all-cases');
+      return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast({
         title: "Sync Complete",
-        description: "All case deadlines have been synced to your calendars",
+        description: `Successfully synced ${data.synced} cases to your calendars`,
       });
       queryClient.invalidateQueries({ queryKey: ['/api/calendar/events'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/calendar/sync-status'] });
     },
     onError: () => {
       toast({
         title: "Sync Failed",
         description: "Failed to sync case deadlines",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const syncFromExternalMutation = useMutation({
+    mutationFn: async (integrationId: number) => {
+      const response = await apiRequest('POST', `/api/calendar/sync/from-external/${integrationId}`);
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "External Sync Complete",
+        description: `Imported ${data.events.length} events from your external calendar`,
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/calendar/events'] });
+    },
+    onError: () => {
+      toast({
+        title: "External Sync Failed",
+        description: "Failed to sync events from external calendar",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const syncUpdatesMutation = useMutation({
+    mutationFn: async (integrationId: number) => {
+      const response = await apiRequest('POST', `/api/calendar/sync/updates/${integrationId}`);
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Updates Synced",
+        description: `Updated ${data.updated} events, created ${data.created} new events`,
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/calendar/events'] });
+    },
+    onError: () => {
+      toast({
+        title: "Update Sync Failed",
+        description: "Failed to sync calendar updates",
         variant: "destructive",
       });
     },

@@ -333,6 +333,283 @@ export class CalendarService {
   async disconnectIntegration(integrationId: number): Promise<void> {
     await supabaseStorage.updateCalendarIntegration(integrationId, { is_active: false });
   }
+
+  // Bidirectional sync methods for full calendar integration
+  async syncEventsFromCalendar(integrationId: number): Promise<CalendarEvent[]> {
+    try {
+      const integration = await supabaseStorage.getCalendarIntegration(integrationId);
+      if (!integration) {
+        throw new Error('Integration not found');
+      }
+
+      let externalEvents: any[] = [];
+
+      if (integration.provider === 'google') {
+        externalEvents = await this.getGoogleEvents(integration);
+      } else if (integration.provider === 'microsoft') {
+        externalEvents = await this.getOutlookEvents(integration);
+      }
+
+      // Sync external events to our database
+      const syncedEvents: CalendarEvent[] = [];
+      for (const event of externalEvents) {
+        const existingEvent = await supabaseStorage.getCalendarEventByExternalId(event.id);
+        
+        if (!existingEvent) {
+          const calendarEvent = await supabaseStorage.createCalendarEvent({
+            user_id: integration.user_id,
+            integration_id: integrationId,
+            external_event_id: event.id,
+            title: event.summary || event.subject || 'Untitled Event',
+            description: event.description || event.bodyPreview,
+            start_time: new Date(event.start?.dateTime || event.start?.date),
+            end_time: new Date(event.end?.dateTime || event.end?.date),
+            location: event.location?.displayName || event.location,
+            is_synced: true,
+            sync_status: 'synced'
+          });
+          syncedEvents.push(calendarEvent);
+        }
+      }
+
+      return syncedEvents;
+    } catch (error) {
+      console.error('Error syncing events from calendar:', error);
+      throw error;
+    }
+  }
+
+  private async getGoogleEvents(integration: CalendarIntegration): Promise<any[]> {
+    await this.refreshGoogleToken(integration);
+    
+    this.googleAuth.setCredentials({
+      access_token: integration.access_token,
+      refresh_token: integration.refresh_token
+    });
+
+    const calendar = google.calendar({ version: 'v3', auth: this.googleAuth });
+    
+    const response = await calendar.events.list({
+      calendarId: integration.calendar_id || 'primary',
+      timeMin: new Date().toISOString(),
+      maxResults: 50,
+      singleEvents: true,
+      orderBy: 'startTime',
+    });
+
+    return response.data.items || [];
+  }
+
+  private async getOutlookEvents(integration: CalendarIntegration): Promise<any[]> {
+    const graphClient = Client.init({
+      authProvider: {
+        getAccessToken: async () => integration.access_token
+      }
+    });
+
+    const events = await graphClient
+      .api('/me/events')
+      .select('id,subject,bodyPreview,start,end,location')
+      .filter(`start/dateTime ge '${new Date().toISOString()}'`)
+      .top(50)
+      .get();
+
+    return events.value || [];
+  }
+
+  async bulkSyncAllCases(userId: string): Promise<{ synced: number; errors: string[] }> {
+    try {
+      const cases = await supabaseStorage.getCasesByUserId(userId);
+      const integrations = await this.getUserIntegrations(userId);
+
+      if (integrations.length === 0) {
+        throw new Error('No calendar integrations found');
+      }
+
+      let synced = 0;
+      const errors: string[] = [];
+
+      for (const caseData of cases) {
+        try {
+          await this.syncCaseDeadlines(caseData.id);
+          synced++;
+        } catch (error) {
+          errors.push(`Failed to sync case ${caseData.title}: ${error}`);
+        }
+      }
+
+      return { synced, errors };
+    } catch (error) {
+      console.error('Error in bulk sync:', error);
+      throw error;
+    }
+  }
+
+  async syncCalendarUpdates(integrationId: number): Promise<{ updated: number; created: number }> {
+    try {
+      const integration = await supabaseStorage.getCalendarIntegration(integrationId);
+      if (!integration) {
+        throw new Error('Integration not found');
+      }
+
+      let externalEvents: any[] = [];
+      if (integration.provider === 'google') {
+        externalEvents = await this.getGoogleEvents(integration);
+      } else if (integration.provider === 'microsoft') {
+        externalEvents = await this.getOutlookEvents(integration);
+      }
+
+      let updated = 0;
+      let created = 0;
+
+      for (const event of externalEvents) {
+        const existingEvent = await supabaseStorage.getCalendarEventByExternalId(event.id);
+        
+        if (existingEvent) {
+          // Update existing event if modified
+          const eventData = {
+            title: event.summary || event.subject || 'Untitled Event',
+            description: event.description || event.bodyPreview,
+            start_time: new Date(event.start?.dateTime || event.start?.date),
+            end_time: new Date(event.end?.dateTime || event.end?.date),
+            location: event.location?.displayName || event.location,
+            sync_status: 'synced'
+          };
+          
+          await supabaseStorage.updateCalendarEvent(existingEvent.id, eventData);
+          updated++;
+        } else {
+          // Create new event
+          await supabaseStorage.createCalendarEvent({
+            user_id: integration.user_id,
+            integration_id: integrationId,
+            external_event_id: event.id,
+            title: event.summary || event.subject || 'Untitled Event',
+            description: event.description || event.bodyPreview,
+            start_time: new Date(event.start?.dateTime || event.start?.date),
+            end_time: new Date(event.end?.dateTime || event.end?.date),
+            location: event.location?.displayName || event.location,
+            is_synced: true,
+            sync_status: 'synced'
+          });
+          created++;
+        }
+      }
+
+      return { updated, created };
+    } catch (error) {
+      console.error('Error syncing calendar updates:', error);
+      throw error;
+    }
+  }
+
+  async createCaseDeadlineEvents(caseId: number): Promise<CalendarEvent[]> {
+    try {
+      const caseData = await supabaseStorage.getCase(caseId);
+      if (!caseData) {
+        throw new Error('Case not found');
+      }
+
+      const integrations = await this.getUserIntegrations(caseData.userId);
+      const events: CalendarEvent[] = [];
+
+      // Enhanced deadline events with comprehensive timeline
+      const deadlineEvents = [];
+      
+      if (caseData.deadline_date) {
+        // Main payment deadline
+        deadlineEvents.push({
+          title: `⚖️ Payment Due: ${caseData.title}`,
+          description: `Payment deadline for case: ${caseData.description}\nAmount: ${caseData.amount || 'TBD'}\nStatus: ${caseData.status}\n\nAction Required: Contact client for payment`,
+          startTime: new Date(caseData.deadline_date),
+          endTime: new Date(new Date(caseData.deadline_date).getTime() + 60 * 60 * 1000),
+          reminderMinutes: 24 * 60, // 24 hours
+        });
+        
+        // 7-day warning
+        const warningDate = new Date(new Date(caseData.deadline_date).getTime() - 7 * 24 * 60 * 60 * 1000);
+        if (warningDate > new Date()) {
+          deadlineEvents.push({
+            title: `⚠️ Payment Warning: ${caseData.title}`,
+            description: `7-day payment deadline warning\nDeadline: ${new Date(caseData.deadline_date).toLocaleDateString()}\nPrepare follow-up communication`,
+            startTime: warningDate,
+            endTime: new Date(warningDate.getTime() + 30 * 60 * 1000),
+            reminderMinutes: 60,
+          });
+        }
+
+        // 24-hour final notice
+        const finalNoticeDate = new Date(new Date(caseData.deadline_date).getTime() - 24 * 60 * 60 * 1000);
+        if (finalNoticeDate > new Date()) {
+          deadlineEvents.push({
+            title: `🚨 Final Notice: ${caseData.title}`,
+            description: `24-hour final payment notice\nSend formal demand letter if payment not received`,
+            startTime: finalNoticeDate,
+            endTime: new Date(finalNoticeDate.getTime() + 30 * 60 * 1000),
+            reminderMinutes: 30,
+          });
+        }
+      }
+
+      // Case review milestones
+      if (caseData.created_at) {
+        const reviewDate = new Date(new Date(caseData.created_at).getTime() + 14 * 24 * 60 * 60 * 1000);
+        if (reviewDate > new Date()) {
+          deadlineEvents.push({
+            title: `🔍 Case Review: ${caseData.title}`,
+            description: `14-day case review checkpoint\nReview progress, update client, plan next steps`,
+            startTime: reviewDate,
+            endTime: new Date(reviewDate.getTime() + 60 * 60 * 1000),
+            reminderMinutes: 120,
+          });
+        }
+
+        // 30-day escalation review
+        const escalationDate = new Date(new Date(caseData.created_at).getTime() + 30 * 24 * 60 * 60 * 1000);
+        if (escalationDate > new Date()) {
+          deadlineEvents.push({
+            title: `📈 Escalation Review: ${caseData.title}`,
+            description: `30-day escalation review\nConsider adjudication or alternative dispute resolution`,
+            startTime: escalationDate,
+            endTime: new Date(escalationDate.getTime() + 60 * 60 * 1000),
+            reminderMinutes: 180,
+          });
+        }
+      }
+
+      // Create events in all active integrations
+      for (const integration of integrations.filter(i => i.is_active)) {
+        for (const eventData of deadlineEvents) {
+          try {
+            let event: CalendarEvent;
+            
+            if (integration.provider === 'google') {
+              event = await this.createGoogleEvent(integration.id, eventData);
+            } else if (integration.provider === 'microsoft') {
+              event = await this.createOutlookEvent(integration.id, eventData);
+            } else {
+              continue;
+            }
+
+            // Link event to case
+            await supabaseStorage.updateCalendarEvent(event.id, { 
+              case_id: caseId,
+              sync_status: 'synced'
+            });
+            
+            events.push(event);
+          } catch (error) {
+            console.error(`Failed to create event in ${integration.provider}:`, error);
+          }
+        }
+      }
+
+      return events;
+    } catch (error) {
+      console.error('Error creating case deadline events:', error);
+      throw error;
+    }
+  }
 }
 
 export const calendarService = new CalendarService();
