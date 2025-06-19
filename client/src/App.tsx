@@ -9,6 +9,7 @@ import Dashboard from "@/pages/dashboard";
 import DemoDashboard from "@/pages/demo-dashboard";
 import AdminDashboard from "@/pages/admin-dashboard";
 import CaseDetail from "@/pages/case-detail";
+import Calendar from "@/pages/calendar";
 import Checkout from "@/pages/checkout";
 import Settings from "@/pages/settings";
 import Profile from "@/pages/profile";
@@ -49,6 +50,9 @@ function Router() {
       </Route>
       <Route path="/case/:id">
         <ProtectedRoute component={CaseDetail} />
+      </Route>
+      <Route path="/calendar">
+        <ProtectedRoute component={Calendar} />
       </Route>
       <Route path="/checkout">
         <ProtectedRoute component={Checkout} />

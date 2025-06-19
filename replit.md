@@ -99,6 +99,7 @@ The application follows a modern full-stack architecture:
 - **Role-Based Access**: User, moderator, and admin roles
 - **Subscription Management**: Strategy packs and monthly subscriptions
 - **AI-Powered Analysis**: Optional legal case analysis and strategy generation
+- **Calendar Integration**: Full Google Calendar and Microsoft Outlook synchronization with OAuth 2.0 authentication
 
 ## Changelog
 
@@ -110,6 +111,7 @@ Changelog:
 - June 17, 2025. Fixed document upload workflow - created comprehensive SQL setup for missing tables (timeline_events, documents, applications), implemented complete file upload endpoints with proper user authentication and field mapping, added multer configuration for secure file handling. Created supabase_timeline_events_table.sql for database table creation.
 - June 18, 2025. Major architectural cleanup - consolidated entire project to use Supabase exclusively for authentication, authorization, and database operations. Removed redundant authentication systems (replitAuth.ts, auth-middleware.ts, direct-storage.ts, storage.ts) and route files (clean-routes.ts, case-routes.ts, contract-routes.ts, file-upload-routes.ts, routes.ts). Unified all API endpoints under supabase-routes.ts with consistent JWT token authentication. Fixed file upload authentication by ensuring proper Authorization header transmission from frontend to backend. System now uses single, clean Supabase-based architecture throughout.
 - June 18, 2025. Implemented comprehensive micro-interaction animation system throughout the application to enhance user engagement. Added custom CSS animations (fadeIn, slideIn, pulse, bounce, shake, glow) with utility classes for buttons, cards, and interactive elements. Enhanced dashboard with staggered animations, hover effects, and smooth transitions. Applied animations to file upload components, navigation elements, stats cards, timeline events, and all interactive buttons. System includes card hover effects, button lift animations, icon bounce effects, and loading state animations for improved user experience.
+- June 19, 2025. Completed comprehensive Google/Outlook calendar integration with full OAuth 2.0 authentication. Implemented CalendarService with Google Calendar API and Microsoft Graph integration for bidirectional synchronization. Added calendar_integrations and calendar_events database tables with complete CRUD operations. Created frontend calendar management components including integration settings, event creation forms, and calendar dashboard. Added dedicated /calendar route with comprehensive calendar management interface. Users can now connect external calendars, sync case deadlines, create events, and manage calendar settings seamlessly.
 
 ## User Preferences
 

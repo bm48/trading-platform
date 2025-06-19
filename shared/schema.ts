@@ -110,6 +110,41 @@ export const timelineEvents = pgTable("timeline_events", {
   created_at: timestamp("created_at").defaultNow(),
 });
 
+// Calendar integrations
+export const calendarIntegrations = pgTable("calendar_integrations", {
+  id: serial("id").primaryKey(),
+  user_id: varchar("user_id").notNull(),
+  provider: varchar("provider").notNull(), // 'google' or 'outlook'
+  access_token: text("access_token").notNull(),
+  refresh_token: text("refresh_token"),
+  token_expires_at: timestamp("token_expires_at"),
+  calendar_id: varchar("calendar_id"),
+  is_active: boolean("is_active").default(true),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
+// Calendar events
+export const calendarEvents = pgTable("calendar_events", {
+  id: serial("id").primaryKey(),
+  user_id: varchar("user_id").notNull(),
+  case_id: integer("case_id"),
+  contract_id: integer("contract_id"),
+  integration_id: integer("integration_id"),
+  external_event_id: varchar("external_event_id"),
+  title: varchar("title").notNull(),
+  description: text("description"),
+  start_time: timestamp("start_time").notNull(),
+  end_time: timestamp("end_time").notNull(),
+  location: varchar("location"),
+  attendees: jsonb("attendees"),
+  reminder_minutes: integer("reminder_minutes").default(15),
+  is_synced: boolean("is_synced").default(false),
+  sync_status: varchar("sync_status").default("pending"), // pending, synced, failed
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
 // Contracts (for future work prevention)
 export const contracts = pgTable("contracts", {
   id: serial("id").primaryKey(),
@@ -178,6 +213,21 @@ export const insertContractSchema = createInsertSchema(contracts).omit({
   endDate: z.string().optional().transform((val) => val ? new Date(val) : undefined),
 });
 
+export const insertCalendarIntegrationSchema = createInsertSchema(calendarIntegrations).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
+
+export const insertCalendarEventSchema = createInsertSchema(calendarEvents).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+}).extend({
+  start_time: z.string().transform((val) => new Date(val)),
+  end_time: z.string().transform((val) => new Date(val)),
+});
+
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -191,3 +241,7 @@ export type InsertTimelineEvent = z.infer<typeof insertTimelineEventSchema>;
 export type TimelineEvent = typeof timelineEvents.$inferSelect;
 export type InsertContract = z.infer<typeof insertContractSchema>;
 export type Contract = typeof contracts.$inferSelect;
+export type InsertCalendarIntegration = z.infer<typeof insertCalendarIntegrationSchema>;
+export type CalendarIntegration = typeof calendarIntegrations.$inferSelect;
+export type InsertCalendarEvent = z.infer<typeof insertCalendarEventSchema>;
+export type CalendarEvent = typeof calendarEvents.$inferSelect;

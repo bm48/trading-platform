@@ -1,5 +1,5 @@
 import { supabase } from "./db";
-import type { User, Case, Contract, Document, TimelineEvent, Application } from '@shared/schema';
+import type { User, Case, Contract, Document, TimelineEvent, Application, CalendarIntegration, CalendarEvent } from '@shared/schema';
 
 // Supabase-based storage implementation
 export class SupabaseStorage {
@@ -702,7 +702,172 @@ export class SupabaseStorage {
       return data as User;
     } catch (error) {
       console.error('Error updating user profile:', error);
-      throw new Error(`Failed to update user profile: ${error.message}`);
+      throw new Error(`Failed to update user profile: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  // Calendar Integration operations
+  async createCalendarIntegration(integrationData: any): Promise<CalendarIntegration> {
+    try {
+      const { data, error } = await supabase
+        .from('calendar_integrations')
+        .insert(integrationData)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating calendar integration:', error);
+        throw new Error(`Failed to create calendar integration: ${error.message}`);
+      }
+
+      return data as CalendarIntegration;
+    } catch (error) {
+      console.error('Error creating calendar integration:', error);
+      throw new Error(`Failed to create calendar integration: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  async getCalendarIntegration(id: number): Promise<CalendarIntegration | undefined> {
+    try {
+      const { data, error } = await supabase
+        .from('calendar_integrations')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching calendar integration:', error);
+        return undefined;
+      }
+
+      return data as CalendarIntegration;
+    } catch (error) {
+      console.error('Error fetching calendar integration:', error);
+      return undefined;
+    }
+  }
+
+  async getUserCalendarIntegrations(userId: string): Promise<CalendarIntegration[]> {
+    try {
+      const { data, error } = await supabase
+        .from('calendar_integrations')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching user calendar integrations:', error);
+        return [];
+      }
+
+      return data as CalendarIntegration[];
+    } catch (error) {
+      console.error('Error fetching user calendar integrations:', error);
+      return [];
+    }
+  }
+
+  async updateCalendarIntegration(id: number, updates: Partial<CalendarIntegration>): Promise<CalendarIntegration> {
+    try {
+      const { data, error } = await supabase
+        .from('calendar_integrations')
+        .update({ ...updates, updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating calendar integration:', error);
+        throw new Error(`Failed to update calendar integration: ${error.message}`);
+      }
+
+      return data as CalendarIntegration;
+    } catch (error) {
+      console.error('Error updating calendar integration:', error);
+      throw new Error(`Failed to update calendar integration: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  // Calendar Event operations
+  async createCalendarEvent(eventData: any): Promise<CalendarEvent> {
+    try {
+      const { data, error } = await supabase
+        .from('calendar_events')
+        .insert(eventData)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating calendar event:', error);
+        throw new Error(`Failed to create calendar event: ${error.message}`);
+      }
+
+      return data as CalendarEvent;
+    } catch (error) {
+      console.error('Error creating calendar event:', error);
+      throw new Error(`Failed to create calendar event: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  async getUserCalendarEvents(userId: string): Promise<CalendarEvent[]> {
+    try {
+      const { data, error } = await supabase
+        .from('calendar_events')
+        .select('*')
+        .eq('user_id', userId)
+        .order('start_time', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching user calendar events:', error);
+        return [];
+      }
+
+      return data as CalendarEvent[];
+    } catch (error) {
+      console.error('Error fetching user calendar events:', error);
+      return [];
+    }
+  }
+
+  async getCaseCalendarEvents(caseId: number): Promise<CalendarEvent[]> {
+    try {
+      const { data, error } = await supabase
+        .from('calendar_events')
+        .select('*')
+        .eq('case_id', caseId)
+        .order('start_time', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching case calendar events:', error);
+        return [];
+      }
+
+      return data as CalendarEvent[];
+    } catch (error) {
+      console.error('Error fetching case calendar events:', error);
+      return [];
+    }
+  }
+
+  async updateCalendarEvent(id: number, updates: Partial<CalendarEvent>): Promise<CalendarEvent> {
+    try {
+      const { data, error } = await supabase
+        .from('calendar_events')
+        .update({ ...updates, updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating calendar event:', error);
+        throw new Error(`Failed to update calendar event: ${error.message}`);
+      }
+
+      return data as CalendarEvent;
+    } catch (error) {
+      console.error('Error updating calendar event:', error);
+      throw new Error(`Failed to update calendar event: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 }

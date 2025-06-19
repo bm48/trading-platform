@@ -6,6 +6,7 @@ import { supabaseStorage } from "./supabase-storage";
 import { analyzeCase, generateStrategyPack } from "./openai";
 import { sendWelcomeEmail, sendApprovalEmail, sendRejectionEmail } from "./email";
 import { generateStrategyPackPDF, generateAIStrategyPackPDF } from "./pdf";
+import { calendarService } from "./calendar-service";
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -649,6 +650,159 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error downloading document:", error);
       res.status(500).json({ message: "Failed to download document" });
+    }
+  });
+
+  // Calendar Integration Routes
+  app.get('/api/calendar/auth/google', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const authUrl = await calendarService.getGoogleAuthUrl();
+      res.json({ authUrl });
+    } catch (error) {
+      console.error('Error getting Google auth URL:', error);
+      res.status(500).json({ message: 'Failed to get Google auth URL' });
+    }
+  });
+
+  app.get('/api/calendar/auth/google/callback', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const { code } = req.query;
+      const userId = (req as any).user.id;
+      
+      if (!code) {
+        return res.status(400).json({ message: 'Authorization code required' });
+      }
+
+      const integration = await calendarService.handleGoogleCallback(code as string, userId);
+      res.json({ message: 'Google Calendar connected successfully', integration });
+    } catch (error) {
+      console.error('Error handling Google callback:', error);
+      res.status(500).json({ message: 'Failed to connect Google Calendar' });
+    }
+  });
+
+  app.get('/api/calendar/auth/microsoft', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const authUrl = await calendarService.getMicrosoftAuthUrl();
+      res.json({ authUrl });
+    } catch (error) {
+      console.error('Error getting Microsoft auth URL:', error);
+      res.status(500).json({ message: 'Failed to get Microsoft auth URL' });
+    }
+  });
+
+  app.get('/api/calendar/auth/microsoft/callback', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const { code } = req.query;
+      const userId = (req as any).user.id;
+      
+      if (!code) {
+        return res.status(400).json({ message: 'Authorization code required' });
+      }
+
+      const integration = await calendarService.handleMicrosoftCallback(code as string, userId);
+      res.json({ message: 'Outlook Calendar connected successfully', integration });
+    } catch (error) {
+      console.error('Error handling Microsoft callback:', error);
+      res.status(500).json({ message: 'Failed to connect Outlook Calendar' });
+    }
+  });
+
+  app.get('/api/calendar/integrations', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const userId = (req as any).user.id;
+      const integrations = await calendarService.getUserIntegrations(userId);
+      res.json(integrations);
+    } catch (error) {
+      console.error('Error fetching calendar integrations:', error);
+      res.status(500).json({ message: 'Failed to fetch calendar integrations' });
+    }
+  });
+
+  app.post('/api/calendar/events', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const userId = (req as any).user.id;
+      const { title, description, startTime, endTime, location, attendees, reminderMinutes, caseId } = req.body;
+
+      const eventData = {
+        title,
+        description,
+        startTime: new Date(startTime),
+        endTime: new Date(endTime),
+        location,
+        attendees,
+        reminderMinutes
+      };
+
+      let events;
+      if (caseId) {
+        events = await calendarService.createEventForCase(caseId, eventData);
+      } else {
+        const integrations = await calendarService.getUserIntegrations(userId);
+        events = [];
+        for (const integration of integrations.filter(i => i.is_active)) {
+          try {
+            let event;
+            if (integration.provider === 'google') {
+              event = await calendarService.createGoogleEvent(integration.id, eventData);
+            } else if (integration.provider === 'outlook') {
+              event = await calendarService.createOutlookEvent(integration.id, eventData);
+            }
+            if (event) events.push(event);
+          } catch (error) {
+            console.error(`Failed to create event for ${integration.provider}:`, error);
+          }
+        }
+      }
+
+      res.json({ message: 'Calendar events created successfully', events });
+    } catch (error) {
+      console.error('Error creating calendar events:', error);
+      res.status(500).json({ message: 'Failed to create calendar events' });
+    }
+  });
+
+  app.post('/api/calendar/sync/case/:caseId', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const { caseId } = req.params;
+      await calendarService.syncCaseDeadlines(parseInt(caseId));
+      res.json({ message: 'Case deadlines synced to calendar successfully' });
+    } catch (error) {
+      console.error('Error syncing case deadlines:', error);
+      res.status(500).json({ message: 'Failed to sync case deadlines' });
+    }
+  });
+
+  app.delete('/api/calendar/integrations/:integrationId', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const { integrationId } = req.params;
+      await calendarService.disconnectIntegration(parseInt(integrationId));
+      res.json({ message: 'Calendar integration disconnected successfully' });
+    } catch (error) {
+      console.error('Error disconnecting calendar integration:', error);
+      res.status(500).json({ message: 'Failed to disconnect calendar integration' });
+    }
+  });
+
+  app.get('/api/calendar/events', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const userId = (req as any).user.id;
+      const events = await supabaseStorage.getUserCalendarEvents(userId);
+      res.json(events);
+    } catch (error) {
+      console.error('Error fetching calendar events:', error);
+      res.status(500).json({ message: 'Failed to fetch calendar events' });
+    }
+  });
+
+  app.get('/api/calendar/events/case/:caseId', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const { caseId } = req.params;
+      const events = await supabaseStorage.getCaseCalendarEvents(parseInt(caseId));
+      res.json(events);
+    } catch (error) {
+      console.error('Error fetching case calendar events:', error);
+      res.status(500).json({ message: 'Failed to fetch case calendar events' });
     }
   });
 

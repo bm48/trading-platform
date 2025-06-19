@@ -9,7 +9,8 @@ import {
   Settings, 
   LogOut,
   Home,
-  User
+  User,
+  Calendar
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Link, useLocation } from 'wouter';
@@ -33,6 +34,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       href: '/dashboard',
       icon: Home,
       current: (location === '/dashboard' || location === '/') && !currentTab,
+    },
+    {
+      name: 'Calendar',
+      href: '/calendar',
+      icon: Calendar,
+      current: location === '/calendar',
     },
     {
       name: 'Settings',
