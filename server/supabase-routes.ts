@@ -621,26 +621,29 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid document ID" });
       }
 
-      // Authenticate user - either via token or regular auth
+      // Authenticate user - try multiple methods
       if (token) {
+        // Token-based auth (from URL parameter)
         const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
         if (error || !user) {
           return res.status(401).json({ message: "Invalid token" });
         }
         userId = user.id;
       } else {
-        // Extract from Authorization header
+        // Try Authorization header first (for API calls)
         const authHeader = req.headers.authorization;
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-          return res.status(401).json({ message: "Access token required" });
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+          const accessToken = authHeader.substring(7);
+          const { data: { user }, error } = await supabaseAdmin.auth.getUser(accessToken);
+          if (!error && user) {
+            userId = user.id;
+          } else {
+            return res.status(401).json({ message: "Invalid access token" });
+          }
+        } else {
+          // For direct browser access without auth header, require token parameter
+          return res.status(401).json({ message: "Access token required. Please use preview mode or include token parameter." });
         }
-        
-        const accessToken = authHeader.substring(7);
-        const { data: { user }, error } = await supabaseAdmin.auth.getUser(accessToken);
-        if (error || !user) {
-          return res.status(401).json({ message: "Invalid access token" });
-        }
-        userId = user.id;
       }
 
       // Get document from database
