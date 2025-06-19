@@ -6,7 +6,7 @@ if (!process.env.VITE_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
   );
 }
 
-// Create Supabase client for both authentication and database operations
+// Create Supabase client with service role key for full database access
 export const supabase = createClient(
   process.env.VITE_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY,
@@ -14,6 +14,12 @@ export const supabase = createClient(
     auth: {
       autoRefreshToken: false,
       persistSession: false
+    },
+    db: {
+      schema: 'public'
     }
   }
 );
+
+// Export admin client for administrative operations
+export const supabaseAdmin = supabase;

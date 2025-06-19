@@ -15,9 +15,9 @@ import { z } from "zod";
 
 // Note: Sessions are handled by Supabase Auth, no need for a sessions table
 
-// User storage table for Supabase Auth
+// User storage table extending Supabase Auth (UUID primary key)
 export const users = pgTable("users", {
-  id: varchar("id").primaryKey().notNull(),
+  id: varchar("id").primaryKey().notNull(), // UUID from auth.users
   email: varchar("email").unique(),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
@@ -37,7 +37,7 @@ export const users = pgTable("users", {
 // Applications (initial form submissions)
 export const applications = pgTable("applications", {
   id: serial("id").primaryKey(),
-  userId: varchar("user_id"),
+  userId: varchar("user_id"), // UUID reference to users.id, nullable for anonymous submissions
   fullName: varchar("full_name").notNull(),
   phone: varchar("phone").notNull(),
   email: varchar("email").notNull(),
@@ -56,7 +56,7 @@ export const applications = pgTable("applications", {
 // Cases (after payment and detailed processing)
 export const cases = pgTable("cases", {
   id: serial("id").primaryKey(),
-  userId: varchar("user_id").notNull(),
+  userId: varchar("user_id").notNull(), // UUID reference to users.id
   applicationId: integer("application_id"),
   title: varchar("title").notNull(),
   caseNumber: varchar("case_number").unique().notNull(),
@@ -79,7 +79,7 @@ export const documents = pgTable("documents", {
   id: serial("id").primaryKey(),
   caseid: integer("caseid"),
   contractid: integer("contractid"),
-  user_id: varchar("user_id").notNull(),
+  user_id: varchar("user_id").notNull(), // UUID reference to users.id
   filename: varchar("filename").notNull(),
   original_name: varchar("original_name").notNull(),
   file_type: varchar("file_type").notNull(), // document, photo, image

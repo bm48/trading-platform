@@ -1,5 +1,4 @@
 import { supabase } from "./db";
-import { Pool } from 'pg';
 import type { User, Case, Contract, Document, TimelineEvent, Application, CalendarIntegration, CalendarEvent } from '@shared/schema';
 
 // Supabase-based storage implementation
@@ -494,40 +493,36 @@ export class SupabaseStorage {
         throw new Error('Missing required fields for application');
       }
 
-      // Use direct SQL insertion to bypass Supabase client issues
-      const pool = new Pool({
-        connectionString: process.env.DATABASE_URL
-      });
+      // Map frontend camelCase to database snake_case for Supabase
+      const dbData = {
+        user_id: application.user_id || application.userId || null,
+        full_name: application.fullName,
+        phone: application.phone,
+        email: application.email,
+        trade: application.trade,
+        state: application.state,
+        issue_type: application.issueType,
+        amount: application.amount ? parseFloat(application.amount.toString()) : null,
+        start_date: application.startDate ? new Date(application.startDate).toISOString() : null,
+        description: application.description,
+        status: 'pending'
+      };
 
-      const query = `
-        INSERT INTO applications (
-          user_id, full_name, phone, email, trade, state, 
-          issue_type, amount, description, status, created_at, updated_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-        RETURNING *
-      `;
+      console.log('Inserting to Supabase with data:', dbData);
 
-      const values = [
-        application.user_id || application.userId || null,
-        application.fullName,
-        application.phone,
-        application.email,
-        application.trade,
-        application.state,
-        application.issueType,
-        application.amount ? parseFloat(application.amount.toString()) : null,
-        application.description,
-        'pending',
-        new Date().toISOString(),
-        new Date().toISOString()
-      ];
+      const { data, error } = await supabase
+        .from('applications')
+        .insert(dbData)
+        .select()
+        .single();
 
-      console.log('Executing SQL with values:', values);
-      const result = await pool.query(query, values);
-      await pool.end();
+      if (error) {
+        console.error('Supabase error creating application:', error);
+        console.error('Full error details:', JSON.stringify(error, null, 2));
+        throw new Error(`Database error: ${error.message || error.details || 'Tables may not exist in Supabase database'}`);
+      }
 
-      const data = result.rows[0];
-      console.log('Application created successfully:', data);
+      console.log('Application created successfully in Supabase:', data);
       return data as Application;
     } catch (error) {
       console.error('Error creating application:', error);
