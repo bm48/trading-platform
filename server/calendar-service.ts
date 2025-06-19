@@ -8,7 +8,7 @@ import type { CalendarIntegration, CalendarEvent, InsertCalendarEvent } from '@s
 // Google Calendar Configuration
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || 'http://localhost:5000/api/auth/google/callback';
+const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || 'http://localhost:5000/api/calendar/auth/google/callback';
 
 // Microsoft Graph Configuration
 const MICROSOFT_CLIENT_ID = process.env.MICROSOFT_CLIENT_ID;
@@ -55,7 +55,8 @@ export class CalendarService {
     return this.googleAuth.generateAuthUrl({
       access_type: 'offline',
       scope: scopes,
-      prompt: 'consent'
+      prompt: 'consent',
+      redirect_uri: GOOGLE_REDIRECT_URI
     });
   }
 

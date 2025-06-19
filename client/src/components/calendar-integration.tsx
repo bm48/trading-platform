@@ -46,23 +46,55 @@ export default function CalendarIntegration() {
     mutationFn: async () => {
       const response = await apiRequest('GET', '/api/calendar/auth/google');
       const data = await response.json();
-      window.open(data.authUrl, '_blank', 'width=500,height=600');
-      return data;
+      
+      return new Promise((resolve, reject) => {
+        const popup = window.open(data.authUrl, '_blank', 'width=500,height=600');
+        
+        // Listen for messages from the popup
+        const messageHandler = async (event: MessageEvent) => {
+          if (event.data.type === 'GOOGLE_AUTH_SUCCESS') {
+            try {
+              // Exchange the code for tokens
+              const exchangeResponse = await apiRequest('POST', '/api/calendar/auth/google/exchange', {
+                code: event.data.code
+              });
+              const result = await exchangeResponse.json();
+              
+              window.removeEventListener('message', messageHandler);
+              resolve(result);
+            } catch (error) {
+              window.removeEventListener('message', messageHandler);
+              reject(error);
+            }
+          } else if (event.data.type === 'GOOGLE_AUTH_ERROR') {
+            window.removeEventListener('message', messageHandler);
+            reject(new Error(event.data.error));
+          }
+        };
+        
+        window.addEventListener('message', messageHandler);
+        
+        // Check if popup was closed without completing auth
+        const checkClosed = setInterval(() => {
+          if (popup?.closed) {
+            clearInterval(checkClosed);
+            window.removeEventListener('message', messageHandler);
+            reject(new Error('Authentication window closed'));
+          }
+        }, 1000);
+      });
     },
     onSuccess: () => {
       toast({
-        title: "Google Calendar",
-        description: "Please complete the authorization in the new window",
+        title: "Google Calendar Connected",
+        description: "Successfully connected your Google Calendar",
       });
-      // Refresh integrations after a delay to allow for OAuth completion
-      setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ['/api/calendar/integrations'] });
-      }, 5000);
+      queryClient.invalidateQueries({ queryKey: ['/api/calendar/integrations'] });
     },
-    onError: () => {
+    onError: (error) => {
       toast({
-        title: "Connection Failed",
-        description: "Failed to connect Google Calendar",
+        title: "Connection Failed", 
+        description: error instanceof Error ? error.message : "Failed to connect Google Calendar",
         variant: "destructive",
       });
     },

@@ -973,19 +973,76 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/calendar/auth/google/callback', authenticateUser, async (req: Request, res: Response) => {
+  app.get('/api/calendar/auth/google/callback', async (req: Request, res: Response) => {
     try {
-      const { code } = req.query;
+      const { code, state } = req.query;
+      
+      if (!code) {
+        return res.status(400).send('<html><body><h1>Error: Authorization code missing</h1><script>window.close();</script></body></html>');
+      }
+
+      // Store the auth code temporarily and redirect to frontend
+      // The frontend will then make an authenticated request to exchange the code
+      const successPage = `
+        <html>
+          <body>
+            <h1>Authorization Successful</h1>
+            <p>Connecting your Google Calendar...</p>
+            <script>
+              // Pass the code to the parent window and close
+              if (window.opener) {
+                window.opener.postMessage({ 
+                  type: 'GOOGLE_AUTH_SUCCESS', 
+                  code: '${code}' 
+                }, '*');
+                window.close();
+              } else {
+                // Fallback: redirect to the app with the code
+                window.location.href = '/?google_auth_code=${code}';
+              }
+            </script>
+          </body>
+        </html>
+      `;
+      
+      res.send(successPage);
+    } catch (error) {
+      console.error('Error handling Google callback:', error);
+      const errorPage = `
+        <html>
+          <body>
+            <h1>Error</h1>
+            <p>Failed to connect Google Calendar</p>
+            <script>
+              if (window.opener) {
+                window.opener.postMessage({ 
+                  type: 'GOOGLE_AUTH_ERROR', 
+                  error: 'Connection failed' 
+                }, '*');
+                window.close();
+              }
+            </script>
+          </body>
+        </html>
+      `;
+      res.send(errorPage);
+    }
+  });
+
+  // New endpoint to exchange Google OAuth code for tokens
+  app.post('/api/calendar/auth/google/exchange', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const { code } = req.body;
       const userId = (req as any).user.id;
       
       if (!code) {
         return res.status(400).json({ message: 'Authorization code required' });
       }
 
-      const integration = await calendarService.handleGoogleCallback(code as string, userId);
+      const integration = await calendarService.handleGoogleCallback(code, userId);
       res.json({ message: 'Google Calendar connected successfully', integration });
     } catch (error) {
-      console.error('Error handling Google callback:', error);
+      console.error('Error exchanging Google code:', error);
       res.status(500).json({ message: 'Failed to connect Google Calendar' });
     }
   });
