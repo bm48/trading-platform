@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
 import DashboardLayout from '@/components/dashboard-layout';
 import EnhancedFileUpload from '@/components/enhanced-file-upload';
+import DocumentPreview from '@/components/document-preview';
 import { 
   formatCurrency, 
   formatDate, 
@@ -33,7 +34,8 @@ import {
   Scale,
   Briefcase,
   MessageSquare,
-  Upload
+  Upload,
+  Eye
 } from 'lucide-react';
 
 export default function CaseDetail() {
@@ -596,13 +598,29 @@ export default function CaseDetail() {
                               Uploaded {formatDate(doc.created_at || doc.createdAt)}
                             </div>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => downloadDocument(doc.id, doc.original_name || doc.originalName)}
-                          >
-                            <Download className="h-4 w-4" />
-                          </Button>
+                          <div className="flex items-center gap-2">
+                            <DocumentPreview
+                              document={{
+                                id: doc.id,
+                                fileName: doc.original_name || doc.originalName,
+                                filePath: doc.file_path || doc.filePath,
+                                fileType: doc.file_type || doc.fileType,
+                                fileSize: doc.file_size || doc.fileSize || 0
+                              }}
+                              trigger={
+                                <Button variant="ghost" size="sm">
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              }
+                            />
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => downloadDocument(doc.id, doc.original_name || doc.originalName)}
+                            >
+                              <Download className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       ))}
                     </div>

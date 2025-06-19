@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Upload, FileIcon, ImageIcon, X, Download, Eye } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import DocumentPreview from '@/components/document-preview';
 
 interface EnhancedFileUploadProps {
   caseId?: number;
@@ -286,15 +287,20 @@ export default function EnhancedFileUpload({
                     </span>
                   </div>
                   <div className="flex gap-2">
-                    {isImage(file.mimeType) && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => previewFile(file.id)}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                    )}
+                    <DocumentPreview
+                      document={{
+                        id: file.id,
+                        fileName: file.originalName,
+                        filePath: file.filename,
+                        fileType: file.fileType,
+                        fileSize: file.fileSize
+                      }}
+                      trigger={
+                        <Button variant="ghost" size="sm">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      }
+                    />
                     <Button
                       variant="ghost"
                       size="sm"
