@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Eye, Download, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/lib/supabase';
 
 interface DocumentPreviewProps {
   document: {
@@ -41,8 +42,21 @@ export default function DocumentPreview({ document, trigger }: DocumentPreviewPr
   const handlePreview = async () => {
     setIsLoading(true);
     try {
-      // Open the document in a new tab for preview
-      const previewUrl = `/api/documents/${document.id}/download`;
+      // Get auth token for authenticated request
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      
+      if (!token) {
+        toast({
+          title: "Authentication Required",
+          description: "Please log in to preview documents",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Create authenticated URL for preview
+      const previewUrl = `/api/documents/${document.id}/download?token=${encodeURIComponent(token)}`;
       window.open(previewUrl, '_blank');
     } catch (error) {
       toast({

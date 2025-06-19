@@ -13,6 +13,7 @@ import Calendar from "@/pages/calendar";
 import Checkout from "@/pages/checkout";
 import Settings from "@/pages/settings";
 import Profile from "@/pages/profile";
+import IntakeForm from "@/pages/intake-form";
 import TermsOfService from "@/pages/terms-of-service";
 import NotFound from "@/pages/not-found";
 
@@ -62,6 +63,9 @@ function Router() {
       </Route>
       <Route path="/profile">
         <ProtectedRoute component={Profile} />
+      </Route>
+      <Route path="/intake">
+        <ProtectedRoute component={IntakeForm} />
       </Route>
       <Route path="/terms-of-service" component={TermsOfService} />
       <Route path="/application/:id/complete">

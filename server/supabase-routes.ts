@@ -4,7 +4,7 @@ import { supabaseAdmin, userManagement, database } from "./supabase";
 import { authenticateUser, optionalAuth } from "./supabase-auth";
 import { supabaseStorage } from "./supabase-storage";
 import { analyzeCase, generateStrategyPack } from "./openai";
-import { sendWelcomeEmail, sendApprovalEmail, sendRejectionEmail } from "./email";
+import { sendWelcomeEmail, sendApprovalEmail, sendRejectionEmail, sendStrategyPackEmail } from "./email";
 import { generateStrategyPackPDF, generateAIStrategyPackPDF } from "./pdf";
 import { calendarService } from "./calendar-service";
 import multer from 'multer';
@@ -610,14 +610,37 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Document download endpoint
-  app.get('/api/documents/:id/download', authenticateUser, async (req: Request, res: Response) => {
+  // Document download endpoint with token authentication support
+  app.get('/api/documents/:id/download', async (req: Request, res: Response) => {
     try {
       const documentId = parseInt(req.params.id);
-      const userId = req.user?.id;
+      const token = req.query.token as string;
+      let userId: string | undefined;
 
       if (!documentId || isNaN(documentId)) {
         return res.status(400).json({ message: "Invalid document ID" });
+      }
+
+      // Authenticate user - either via token or regular auth
+      if (token) {
+        const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
+        if (error || !user) {
+          return res.status(401).json({ message: "Invalid token" });
+        }
+        userId = user.id;
+      } else {
+        // Extract from Authorization header
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+          return res.status(401).json({ message: "Access token required" });
+        }
+        
+        const accessToken = authHeader.substring(7);
+        const { data: { user }, error } = await supabaseAdmin.auth.getUser(accessToken);
+        if (error || !user) {
+          return res.status(401).json({ message: "Invalid access token" });
+        }
+        userId = user.id;
       }
 
       // Get document from database
@@ -639,9 +662,13 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
       }
 
       const fileName = document.original_name || 'download';
-      const fileExtension = path.extname(fileName);
       
-      res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+      // Set appropriate headers for inline viewing (for preview) or download
+      if (req.query.preview === 'true') {
+        res.setHeader('Content-Disposition', `inline; filename="${fileName}"`);
+      } else {
+        res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+      }
       res.setHeader('Content-Type', document.mime_type || 'application/octet-stream');
       
       const fileStream = fs.createReadStream(filePath);
@@ -650,6 +677,257 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error downloading document:", error);
       res.status(500).json({ message: "Failed to download document" });
+    }
+  });
+
+  // AI Strategy Generation Routes
+  app.post('/api/ai/generate-strategy', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const intakeData = req.body;
+
+      console.log('Generating AI strategy for user:', userId);
+
+      // Import AI service
+      const { aiTemplateService } = await import('./ai-template-service');
+
+      // Generate AI content
+      const aiContent = await aiTemplateService.generateContentFromIntake(intakeData);
+
+      // Create a case for this intake if needed
+      const caseData = {
+        user_id: userId,
+        title: intakeData.caseTitle,
+        case_number: `CASE-${Date.now()}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`,
+        issue_type: intakeData.issueType,
+        description: intakeData.description,
+        amount: intakeData.amount || 0,
+        urgency: intakeData.urgency,
+        status: 'active',
+        ai_analysis: aiContent,
+        intake_data: intakeData,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      const newCase = await supabaseStorage.createCase(caseData);
+
+      // Generate and save documents
+      const { wordDocId, pdfDocId } = await aiTemplateService.saveGeneratedDocuments(
+        newCase.id,
+        userId,
+        intakeData,
+        aiContent
+      );
+
+      // Store generation record for admin review
+      const { data: generationRecord } = await supabaseAdmin
+        .from('ai_generations')
+        .insert({
+          case_id: newCase.id,
+          user_id: userId,
+          type: 'strategy',
+          status: 'draft',
+          word_doc_id: wordDocId,
+          pdf_doc_id: pdfDocId,
+          ai_content: aiContent,
+          intake_data: intakeData,
+          created_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      res.json({
+        success: true,
+        caseId: newCase.id,
+        aiContent,
+        documents: {
+          wordDocId,
+          pdfDocId
+        },
+        generationId: generationRecord?.id
+      });
+
+    } catch (error) {
+      console.error('Error generating AI strategy:', error);
+      res.status(500).json({ 
+        message: "Failed to generate AI strategy",
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Admin document management routes
+  app.get('/api/admin/pending-documents', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      if (req.user?.role !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+
+      const { data: pendingDocs, error } = await supabaseAdmin
+        .from('ai_generations')
+        .select('*')
+        .in('status', ['draft', 'reviewed'])
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      res.json(pendingDocs || []);
+    } catch (error) {
+      console.error('Error fetching pending documents:', error);
+      res.status(500).json({ message: 'Failed to fetch pending documents' });
+    }
+  });
+
+  app.get('/api/admin/documents/:id', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      if (req.user?.role !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+
+      const documentId = parseInt(req.params.id);
+      const { data: document, error } = await supabaseAdmin
+        .from('ai_generations')
+        .select('*')
+        .eq('id', documentId)
+        .single();
+
+      if (error) throw error;
+
+      res.json(document);
+    } catch (error) {
+      console.error('Error fetching document:', error);
+      res.status(500).json({ message: 'Failed to fetch document' });
+    }
+  });
+
+  app.put('/api/admin/documents/:id', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      if (req.user?.role !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+
+      const documentId = parseInt(req.params.id);
+      const { content, type } = req.body;
+
+      let updateData: any = {
+        updated_at: new Date().toISOString(),
+        reviewed_by: req.user.id,
+        reviewed_at: new Date().toISOString(),
+        status: 'reviewed'
+      };
+
+      if (type === 'ai_content') {
+        updateData.ai_content = JSON.parse(content);
+      }
+
+      const { data: updatedDoc, error } = await supabaseAdmin
+        .from('ai_generations')
+        .update(updateData)
+        .eq('id', documentId)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      res.json(updatedDoc);
+    } catch (error) {
+      console.error('Error updating document:', error);
+      res.status(500).json({ message: 'Failed to update document' });
+    }
+  });
+
+  app.post('/api/admin/documents/:id/send', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      if (req.user?.role !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+
+      const documentId = parseInt(req.params.id);
+      const { to, subject, body, attachments } = req.body;
+
+      // Get document details
+      const { data: document, error: docError } = await supabaseAdmin
+        .from('ai_generations')
+        .select('*')
+        .eq('id', documentId)
+        .single();
+
+      if (docError) throw docError;
+
+      // Send email with attachments
+      const emailResult = await sendStrategyPackEmail(to, subject, body, attachments);
+
+      // Update document status
+      const { data: updatedDoc, error: updateError } = await supabaseAdmin
+        .from('ai_generations')
+        .update({
+          status: 'sent',
+          sent_at: new Date().toISOString(),
+          sent_by: req.user.id
+        })
+        .eq('id', documentId)
+        .select()
+        .single();
+
+      if (updateError) throw updateError;
+
+      // Create timeline event
+      await supabaseStorage.createTimelineEvent({
+        case_id: document.case_id,
+        title: 'Strategy Pack Sent',
+        description: `AI-generated strategy pack sent to client via email`,
+        event_date: new Date().toISOString(),
+        event_type: 'communication',
+        is_completed: true,
+        created_by: req.user.id
+      });
+
+      res.json({ success: true, document: updatedDoc });
+    } catch (error) {
+      console.error('Error sending document:', error);
+      res.status(500).json({ message: 'Failed to send document' });
+    }
+  });
+
+  // Document download routes for generated files
+  app.get('/api/documents/word/:filename', async (req: Request, res: Response) => {
+    try {
+      const filename = req.params.filename;
+      const filePath = path.join(process.cwd(), 'templates', filename);
+      
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ message: 'File not found' });
+      }
+
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+      
+      const fileStream = fs.createReadStream(filePath);
+      fileStream.pipe(res);
+    } catch (error) {
+      console.error('Error downloading Word document:', error);
+      res.status(500).json({ message: 'Failed to download document' });
+    }
+  });
+
+  app.get('/api/documents/checklist/:filename', async (req: Request, res: Response) => {
+    try {
+      const filename = req.params.filename;
+      const filePath = path.join(process.cwd(), 'templates', filename);
+      
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ message: 'File not found' });
+      }
+
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.setHeader('Content-Type', 'application/pdf');
+      
+      const fileStream = fs.createReadStream(filePath);
+      fileStream.pipe(res);
+    } catch (error) {
+      console.error('Error downloading checklist:', error);
+      res.status(500).json({ message: 'Failed to download document' });
     }
   });
 

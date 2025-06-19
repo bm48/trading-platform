@@ -135,67 +135,7 @@ export async function sendApprovalEmail(email: string, fullName: string, applica
   }
 }
 
-export async function sendStrategyPackEmail(email: string, fullName: string, caseNumber: string): Promise<void> {
-  if (!EMAIL_ENABLED) {
-    console.log(`Email would be sent to ${email} (${fullName}) - Strategy pack ready for case ${caseNumber}`);
-    return;
-  }
-  
-  try {
-    const portalLink = `${process.env.BASE_URL || 'http://localhost:5000'}/dashboard`;
-    
-    const mailOptions = {
-      from: process.env.FROM_EMAIL || 'hello@projectresolveai.com',
-      to: email,
-      subject: `Your Strategy Pack is Ready - Project Resolve AI Case ${caseNumber}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <div style="background: linear-gradient(135deg, #1565C0, #0277BD); color: white; padding: 30px; text-align: center;">
-            <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">
-              <div style="background: rgba(255,255,255,0.2); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; font-size: 24px; font-weight: bold;">+</div>
-              <h1 style="margin: 0; font-size: 28px;">Strategy Pack Complete!</h1>
-            </div>
-            <p style="margin: 10px 0 0 0; font-size: 16px;">Project Resolve AI - Case ${caseNumber}</p>
-          </div>
-          
-          <div style="padding: 30px; background: #f8f9fa;">
-            <h2 style="color: #1565C0; margin-top: 0;">Your custom strategy is ready, ${fullName}!</h2>
-            
-            <p>Our AI has completed the analysis of your case and generated a comprehensive strategy pack tailored to your specific situation.</p>
-            
-            <div style="background: white; padding: 25px; border-radius: 8px; text-align: center; margin: 25px 0;">
-              <h3 style="color: #1565C0; margin-top: 0;">Access Your Strategy Pack</h3>
-              <p style="margin-bottom: 20px;">Log in to your personal portal to view your complete strategy pack and start taking action.</p>
-              <a href="${portalLink}" style="background: #FF8F00; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Access Your Portal</a>
-            </div>
-            
-            <div style="background: #E8F5E8; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <h3 style="color: #2E7D32; margin-top: 0;">Your strategy pack includes:</h3>
-              <ul style="color: #37474F; padding-left: 20px; margin-bottom: 0;">
-                <li>Executive summary of your case</li>
-                <li>Step-by-step action plan with timelines</li>
-                <li>Ready-to-send legal documents</li>
-                <li>Risk assessment and mitigation strategies</li>
-                <li>Expected outcomes and next steps</li>
-                <li>Interactive timeline with deadlines</li>
-              </ul>
-            </div>
-            
-            <p style="color: #37474F;">Need ongoing support? Consider upgrading to our monthly support plan for continued guidance and additional case assistance.</p>
-          </div>
-          
-          <div style="background: #37474F; color: white; padding: 20px; text-align: center; font-size: 14px;">
-            <p style="margin: 0;">© 2024 Project Resolve AI - Legal Support for Australian Tradespeople</p>
-          </div>
-        </div>
-      `,
-    };
 
-    await transporter!.sendMail(mailOptions);
-  } catch (error) {
-    console.error('Error sending strategy pack email:', error);
-  }
-}
 
 export async function sendRejectionEmail(email: string, fullName: string, reason: string): Promise<void> {
   if (!EMAIL_ENABLED) {
@@ -255,5 +195,52 @@ export async function sendRejectionEmail(email: string, fullName: string, reason
     await transporter!.sendMail(mailOptions);
   } catch (error) {
     console.error('Error sending rejection email:', error);
+  }
+}
+
+export async function sendStrategyPackEmail(
+  email: string, 
+  subject: string, 
+  body: string, 
+  attachmentIds?: number[]
+): Promise<boolean> {
+  if (!EMAIL_ENABLED) {
+    console.log(`Email would be sent to ${email} - Strategy pack: ${subject}`);
+    return true;
+  }
+
+  try {
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h1 style="color: #1a365d; margin: 0;">RESOLVE+</h1>
+          <p style="color: #666; margin: 5px 0;">AI-Powered Legal Services</p>
+        </div>
+        
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+          ${body.split('\n').map(line => `<p style="margin: 10px 0;">${line}</p>`).join('')}
+        </div>
+        
+        <div style="border-top: 1px solid #e9ecef; padding-top: 20px; text-align: center;">
+          <p style="color: #666; font-size: 14px; margin: 0;">
+            This email was sent by RESOLVE+ Legal Services<br>
+            For support, please contact us at support@resolveplus.com.au
+          </p>
+        </div>
+      </div>
+    `;
+    
+    const mailOptions = {
+      from: process.env.FROM_EMAIL || 'hello@projectresolveai.com',
+      to: email,
+      subject: subject,
+      html: html,
+    };
+
+    await transporter!.sendMail(mailOptions);
+    return true;
+  } catch (error) {
+    console.error('Error sending strategy pack email:', error);
+    return false;
   }
 }
