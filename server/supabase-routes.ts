@@ -892,7 +892,7 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
       const sessionId = req.headers['x-admin-session'] || req.cookies?.adminSession;
       
       if (sessionId) {
-        adminAuthService.logoutAdmin(sessionId as string);
+        await adminAuthService.logoutAdmin(sessionId as string);
       }
 
       res.clearCookie('adminSession');
