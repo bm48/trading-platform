@@ -1,10 +1,12 @@
 import express, { type Request, Response, NextFunction } from "express";
+import cookieParser from "cookie-parser";
 import { registerSupabaseRoutes } from "./supabase-routes";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
 
 // CORS headers for Supabase with proper Authorization header support
 app.use((req, res, next) => {

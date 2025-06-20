@@ -1,54 +1,42 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { Shield, Lock, Mail } from 'lucide-react';
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const { loginAdmin, isAuthenticated, isLoading } = useAdminAuth();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      setLocation('/admin');
+    }
+  }, [isAuthenticated, setLocation]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
 
-    try {
-      const response = await fetch('/api/admin/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
+    const success = await loginAdmin(email, password);
 
-      const data = await response.json();
-
-      if (response.ok) {
-        toast({
-          title: "Login Successful",
-          description: "Welcome to the admin panel",
-        });
-        setLocation('/admin');
-      } else {
-        toast({
-          title: "Login Failed",
-          description: data.message || "Invalid credentials",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
+    if (success) {
       toast({
-        title: "Login Error",
-        description: "Unable to connect to server",
+        title: "Login Successful",
+        description: "Welcome to the admin panel",
+      });
+      setLocation('/admin');
+    } else {
+      toast({
+        title: "Login Failed",
+        description: "Invalid credentials",
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 

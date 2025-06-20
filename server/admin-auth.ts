@@ -79,6 +79,8 @@ export const authenticateAdmin = (req: any, res: any, next: any) => {
 
     const sessionId = req.headers['x-admin-session'] || req.cookies?.adminSession;
     
+
+    
     if (!sessionId) {
       return res.status(401).json({ message: 'Admin authentication required' });
     }

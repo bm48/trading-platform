@@ -816,9 +816,13 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
         maxAge: 24 * 60 * 60 * 1000 // 24 hours
       });
 
+      // Get the admin session data
+      const adminSession = adminAuthService.validateAdminSession(sessionId);
+
       res.json({ 
         success: true, 
         sessionId,
+        admin: adminSession,
         message: 'Admin login successful' 
       });
     } catch (error) {
@@ -936,6 +940,10 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     try {
       const documentId = parseInt(req.params.id);
       const { content, status } = req.body;
+
+      if (!req.adminSession) {
+        return res.status(401).json({ message: 'Admin session required' });
+      }
 
       const success = await adminService.updateDocument(documentId, {
         content,

@@ -644,6 +644,14 @@ export default function Landing() {
               © 2024 Project Resolve AI. This platform provides information services, not legal advice. 
               Always consult with qualified legal professionals for complex matters.
             </p>
+            <div className="mt-4">
+              <a 
+                href="/admin-login" 
+                className="text-xs text-gray-500 hover:text-gray-400 transition-colors"
+              >
+                Admin Access
+              </a>
+            </div>
           </div>
         </div>
       </footer>
