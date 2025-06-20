@@ -283,17 +283,17 @@ export default function EnhancedFileUpload({
                     )}
                     <span className="text-sm font-medium">{file.originalName}</span>
                     <span className="text-xs text-gray-500">
-                      ({Math.round(file.fileSize / 1024)}KB)
+                      ({Math.round((file.fileSize || 0) / 1024)}KB)
                     </span>
                   </div>
                   <div className="flex gap-2">
                     <DocumentPreview
                       document={{
                         id: file.id,
-                        fileName: file.originalName,
-                        filePath: file.filename,
-                        fileType: file.fileType,
-                        fileSize: file.fileSize
+                        fileName: file.originalName || 'Unknown File',
+                        filePath: file.filename || '',
+                        fileType: file.fileType || 'application/octet-stream',
+                        fileSize: file.fileSize || 0
                       }}
                       trigger={
                         <Button variant="ghost" size="sm">

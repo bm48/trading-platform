@@ -679,11 +679,15 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
       const document = await supabaseStorage.getDocument(documentId);
       
       if (!document) {
+        console.log(`Document ${documentId} not found in database`);
         return res.status(404).json({ message: "Document not found" });
       }
+      
+      console.log(`Document found: ${document.original_name}, user: ${document.user_id}, requesting user: ${userId}`);
 
       // Check if user has access to this document
       if (document.user_id !== userId) {
+        console.log(`Access denied: document user ${document.user_id} !== requesting user ${userId}`);
         return res.status(403).json({ message: "Access denied" });
       }
 

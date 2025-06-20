@@ -602,9 +602,9 @@ export default function CaseDetail() {
                             <DocumentPreview
                               document={{
                                 id: doc.id,
-                                fileName: doc.original_name || doc.originalName,
-                                filePath: doc.file_path || doc.filePath,
-                                fileType: doc.file_type || doc.fileType,
+                                fileName: doc.original_name || doc.originalName || 'Unknown File',
+                                filePath: doc.upload_path || doc.filePath || '',
+                                fileType: doc.mime_type || doc.fileType || 'application/octet-stream',
                                 fileSize: doc.file_size || doc.fileSize || 0
                               }}
                               trigger={

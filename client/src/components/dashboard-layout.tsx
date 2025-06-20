@@ -77,7 +77,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       <header className="bg-white border-b border-gray-200 sticky top-0 z-40 animate-fade-in">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center animate-slide-in">
+            <div 
+              className="flex items-center animate-slide-in cursor-pointer hover:opacity-80 transition-opacity"
+              onClick={() => window.location.href = '/'}
+            >
               <Plus className="h-8 w-8 text-primary mr-3 animate-bounce-hover" />
               <span className="text-xl font-bold text-neutral-dark">Project Resolve AI</span>
             </div>
