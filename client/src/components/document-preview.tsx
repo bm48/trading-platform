@@ -16,33 +16,69 @@ interface DocumentPreviewProps {
   trigger?: React.ReactNode;
 }
 
-export default function DocumentPreview({ document, trigger }: DocumentPreviewProps) {
+const getFileExtension = (fileName: string) => {
+  if (!fileName || typeof fileName !== 'string') {
+    return '';
+  }
+  return fileName.split('.').pop()?.toLowerCase() || '';
+};
+
+const getFileIcon = (fileName: string) => {
+  if (!fileName) return '📄';
+  const ext = getFileExtension(fileName);
+  switch (ext) {
+    case 'pdf': return '📕';
+    case 'doc':
+    case 'docx': return '📘';
+    case 'xls':
+    case 'xlsx': return '📗';
+    case 'jpg':
+    case 'jpeg':
+    case 'png':
+    case 'gif': return '🖼️';
+    case 'zip':
+    case 'rar': return '📦';
+    case 'txt': return '📝';
+    default: return '📄';
+  }
+};
+
+const formatFileSize = (bytes: number) => {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
+
+const isImageFile = (fileName: string) => {
+  if (!fileName || typeof fileName !== 'string') {
+    return false;
+  }
+  const ext = getFileExtension(fileName);
+  return ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(ext);
+};
+
+const isPdfFile = (fileName: string) => {
+  if (!fileName || typeof fileName !== 'string') {
+    return false;
+  }
+  const ext = getFileExtension(fileName);
+  return ext === 'pdf';
+};
+
+const isPreviewable = (fileName: string) => {
+  return isImageFile(fileName) || isPdfFile(fileName);
+};
+
+export default function DocumentPreview({ document: doc, trigger }: DocumentPreviewProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const getFileExtension = (fileName: string) => {
-    return fileName.split('.').pop()?.toLowerCase() || '';
-  };
-
-  const isImageFile = (fileName: string) => {
-    const ext = getFileExtension(fileName);
-    return ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(ext);
-  };
-
-  const isPdfFile = (fileName: string) => {
-    const ext = getFileExtension(fileName);
-    return ext === 'pdf';
-  };
-
-  const isPreviewable = (fileName: string) => {
-    return isImageFile(fileName) || isPdfFile(fileName);
-  };
-
   const handlePreview = async () => {
     setIsLoading(true);
     try {
-      // Get auth token for authenticated request
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
       
@@ -55,8 +91,7 @@ export default function DocumentPreview({ document, trigger }: DocumentPreviewPr
         return;
       }
 
-      // Create authenticated URL for preview
-      const previewUrl = `/api/documents/${document.id}/download?token=${encodeURIComponent(token)}`;
+      const previewUrl = `/api/documents/${doc.id}/download?token=${encodeURIComponent(token)}`;
       window.open(previewUrl, '_blank');
     } catch (error) {
       toast({
@@ -71,7 +106,6 @@ export default function DocumentPreview({ document, trigger }: DocumentPreviewPr
 
   const handleDownload = async () => {
     try {
-      // Get auth token for authenticated download
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
       
@@ -84,24 +118,11 @@ export default function DocumentPreview({ document, trigger }: DocumentPreviewPr
         return;
       }
 
-      // Create authenticated download request
-      const response = await fetch(`/api/documents/${document.id}/download`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (!response.ok) throw new Error('Download failed');
-      
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
+      const downloadUrl = `/api/documents/${doc.id}/download?token=${encodeURIComponent(token)}`;
       const link = window.document.createElement('a');
-      link.href = url;
-      link.download = document.fileName;
-      window.document.body.appendChild(link);
+      link.href = downloadUrl;
+      link.download = doc.fileName || 'download';
       link.click();
-      window.URL.revokeObjectURL(url);
-      window.document.body.removeChild(link);
     } catch (error) {
       toast({
         title: "Download Failed",
@@ -111,33 +132,7 @@ export default function DocumentPreview({ document, trigger }: DocumentPreviewPr
     }
   };
 
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
-
-  const getFileIcon = (fileName: string) => {
-    const ext = getFileExtension(fileName);
-    switch (ext) {
-      case 'pdf':
-        return '📄';
-      case 'jpg':
-      case 'jpeg':
-      case 'png':
-      case 'gif':
-        return '🖼️';
-      case 'doc':
-      case 'docx':
-        return '📝';
-      case 'txt':
-        return '📄';
-      default:
-        return '📎';
-    }
-  };
+  const safeFileName = doc.fileName || 'Unknown File';
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -153,13 +148,13 @@ export default function DocumentPreview({ document, trigger }: DocumentPreviewPr
         <DialogHeader className="flex-shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="text-2xl">{getFileIcon(document.fileName)}</div>
+              <div className="text-2xl">{getFileIcon(safeFileName)}</div>
               <div>
                 <DialogTitle className="text-lg font-semibold">
-                  {document.fileName}
+                  {safeFileName}
                 </DialogTitle>
                 <p className="text-sm text-gray-500">
-                  {formatFileSize(document.fileSize)} • {getFileExtension(document.fileName).toUpperCase()}
+                  {formatFileSize(doc.fileSize || 0)} • {getFileExtension(safeFileName).toUpperCase()}
                 </p>
               </div>
             </div>
@@ -177,7 +172,7 @@ export default function DocumentPreview({ document, trigger }: DocumentPreviewPr
                 variant="outline"
                 size="sm"
                 onClick={handlePreview}
-                disabled={isLoading || !isPreviewable(document.fileName)}
+                disabled={isLoading || !isPreviewable(safeFileName)}
                 className="gap-2"
               >
                 <Eye className="w-4 h-4" />
@@ -188,22 +183,22 @@ export default function DocumentPreview({ document, trigger }: DocumentPreviewPr
         </DialogHeader>
         
         <div className="flex-1 border rounded-lg overflow-hidden bg-gray-50">
-          {isPreviewable(document.fileName) ? (
+          {isPreviewable(safeFileName) ? (
             <div className="w-full h-full flex items-center justify-center">
-              {isImageFile(document.fileName) ? (
+              {isImageFile(safeFileName) ? (
                 <AuthenticatedImage 
-                  documentId={document.id}
-                  fileName={document.fileName}
+                  documentId={doc.id}
+                  fileName={safeFileName}
                   className="max-w-full max-h-full object-contain"
                 />
-              ) : isPdfFile(document.fileName) ? (
+              ) : isPdfFile(safeFileName) ? (
                 <AuthenticatedPdf 
-                  documentId={document.id}
-                  fileName={document.fileName}
+                  documentId={doc.id}
+                  fileName={safeFileName}
                 />
               ) : (
                 <div className="p-8 text-center text-gray-500">
-                  <div className="text-6xl mb-4">{getFileIcon(document.fileName)}</div>
+                  <div className="text-6xl mb-4">{getFileIcon(safeFileName)}</div>
                   <p>Preview not available for this file type</p>
                   <p className="text-sm mt-2">Use "Open in New Tab" to view the document</p>
                 </div>
@@ -212,7 +207,7 @@ export default function DocumentPreview({ document, trigger }: DocumentPreviewPr
           ) : (
             <div className="w-full h-full flex items-center justify-center p-8 text-center text-gray-500">
               <div>
-                <div className="text-6xl mb-4">{getFileIcon(document.fileName)}</div>
+                <div className="text-6xl mb-4">{getFileIcon(safeFileName)}</div>
                 <p>Preview not available for this file type</p>
                 <p className="text-sm mt-2">Use the download button to access the file</p>
               </div>
