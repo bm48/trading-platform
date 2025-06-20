@@ -1,4 +1,5 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
+import React from "react";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -39,38 +40,12 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
   return <Component />;
 }
 
-function RootRoute() {
-  const { isAuthenticated: isUserAuth, isLoading: isUserLoading } = useAuth();
-  const { isAuthenticated: isAdminAuth, isLoading: isAdminLoading } = useAdminAuth();
 
-  if (isUserLoading || isAdminLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
-      </div>
-    );
-  }
-
-  // If admin is authenticated, redirect to admin dashboard
-  if (isAdminAuth) {
-    window.location.href = '/admin';
-    return null;
-  }
-
-  // If regular user is authenticated, redirect to dashboard
-  if (isUserAuth) {
-    window.location.href = '/dashboard';
-    return null;
-  }
-
-  // Otherwise show landing page
-  return <Landing />;
-}
 
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={RootRoute} />
+      <Route path="/" component={Landing} />
       <Route path="/dashboard">
         <ProtectedRoute component={Dashboard} />
       </Route>
