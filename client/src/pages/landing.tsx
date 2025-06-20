@@ -14,8 +14,11 @@ import AdminLogin from './admin-login'
 
 export default function Landing() {
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [showAdminLogin, setShowAdminLogin]=useState(false);
+  const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [isSignUpMode, setIsSignUpMode] = useState(false);
+  const [adminEmail, setAdminEmail] = useState('hello@projectresolveai.com');
+  const [adminPassword, setAdminPassword] = useState('');
+  const [adminLoading, setAdminLoading] = useState(false);
   const { user, isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -54,6 +57,48 @@ export default function Landing() {
   const openSignUpModal = () => {
     setIsSignUpMode(true);
     setShowLoginModal(true);
+  };
+
+  const handleAdminLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAdminLoading(true);
+
+    try {
+      const response = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ email: adminEmail, password: adminPassword }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        toast({
+          title: "Login Successful",
+          description: "Welcome to the admin panel",
+        });
+        setShowAdminLogin(false);
+        // Redirect to admin page
+        window.location.href = '/admin';
+      } else {
+        toast({
+          title: "Login Failed",
+          description: data.message || "Invalid credentials",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Login Failed",
+        description: "Unable to connect to server",
+        variant: "destructive",
+      });
+    } finally {
+      setAdminLoading(false);
+    }
   };
   
   return (
@@ -113,12 +158,81 @@ export default function Landing() {
       </nav>
 
       {showAdminLogin && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="relative">
-            <button onClick={() => setShowAdminLogin(false)} className="absolute top-2 right-2 text-gray-500 text-2xl" aria-label='Close admin login'>
-              x
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="relative w-full max-w-md mx-4">
+            <button 
+              onClick={() => setShowAdminLogin(false)} 
+              className="absolute -top-2 -right-2 z-10 w-8 h-8 bg-white rounded-full shadow-lg flex items-center justify-center text-gray-500 hover:text-gray-700 text-xl font-bold"
+              aria-label='Close admin login'
+            >
+              ×
             </button>
-            <AdminLogin />
+            <div className="bg-white rounded-lg shadow-xl p-6">
+              <div className="text-center mb-6">
+                <div className="mx-auto mb-4 w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                  <Shield className="h-6 w-6 text-white" />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900">Admin Login</h2>
+                <p className="text-gray-600 mt-2">Access the Project Resolve AI admin panel</p>
+              </div>
+              
+              <form onSubmit={handleAdminLogin} className="space-y-4">
+                <div className="space-y-2">
+                  <label htmlFor="admin-email" className="text-sm font-medium text-gray-700">
+                    Email Address
+                  </label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <input
+                      id="admin-email"
+                      type="email"
+                      placeholder="hello@projectresolveai.com"
+                      value={adminEmail}
+                      onChange={(e) => setAdminEmail(e.target.value)}
+                      className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      required
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <label htmlFor="admin-password" className="text-sm font-medium text-gray-700">
+                    Password
+                  </label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <input
+                      id="admin-password"
+                      type="password"
+                      placeholder="Enter password"
+                      value={adminPassword}
+                      onChange={(e) => setAdminPassword(e.target.value)}
+                      className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      required
+                    />
+                  </div>
+                </div>
+                
+                <Button 
+                  type="submit" 
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md font-medium"
+                  disabled={adminLoading}
+                >
+                  {adminLoading ? (
+                    <div className="flex items-center justify-center">
+                      <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
+                      Signing in...
+                    </div>
+                  ) : (
+                    'Sign in'
+                  )}
+                </Button>
+                
+                <p className="text-xs text-gray-500 text-center mt-4">
+                  Authorized personnel only
+                </p>
+              </form>
+            </div>
           </div>
         </div>
       )}
