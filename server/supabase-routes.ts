@@ -8,6 +8,7 @@ import { sendWelcomeEmail, sendApprovalEmail, sendRejectionEmail, sendStrategyPa
 import { generateStrategyPackPDF, generateAIStrategyPackPDF } from "./pdf";
 import { calendarService } from "./calendar-service";
 import { adminService } from "./admin-service";
+import { adminAuthService, authenticateAdmin } from './admin-auth';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -793,12 +794,71 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Admin dashboard and management routes
-  app.get('/api/admin/stats', authenticateUser, async (req: Request, res: Response) => {
+  // Admin login routes
+  app.post('/api/admin/login', async (req: Request, res: Response) => {
     try {
-      if (req.user?.role !== 'admin') {
-        return res.status(403).json({ message: 'Admin access required' });
+      const { email, password } = req.body;
+      
+      if (!email || !password) {
+        return res.status(400).json({ message: 'Email and password required' });
       }
+
+      const sessionId = await adminAuthService.authenticateAdmin(email, password);
+      
+      if (!sessionId) {
+        return res.status(401).json({ message: 'Invalid credentials' });
+      }
+
+      // Set session cookie
+      res.cookie('adminSession', sessionId, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+      });
+
+      res.json({ 
+        success: true, 
+        sessionId,
+        message: 'Admin login successful' 
+      });
+    } catch (error) {
+      console.error('Admin login error:', error);
+      res.status(500).json({ message: 'Login failed' });
+    }
+  });
+
+  app.post('/api/admin/logout', authenticateAdmin, async (req: Request, res: Response) => {
+    try {
+      const sessionId = req.headers['x-admin-session'] || req.cookies?.adminSession;
+      
+      if (sessionId) {
+        adminAuthService.logoutAdmin(sessionId as string);
+      }
+
+      res.clearCookie('adminSession');
+      res.json({ success: true, message: 'Admin logout successful' });
+    } catch (error) {
+      console.error('Admin logout error:', error);
+      res.status(500).json({ message: 'Logout failed' });
+    }
+  });
+
+  app.get('/api/admin/session', authenticateAdmin, async (req: Request, res: Response) => {
+    try {
+      res.json({ 
+        success: true, 
+        admin: req.adminSession,
+        message: 'Admin session valid' 
+      });
+    } catch (error) {
+      console.error('Admin session check error:', error);
+      res.status(500).json({ message: 'Session check failed' });
+    }
+  });
+
+  // Admin dashboard and management routes
+  app.get('/api/admin/stats', authenticateAdmin, async (req: Request, res: Response) => {
+    try {
 
       const stats = await adminService.getAdminStats();
       res.json(stats);
@@ -808,11 +868,8 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/admin/notifications', authenticateUser, async (req: Request, res: Response) => {
+  app.get('/api/admin/notifications', authenticateAdmin, async (req: Request, res: Response) => {
     try {
-      if (req.user?.role !== 'admin') {
-        return res.status(403).json({ message: 'Admin access required' });
-      }
 
       const notifications = await adminService.getAdminNotifications();
       res.json(notifications);
@@ -822,11 +879,8 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/admin/activity', authenticateUser, async (req: Request, res: Response) => {
+  app.get('/api/admin/activity', authenticateAdmin, async (req: Request, res: Response) => {
     try {
-      if (req.user?.role !== 'admin') {
-        return res.status(403).json({ message: 'Admin access required' });
-      }
 
       const limit = parseInt(req.query.limit as string) || 50;
       const activity = await adminService.getUserActivity(limit);
@@ -837,11 +891,8 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/admin/applications', authenticateUser, async (req: Request, res: Response) => {
+  app.get('/api/admin/applications', authenticateAdmin, async (req: Request, res: Response) => {
     try {
-      if (req.user?.role !== 'admin') {
-        return res.status(403).json({ message: 'Admin access required' });
-      }
 
       const applications = await adminService.getAllApplications();
       res.json(applications);
@@ -851,11 +902,8 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/admin/pending-documents', authenticateUser, async (req: Request, res: Response) => {
+  app.get('/api/admin/pending-documents', authenticateAdmin, async (req: Request, res: Response) => {
     try {
-      if (req.user?.role !== 'admin') {
-        return res.status(403).json({ message: 'Admin access required' });
-      }
 
       const pendingDocs = await adminService.getPendingDocuments();
       res.json(pendingDocs);
@@ -865,11 +913,8 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/admin/documents/:id', authenticateUser, async (req: Request, res: Response) => {
+  app.get('/api/admin/documents/:id', authenticateAdmin, async (req: Request, res: Response) => {
     try {
-      if (req.user?.role !== 'admin') {
-        return res.status(403).json({ message: 'Admin access required' });
-      }
 
       const documentId = parseInt(req.params.id);
       const { data: document, error } = await supabaseAdmin
@@ -887,19 +932,15 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/admin/documents/:id', authenticateUser, async (req: Request, res: Response) => {
+  app.put('/api/admin/documents/:id', authenticateAdmin, async (req: Request, res: Response) => {
     try {
-      if (req.user?.role !== 'admin') {
-        return res.status(403).json({ message: 'Admin access required' });
-      }
-
       const documentId = parseInt(req.params.id);
       const { content, status } = req.body;
 
       const success = await adminService.updateDocument(documentId, {
         content,
         status,
-        reviewedBy: req.user.id
+        reviewedBy: req.adminSession.email
       });
 
       if (success) {

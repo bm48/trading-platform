@@ -8,6 +8,7 @@ import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
 import DemoDashboard from "@/pages/demo-dashboard";
 import AdminDashboard from "@/pages/admin";
+import AdminLogin from "@/pages/admin-login";
 import CaseDetail from "@/pages/case-detail";
 import Calendar from "@/pages/calendar";
 import Checkout from "@/pages/checkout";
@@ -46,6 +47,7 @@ function Router() {
       <Route path="/demo-dashboard">
         <ProtectedRoute component={DemoDashboard} />
       </Route>
+      <Route path="/admin-login" component={AdminLogin} />
       <Route path="/admin">
         <ProtectedRoute component={AdminDashboard} />
       </Route>
