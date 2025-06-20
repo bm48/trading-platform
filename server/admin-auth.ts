@@ -63,7 +63,7 @@ export class AdminAuthService {
       // Check session in database first
       const { data: sessionData, error } = await supabaseAdmin
         .from('admin_sessions')
-        .select('*, users:user_id(email)')
+        .select('*, auth_users:user_id(email)')
         .eq('session_id', sessionId)
         .gt('expires_at', new Date().toISOString())
         .single();
@@ -75,7 +75,7 @@ export class AdminAuthService {
 
       return {
         isAdmin: true,
-        email: sessionData.users?.email || '',
+        email: sessionData.auth_users?.email || '',
         sessionId: sessionData.session_id,
         expiresAt: new Date(sessionData.expires_at),
         userId: sessionData.user_id

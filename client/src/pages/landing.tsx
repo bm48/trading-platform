@@ -10,9 +10,11 @@ import { useAuth } from '@/hooks/useAuth';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { authHelpers } from '@/lib/supabase';
+import AdminLogin from './admin-login'
 
 export default function Landing() {
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showAdminLogin, setShowAdminLogin]=useState(false);
   const [isSignUpMode, setIsSignUpMode] = useState(false);
   const { user, isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
@@ -38,8 +40,6 @@ export default function Landing() {
       });
     }
   };
-
-
 
   const getUserInitials = () => {
     if (!user || typeof user !== 'object' || !('email' in user) || !user.email || typeof user.email !== 'string') return 'U';
@@ -96,6 +96,9 @@ export default function Landing() {
                 </div>
               ) : (
                 <div className="flex items-center space-x-3">
+                  <Button variant="outline" onClick={setShowAdminLogin(true)}>
+                    Admin
+                  </Button>
                   <Button variant="outline" onClick={openLoginModal}>
                     Login
                   </Button>
@@ -109,6 +112,17 @@ export default function Landing() {
         </div>
       </nav>
 
+      {showAdminLogin && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="relative">
+            <button onClick={() => setShowAdminLogin(false)} className="absolute top-2 right-2 text-gray-500 text-2xl" aria-label='Close admin login'>
+              x
+            </button>
+            <AdminLogin />
+          </div>
+        </div>
+      )}
+      
       {/* Hero Section */}
       <section className="gradient-primary text-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
