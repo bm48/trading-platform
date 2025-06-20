@@ -11,6 +11,8 @@ import ApplicationForm from '@/components/application-form';
 import ValidatedCaseForm from '@/components/validated-case-form';
 import ValidatedContractForm from '@/components/validated-contract-form';
 import { formatCurrency, formatDate, getStatusColor, calculateProgress } from '@/lib/utils';
+import { MoodIndicator } from '@/components/mood-visualization';
+import { MoodData } from '@/lib/mood-utils';
 import { 
   FolderOpen, 
   FileText, 
@@ -427,14 +429,28 @@ export default function Dashboard() {
                           </div>
                         </div>
 
-                        <div className="grid md:grid-cols-2 gap-4 mb-4">
+                        <div className="grid md:grid-cols-3 gap-4 mb-4">
                           <div>
                             <p className="text-sm text-neutral-medium">Case Number</p>
-                            <p className="font-medium text-neutral-dark">{caseItem.caseNumber}</p>
+                            <p className="font-medium text-neutral-dark">{caseItem.case_number || caseItem.caseNumber}</p>
                           </div>
                           <div>
                             <p className="text-sm text-neutral-medium">Created</p>
-                            <p className="font-medium text-neutral-dark">{formatDate(caseItem.createdAt)}</p>
+                            <p className="font-medium text-neutral-dark">{formatDate(caseItem.created_at || caseItem.createdAt)}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-neutral-medium">Current Mood</p>
+                            <div className="flex items-center gap-2">
+                              <MoodIndicator moodData={{
+                                moodScore: caseItem.mood_score || 5,
+                                stressLevel: (caseItem.stress_level as 'low' | 'medium' | 'high' | 'critical') || 'medium',
+                                urgencyFeeling: (caseItem.urgency_feeling as 'calm' | 'moderate' | 'urgent' | 'panic') || 'moderate',
+                                confidenceLevel: caseItem.confidence_level || 5,
+                                clientSatisfaction: caseItem.client_satisfaction || 5,
+                                moodNotes: caseItem.mood_notes || '',
+                                lastMoodUpdate: caseItem.last_mood_update || ''
+                              }} />
+                            </div>
                           </div>
                         </div>
 

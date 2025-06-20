@@ -303,6 +303,62 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update case mood
+  app.put('/api/cases/:id/mood', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const caseId = parseInt(req.params.id);
+      const userId = req.user?.id;
+      const { 
+        moodScore, 
+        stressLevel, 
+        urgencyFeeling, 
+        confidenceLevel, 
+        clientSatisfaction, 
+        moodNotes 
+      } = req.body;
+
+      if (!userId) {
+        return res.status(401).json({ message: 'User authentication required' });
+      }
+
+      // Update case mood data
+      const { data: updatedCase, error } = await supabaseAdmin
+        .from('cases')
+        .update({
+          mood_score: moodScore,
+          stress_level: stressLevel,
+          urgency_feeling: urgencyFeeling,
+          confidence_level: confidenceLevel,
+          client_satisfaction: clientSatisfaction,
+          mood_notes: moodNotes,
+          last_mood_update: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', caseId)
+        .eq('user_id', userId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating case mood:', error);
+        return res.status(500).json({ message: 'Failed to update case mood' });
+      }
+
+      if (!updatedCase) {
+        return res.status(404).json({ message: 'Case not found or access denied' });
+      }
+
+      res.json({ 
+        success: true, 
+        message: 'Case mood updated successfully',
+        case: updatedCase 
+      });
+    } catch (error) {
+      console.error('Error updating case mood:', error);
+      res.status(500).json({ message: 'Failed to update case mood' });
+    }
+  });
+
   app.post('/api/cases/:id/generate-strategy', authenticateUser, async (req: Request, res: Response) => {
     try {
       const { id } = req.params;

@@ -70,6 +70,13 @@ export const cases = pgTable("cases", {
   nextAction: varchar("next_action"),
   nextActionDue: timestamp("next_action_due"),
   progress: integer("progress").default(0), // 0-100
+  moodScore: integer("mood_score").default(5), // 1-10 scale (1=very negative, 10=very positive)
+  stressLevel: varchar("stress_level").default("medium"), // low, medium, high, critical
+  urgencyFeeling: varchar("urgency_feeling").default("moderate"), // calm, moderate, urgent, panic
+  confidenceLevel: integer("confidence_level").default(5), // 1-10 scale
+  clientSatisfaction: integer("client_satisfaction").default(5), // 1-10 scale
+  moodNotes: text("mood_notes"),
+  lastMoodUpdate: timestamp("last_mood_update"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

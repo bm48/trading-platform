@@ -13,6 +13,9 @@ import { supabase } from '@/lib/supabase';
 import DashboardLayout from '@/components/dashboard-layout';
 import EnhancedFileUpload from '@/components/enhanced-file-upload';
 import DocumentPreview from '@/components/document-preview';
+import { MoodVisualization } from '@/components/mood-visualization';
+import { MoodTracker } from '@/components/mood-tracker';
+import { MoodData } from '@/lib/mood-utils';
 import { 
   formatCurrency, 
   formatDate, 
@@ -46,7 +49,7 @@ export default function CaseDetail() {
   const [activeTab, setActiveTab] = useState('overview');
   const [newNote, setNewNote] = useState('');
 
-  const { data: caseData, isLoading } = useQuery({
+  const { data: caseData, isLoading } = useQuery<any>({
     queryKey: ['/api/cases', id],
     enabled: !!id,
   });
@@ -187,8 +190,19 @@ export default function CaseDetail() {
   }
 
   const progress = calculateProgress(caseData);
-  const analysis = caseData.aiAnalysis;
-  const strategy = caseData.strategyPack;
+  const analysis = caseData.ai_analysis || caseData.aiAnalysis;
+  const strategy = caseData.strategy_pack || caseData.strategyPack;
+
+  // Create mood data object from case data
+  const moodData: MoodData = {
+    moodScore: caseData.mood_score || 5,
+    stressLevel: (caseData.stress_level as 'low' | 'medium' | 'high' | 'critical') || 'medium',
+    urgencyFeeling: (caseData.urgency_feeling as 'calm' | 'moderate' | 'urgent' | 'panic') || 'moderate',
+    confidenceLevel: caseData.confidence_level || 5,
+    clientSatisfaction: caseData.client_satisfaction || 5,
+    moodNotes: caseData.mood_notes || '',
+    lastMoodUpdate: caseData.last_mood_update || ''
+  };
 
   return (
     <DashboardLayout>
@@ -216,20 +230,25 @@ export default function CaseDetail() {
             <div className="grid md:grid-cols-4 gap-4 mb-6">
               <div>
                 <p className="text-sm text-neutral-medium">Case Number</p>
-                <p className="font-semibold text-neutral-dark">{caseData.caseNumber}</p>
+                <p className="font-semibold text-neutral-dark">{caseData.case_number}</p>
               </div>
               <div>
                 <p className="text-sm text-neutral-medium">Issue Type</p>
-                <p className="font-semibold text-neutral-dark">{caseData.issueType}</p>
+                <p className="font-semibold text-neutral-dark">{caseData.issue_type}</p>
               </div>
               <div>
                 <p className="text-sm text-neutral-medium">Created</p>
-                <p className="font-semibold text-neutral-dark">{formatDate(caseData.createdAt)}</p>
+                <p className="font-semibold text-neutral-dark">{formatDate(caseData.created_at)}</p>
               </div>
               <div>
                 <p className="text-sm text-neutral-medium">Last Updated</p>
-                <p className="font-semibold text-neutral-dark">{formatDate(caseData.updatedAt)}</p>
+                <p className="font-semibold text-neutral-dark">{formatDate(caseData.updated_at)}</p>
               </div>
+            </div>
+
+            {/* Mood Visualization */}
+            <div className="mb-6">
+              <MoodVisualization moodData={moodData} compact={true} />
             </div>
 
             {/* Progress */}
@@ -262,11 +281,12 @@ export default function CaseDetail() {
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="analysis">Analysis</TabsTrigger>
             <TabsTrigger value="strategy">Strategy</TabsTrigger>
             <TabsTrigger value="documents">Documents</TabsTrigger>
+            <TabsTrigger value="mood">Mood Tracker</TabsTrigger>
             <TabsTrigger value="timeline">Timeline</TabsTrigger>
           </TabsList>
 
@@ -630,6 +650,37 @@ export default function CaseDetail() {
             </div>
           </TabsContent>
 
+          {/* Mood Tracker Tab */}
+          <TabsContent value="mood" className="space-y-6">
+            <div className="grid lg:grid-cols-2 gap-6">
+              {/* Current Mood Visualization */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <MessageSquare className="h-5 w-5 mr-2" />
+                    Current Mood Status
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <MoodVisualization moodData={moodData} showDetails={true} />
+                </CardContent>
+              </Card>
+
+              {/* Update Mood */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Target className="h-5 w-5 mr-2" />
+                    Update Mood Tracking
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <MoodTracker caseId={parseInt(id!)} currentMoodData={moodData} />
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
           {/* Timeline Tab */}
           <TabsContent value="timeline" className="space-y-6">
             <div className="grid lg:grid-cols-2 gap-6">
@@ -643,7 +694,7 @@ export default function CaseDetail() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4 max-h-96 overflow-y-auto">
-                    {timeline.map((event: any) => (
+                    {(timeline || []).map((event: any) => (
                       <div key={event.id} className="flex items-start space-x-3">
                         <div className={`w-3 h-3 rounded-full mt-2 flex-shrink-0 ${
                           event.isCompleted ? 'bg-success' : 'bg-warning'
