@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import {useParams} from 'wouter';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -32,6 +33,7 @@ interface ValidatedCaseFormProps {
 
 export default function ValidatedCaseForm({ onClose, onSuccess }: ValidatedCaseFormProps) {
   const { toast } = useToast();
+  const { id }=useParams();
   const queryClient = useQueryClient();
   const [showFileUpload, setShowFileUpload] = useState(false);
   const [createdCaseId, setCreatedCaseId] = useState<number | null>(null);

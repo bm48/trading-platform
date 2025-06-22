@@ -115,7 +115,6 @@ export default function Dashboard() {
   const resolvedCases = cases.filter((c: any) => c.status === 'resolved');
 
   const handleNewCaseClick = () => {
-    // For demo purposes, always allow case creation
     setShowNewCaseForm(true);
   };
 
