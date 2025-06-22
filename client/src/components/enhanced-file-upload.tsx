@@ -105,6 +105,7 @@ export default function EnhancedFileUpload({
       return response.json();
     },
     onSuccess: (data) => {
+      console.log('Upload response data:', data);
       setUploadedFiles(prev => [...prev, data]);
       toast({
         title: "File Uploaded Successfully",
@@ -296,7 +297,7 @@ export default function EnhancedFileUpload({
                         fileSize: file.fileSize || 0
                       }}
                       trigger={
-                        <Button variant="ghost" size="sm">
+                        <Button variant="ghost" size="sm" onClick={() => console.log('Preview document data:', { id: file.id, fileName: file.originalName, fullFile: file })}>
                           <Eye className="h-4 w-4" />
                         </Button>
                       }
