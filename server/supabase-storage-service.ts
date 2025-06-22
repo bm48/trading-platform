@@ -110,25 +110,31 @@ export class SupabaseStorageService {
         .from(this.bucketName)
         .createSignedUrl(supabasePath, 3600); // 1 hour expiry
 
-      // Save file metadata to database (using correct snake_case field names)
+      // Save file metadata to database with all required fields
+      const insertData: any = {
+        user_id: userId,
+        caseid: options.caseId || null,
+        contractid: options.contractId || null,
+        filename: fileName,
+        original_name: file.originalname,
+        file_type: 'document',
+        mime_type: file.mimetype,
+        file_size: file.size,
+        category: options.category || 'general',
+        description: options.description || file.originalname,
+        upload_path: null, // No local upload path for Supabase files
+        supabase_path: supabasePath,
+        supabase_url: urlData?.signedUrl || '',
+        file_path: urlData?.signedUrl || '',
+        version: 1,
+        is_latest_version: true
+      };
+
+      console.log('Inserting document data:', insertData);
+
       const { data: documentData, error: dbError } = await supabaseAdmin
         .from('documents')
-        .insert({
-          user_id: userId,
-          caseid: options.caseId || null,
-          contractid: options.contractId || null,
-          filename: fileName,
-          original_name: file.originalname,
-          file_path: urlData?.signedUrl || '',
-          file_type: 'document',
-          file_size: file.size,
-          mime_type: file.mimetype,
-          category: options.category || 'general',
-          description: options.description || file.originalname,
-          supabase_url: urlData?.signedUrl || '',
-          supabase_path: supabasePath,
-          created_at: new Date().toISOString()
-        })
+        .insert(insertData)
         .select()
         .single();
 
