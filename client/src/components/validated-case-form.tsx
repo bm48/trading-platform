@@ -54,7 +54,10 @@ export default function ValidatedCaseForm({ onClose, onSuccess }: ValidatedCaseF
       return await apiRequest('POST', '/api/cases', data);
     },
     onSuccess: (data) => {
+      console.log('Case creation response:', data);
       const newCase = typeof data === 'object' && data !== null ? data : {};
+      console.log('Extracted case ID:', (newCase as any).id);
+      
       toast({
         title: "Case Created Successfully",
         description: "Your case has been created. You can now upload supporting documents.",
@@ -220,32 +223,53 @@ export default function ValidatedCaseForm({ onClose, onSuccess }: ValidatedCaseF
               <div className="space-y-4">
                 <div>
                   <h4 className="font-medium mb-2">Documents & Contracts</h4>
-                  <EnhancedFileUpload
-                    caseId={createdCaseId!}
-                    accept=".pdf,.doc,.docx,.txt"
-                    category="evidence"
-                    multiple={true}
-                  />
+                  {createdCaseId && (
+                    <EnhancedFileUpload
+                      caseId={createdCaseId}
+                      accept=".pdf,.doc,.docx,.txt"
+                      category="evidence"
+                      multiple={true}
+                    />
+                  )}
+                  {!createdCaseId && (
+                    <div className="text-red-500">
+                      Error: Case ID not available for file upload
+                    </div>
+                  )}
                 </div>
 
                 <div>
                   <h4 className="font-medium mb-2">Photos & Images</h4>
-                  <EnhancedFileUpload
-                    caseId={createdCaseId!}
-                    accept=".jpg,.jpeg,.png,.gif,.webp"
-                    category="photos"
-                    multiple={true}
-                  />
+                  {createdCaseId && (
+                    <EnhancedFileUpload
+                      caseId={createdCaseId}
+                      accept=".jpg,.jpeg,.png,.gif,.webp"
+                      category="photos"
+                      multiple={true}
+                    />
+                  )}
+                  {!createdCaseId && (
+                    <div className="text-red-500">
+                      Error: Case ID not available for file upload
+                    </div>
+                  )}
                 </div>
 
                 <div>
                   <h4 className="font-medium mb-2">Email Communications</h4>
-                  <EnhancedFileUpload
-                    caseId={createdCaseId!}
-                    accept=".eml,.msg,.pdf"
-                    category="correspondence"
-                    multiple={true}
-                  />
+                  {createdCaseId && (
+                    <EnhancedFileUpload
+                      caseId={createdCaseId}
+                      accept=".eml,.msg,.pdf"
+                      category="correspondence"
+                      multiple={true}
+                    />
+                  )}
+                  {!createdCaseId && (
+                    <div className="text-red-500">
+                      Error: Case ID not available for file upload
+                    </div>
+                  )}
                 </div>
               </div>
 
