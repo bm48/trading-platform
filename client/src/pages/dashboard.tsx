@@ -348,7 +348,7 @@ export default function Dashboard() {
           url.searchParams.set('tab', value);
           window.history.pushState({}, '', url.toString());
         }} className="space-y-6 animate-fade-in">
-          <TabsList className="grid w-full grid-cols-2 smooth-transition">
+          <TabsList className="grid w-full grid-cols-3 smooth-transition">
             <TabsTrigger value="cases" className="flex items-center gap-2 smooth-transition btn-hover-scale">
               <FolderOpen className="h-4 w-4" />
               Case Files
@@ -356,6 +356,10 @@ export default function Dashboard() {
             <TabsTrigger value="contracts" className="flex items-center gap-2 smooth-transition btn-hover-scale">
               <FileText className="h-4 w-4" />
               Contract Files
+            </TabsTrigger>
+            <TabsTrigger value="calendar" className="flex items-center gap-2 smooth-transition btn-hover-scale">
+              <Calendar className="h-4 w-4" />
+              Calendar
             </TabsTrigger>
           </TabsList>
 
@@ -560,6 +564,169 @@ export default function Dashboard() {
                 ))}
               </div>
             )}
+          </TabsContent>
+
+          {/* Calendar Tab */}
+          <TabsContent value="calendar" className="space-y-6">
+            <div className="flex items-center justify-between animate-slide-in">
+              <h2 className="text-xl font-semibold text-neutral-dark">Legal Calendar</h2>
+              <div className="flex gap-2">
+                <Link href="/calendar">
+                  <Button variant="outline" className="btn-hover-lift">
+                    <Calendar className="h-4 w-4 mr-2" />
+                    Full Calendar View
+                  </Button>
+                </Link>
+              </div>
+            </div>
+
+            {/* Calendar Integration Status */}
+            <Card className="border-l-4 border-l-primary bg-blue-50 animate-fade-in">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <Calendar className="h-8 w-8 text-primary" />
+                    <div>
+                      <h3 className="text-lg font-semibold text-neutral-dark">Calendar Integration</h3>
+                      <p className="text-sm text-neutral-medium">Connect your Google or Outlook calendar to sync legal deadlines</p>
+                    </div>
+                  </div>
+                  <Link href="/calendar">
+                    <Button className="btn-hover-lift">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Connect Calendar
+                    </Button>
+                  </Link>
+                </div>
+                
+                {/* Quick Calendar Stats */}
+                <div className="grid grid-cols-3 gap-4 mt-4">
+                  <div className="text-center p-3 bg-white rounded-lg">
+                    <div className="text-2xl font-bold text-neutral-dark">{timelineEvents.length}</div>
+                    <div className="text-sm text-neutral-medium">Upcoming Deadlines</div>
+                  </div>
+                  <div className="text-center p-3 bg-white rounded-lg">
+                    <div className="text-2xl font-bold text-neutral-dark">
+                      {timelineEvents.filter(event => {
+                        const eventDate = new Date(event.date);
+                        const weekFromNow = new Date();
+                        weekFromNow.setDate(weekFromNow.getDate() + 7);
+                        return eventDate <= weekFromNow;
+                      }).length}
+                    </div>
+                    <div className="text-sm text-neutral-medium">This Week</div>
+                  </div>
+                  <div className="text-center p-3 bg-white rounded-lg">
+                    <div className="text-2xl font-bold text-neutral-dark">0</div>
+                    <div className="text-sm text-neutral-medium">Connected Calendars</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Upcoming Legal Events */}
+            <Card className="animate-fade-in">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Clock className="h-5 w-5" />
+                  Upcoming Legal Events
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {timelineEvents.length > 0 ? (
+                  <div className="space-y-3">
+                    {timelineEvents.slice(0, 10).map((event: any, index: number) => (
+                      <div 
+                        key={event.id} 
+                        className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors smooth-transition"
+                        style={{ animationDelay: `${index * 0.1}s` }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`p-2 rounded-full ${
+                            event.priority === 'high' ? 'bg-red-100 text-red-600' :
+                            event.priority === 'medium' ? 'bg-yellow-100 text-yellow-600' :
+                            'bg-blue-100 text-blue-600'
+                          }`}>
+                            {event.type === 'case' ? <FolderOpen className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
+                          </div>
+                          <div>
+                            <h4 className="font-medium text-neutral-dark">{event.title}</h4>
+                            <p className="text-sm text-neutral-medium">{event.subtitle}</p>
+                            <div className="flex items-center gap-4 mt-1 text-sm text-neutral-medium">
+                              <span>{formatDate(event.date)}</span>
+                              {event.amount && (
+                                <span className="font-medium text-accent">{formatCurrency(event.amount)}</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge className={`${
+                            event.priority === 'high' ? 'bg-red-100 text-red-800' :
+                            event.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-blue-100 text-blue-800'
+                          }`}>
+                            {event.daysUntil === 0 ? 'Today' : 
+                             event.daysUntil === 1 ? 'Tomorrow' :
+                             event.daysUntil > 0 ? `${event.daysUntil} days` : 'Overdue'}
+                          </Badge>
+                          <Link href={event.type === 'case' ? `/case/${event.caseId}` : `/contract/${event.contractId}`}>
+                            <Button variant="ghost" size="sm" className="btn-hover-lift">
+                              <ArrowRight className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <Calendar className="h-12 w-12 text-neutral-medium mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-neutral-dark mb-2">No Upcoming Events</h3>
+                    <p className="text-neutral-medium mb-4">Your calendar is clear! Create cases or contracts to see deadlines here.</p>
+                    <div className="flex justify-center gap-2">
+                      <Button onClick={handleNewCaseClick} variant="outline" size="sm">
+                        <Plus className="h-4 w-4 mr-2" />
+                        New Case
+                      </Button>
+                      <Button onClick={() => setShowNewContractForm(true)} variant="outline" size="sm">
+                        <Plus className="h-4 w-4 mr-2" />
+                        New Contract
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Calendar Quick Actions */}
+            <Card className="animate-fade-in">
+              <CardHeader>
+                <CardTitle>Quick Calendar Actions</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Link href="/calendar">
+                    <div className="p-4 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
+                      <div className="flex items-center gap-3 mb-2">
+                        <Calendar className="h-5 w-5 text-primary" />
+                        <h4 className="font-medium">Manage Calendar Integrations</h4>
+                      </div>
+                      <p className="text-sm text-neutral-medium">Connect Google Calendar, Outlook, or other calendar apps</p>
+                    </div>
+                  </Link>
+                  <Link href="/calendar">
+                    <div className="p-4 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
+                      <div className="flex items-center gap-3 mb-2">
+                        <Plus className="h-5 w-5 text-primary" />
+                        <h4 className="font-medium">Create Calendar Event</h4>
+                      </div>
+                      <p className="text-sm text-neutral-medium">Schedule meetings, court dates, and deadlines</p>
+                    </div>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>
