@@ -23,6 +23,7 @@ interface UploadedFile {
   id: number;
   fileName: string;
   originalName: string;
+  filePath: string;
   fileType: string;
   mimeType: string;
   fileSize: number;
@@ -35,7 +36,7 @@ export default function EnhancedFileUpload({
   caseId,
   contractId,
   onUploadSuccess,
-  accept = ".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.webp",
+  accept = "image/*,.pdf,.doc,.docx,.txt,.csv,.xlsx,.xls",
   maxSize = 50 * 1024 * 1024, // 50MB
   multiple = false,
   category = "evidence",
@@ -173,12 +174,48 @@ export default function EnhancedFileUpload({
     handleFileSelect(e.dataTransfer.files);
   };
 
-  const downloadFile = (fileId: number) => {
-    window.open(`/api/documents/${fileId}/download`, '_blank');
+  const downloadFile = async (fileId: number) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        const downloadUrl = `/api/documents/${fileId}/download?token=${encodeURIComponent(session.access_token)}`;
+        window.open(downloadUrl, '_blank');
+      } else {
+        toast({
+          title: "Authentication Required",
+          description: "Please log in to download documents",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Download Failed",
+        description: "Could not download document",
+        variant: "destructive",
+      });
+    }
   };
 
-  const previewFile = (fileId: number) => {
-    window.open(`/api/documents/${fileId}/preview`, '_blank');
+  const previewFile = async (fileId: number) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        const previewUrl = `/api/documents/${fileId}/download?token=${encodeURIComponent(session.access_token)}&preview=true`;
+        window.open(previewUrl, '_blank');
+      } else {
+        toast({
+          title: "Authentication Required",
+          description: "Please log in to preview documents",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Preview Failed",
+        description: "Could not preview document",
+        variant: "destructive",
+      });
+    }
   };
 
   const isImage = (mimeType: string | undefined) => mimeType && mimeType.startsWith('image/');
@@ -215,7 +252,7 @@ export default function EnhancedFileUpload({
             Choose Files
           </Button>
           <p className="text-xs text-gray-500 mt-2">
-            Supported: {accept.includes('.jpg') ? 'jpg, jpeg, png, gif, webp' : ''}{accept.includes('.pdf') ? (accept.includes('.jpg') ? ', pdf, doc, docx' : 'pdf, doc, docx') : ''} (Max: {Math.round(maxSize / (1024 * 1024))}MB)
+            Supported: Images, PDFs, Documents (Max: {Math.round(maxSize / (1024 * 1024))}MB)
           </p>
         </CardContent>
       </Card>
@@ -293,12 +330,12 @@ export default function EnhancedFileUpload({
                       document={{
                         id: file.id,
                         fileName: file.originalName || 'Unknown File',
-                        filePath: file.fileName || '',
+                        filePath: file.filePath || '',
                         fileType: file.fileType || 'application/octet-stream',
                         fileSize: file.fileSize || 0
                       }}
                       trigger={
-                        <Button variant="ghost" size="sm" onClick={() => console.log('Preview document data:', { id: file.id, fileName: file.originalName, fullFile: file })}>
+                        <Button variant="ghost" size="sm">
                           <Eye className="h-4 w-4" />
                         </Button>
                       }
