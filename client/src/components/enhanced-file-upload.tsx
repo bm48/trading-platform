@@ -21,7 +21,7 @@ interface EnhancedFileUploadProps {
 
 interface UploadedFile {
   id: number;
-  filename: string;
+  fileName: string;
   originalName: string;
   fileType: string;
   mimeType: string;
@@ -35,7 +35,7 @@ export default function EnhancedFileUpload({
   caseId,
   contractId,
   onUploadSuccess,
-  accept = ".pdf,.doc,.docx,.jpg,.jpeg,.png",
+  accept = ".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.webp",
   maxSize = 50 * 1024 * 1024, // 50MB
   multiple = false,
   category = "evidence",
@@ -102,7 +102,8 @@ export default function EnhancedFileUpload({
         throw new Error(errorMessage);
       }
 
-      return response.json();
+      const result = await response.json();
+      return result.document; // Extract document from server response
     },
     onSuccess: (data) => {
       console.log('Upload response data:', data);
@@ -214,7 +215,7 @@ export default function EnhancedFileUpload({
             Choose Files
           </Button>
           <p className="text-xs text-gray-500 mt-2">
-            Supported: {accept} (Max: {Math.round(maxSize / (1024 * 1024))}MB)
+            Supported: {accept.includes('.jpg') ? 'jpg, jpeg, png, gif, webp' : ''}{accept.includes('.pdf') ? (accept.includes('.jpg') ? ', pdf, doc, docx' : 'pdf, doc, docx') : ''} (Max: {Math.round(maxSize / (1024 * 1024))}MB)
           </p>
         </CardContent>
       </Card>
@@ -292,7 +293,7 @@ export default function EnhancedFileUpload({
                       document={{
                         id: file.id,
                         fileName: file.originalName || 'Unknown File',
-                        filePath: file.filename || '',
+                        filePath: file.fileName || '',
                         fileType: file.fileType || 'application/octet-stream',
                         fileSize: file.fileSize || 0
                       }}
