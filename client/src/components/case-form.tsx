@@ -98,7 +98,8 @@ export default function CaseForm({ onClose, onSuccess }: CaseFormProps) {
 
   const createCaseMutation = useMutation({
     mutationFn: async (data: CaseFormData) => {
-      return await apiRequest('POST', '/api/cases', data);
+      const response = await apiRequest('POST', '/api/cases', data);
+      return await response.json();
     },
     onSuccess: () => {
       toast({

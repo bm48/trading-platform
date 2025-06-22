@@ -67,9 +67,10 @@ export default function AdminDashboard() {
 
   const rejectApplication = useMutation({
     mutationFn: async (data: { applicationId: number; reason: string }) => {
-      return apiRequest("POST", `/api/admin/applications/${data.applicationId}/reject`, {
+      const response = await apiRequest("POST", `/api/admin/applications/${data.applicationId}/reject`, {
         reason: data.reason,
       });
+      return await response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/applications"] });
@@ -90,7 +91,8 @@ export default function AdminDashboard() {
 
   const generateAnalysis = useMutation({
     mutationFn: async (applicationId: number) => {
-      return apiRequest("POST", `/api/admin/applications/${applicationId}/analyze`);
+      const response = await apiRequest("POST", `/api/admin/applications/${applicationId}/analyze`);
+      return await response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/applications"] });

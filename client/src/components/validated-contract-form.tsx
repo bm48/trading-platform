@@ -60,15 +60,15 @@ export default function ValidatedContractForm({ onClose, onSuccess }: ValidatedC
 
   const createContractMutation = useMutation({
     mutationFn: async (data: ContractFormData) => {
-      return await apiRequest('POST', '/api/contracts', data);
+      const response = await apiRequest('POST', '/api/contracts', data);
+      return await response.json();
     },
     onSuccess: (data) => {
-      const newContract = typeof data === 'object' && data !== null ? data : {};
       toast({
         title: "Contract Created Successfully",
         description: "Your contract has been created. You can now upload related documents.",
       });
-      setCreatedContractId((newContract as any).id);
+      setCreatedContractId(data.id);
       setShowFileUpload(true);
       queryClient.invalidateQueries({ queryKey: ['/api/contracts'] });
     },
