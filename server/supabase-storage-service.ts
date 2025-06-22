@@ -131,6 +131,7 @@ export class SupabaseStorageService {
       };
 
       console.log('Inserting document data:', insertData);
+      console.log('Case ID value and type:', options.caseId, typeof options.caseId);
 
       const { data: documentData, error: dbError } = await supabaseAdmin
         .from('documents')

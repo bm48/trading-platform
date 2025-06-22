@@ -598,6 +598,8 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
       const category = req.body.category || 'general';
       const description = req.body.description || file.originalname;
       
+      console.log('Upload parameters:', { caseId, userId, category, description });
+      
       // Upload to Supabase Storage
       const document = await supabaseStorageService.uploadFile(file, userId, {
         caseId,
