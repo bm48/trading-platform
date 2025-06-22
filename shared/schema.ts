@@ -81,7 +81,7 @@ export const cases = pgTable("cases", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Documents (supports both documents and photos with versioning)
+// Documents (supports both documents and photos with versioning) - Updated for Supabase Storage
 export const documents = pgTable("documents", {
   id: serial("id").primaryKey(),
   caseid: integer("caseid"),
@@ -92,7 +92,10 @@ export const documents = pgTable("documents", {
   file_type: varchar("file_type").notNull(), // document, photo, image
   mime_type: varchar("mime_type").notNull(),
   file_size: integer("file_size").notNull(),
-  upload_path: varchar("upload_path").notNull(),
+  upload_path: varchar("upload_path"), // Legacy local path - nullable for Supabase files
+  file_path: varchar("file_path"), // Legacy field - nullable for Supabase files
+  supabase_url: varchar("supabase_url"), // Signed URL for file access
+  supabase_path: varchar("supabase_path"), // Internal Supabase Storage path
   thumbnail_path: varchar("thumbnail_path"),
   tags: jsonb("tags"),
   category: varchar("category"), // evidence, contract, correspondence, generated, photos

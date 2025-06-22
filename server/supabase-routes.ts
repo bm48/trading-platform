@@ -2,7 +2,7 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { supabaseAdmin, userManagement, database } from "./supabase";
 import { authenticateUser, optionalAuth } from "./supabase-auth";
-import { supabaseStorage } from "./supabase-storage";
+import { supabaseStorageService } from "./supabase-storage-service";
 import { analyzeCase, generateStrategyPack } from "./openai";
 import { sendWelcomeEmail, sendApprovalEmail, sendRejectionEmail, sendStrategyPackEmail } from "./email";
 import { generateStrategyPackPDF, generateAIStrategyPackPDF } from "./pdf";
@@ -145,8 +145,8 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
         created_at: new Date().toISOString()
       };
 
-      console.log('Creating application with supabaseStorage...');
-      const application = await supabaseStorage.createApplication(applicationData);
+      console.log('Creating application with database...');
+      const application = await database.createApplication(applicationData);
       console.log('Application created successfully:', application);
 
       // Send welcome email (non-blocking)
@@ -559,16 +559,10 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
       const category = req.body.category || 'general';
       const description = req.body.description || file.originalname;
       
-      const document = await supabaseStorage.createDocument({
-        userid: userId,
-        filename: file.filename,
-        originalName: file.originalname,
-        uploadPath: file.path,
-        fileType: 'document',
-        fileSize: file.size,
-        mimeType: file.mimetype,
-        category: category,
-        description: description
+      // Upload to Supabase Storage
+      const document = await supabaseStorageService.uploadFile(file, userId, {
+        category,
+        description
       });
 
       res.status(201).json({
@@ -604,17 +598,11 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
       const category = req.body.category || 'general';
       const description = req.body.description || file.originalname;
       
-      const document = await supabaseStorage.createDocument({
-        userid: userId,
-        caseid: caseId,
-        filename: file.filename,
-        originalName: file.originalname,
-        uploadPath: file.path,
-        fileType: 'document',
-        fileSize: file.size,
-        mimeType: file.mimetype,
-        category: category,
-        description: description
+      // Upload to Supabase Storage
+      const document = await supabaseStorageService.uploadFile(file, userId, {
+        caseId,
+        category,
+        description
       });
 
       res.status(201).json({
@@ -650,17 +638,11 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
       const category = req.body.category || 'general';
       const description = req.body.description || file.originalname;
       
-      const document = await supabaseStorage.createDocument({
-        userid: userId,
-        contractid: contractId,
-        filename: file.filename,
-        originalName: file.originalname,
-        uploadPath: file.path,
-        fileType: 'document',
-        fileSize: file.size,
-        mimeType: file.mimetype,
-        category: category,
-        description: description
+      // Upload to Supabase Storage
+      const document = await supabaseStorageService.uploadFile(file, userId, {
+        contractId,
+        category,
+        description
       });
 
       res.status(201).json({
@@ -683,13 +665,10 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid case ID" });
       }
 
-      // Get documents for this case
-      const documents = await supabaseStorage.getCaseDocuments(caseId);
+      // Get documents for this case using Supabase Storage
+      const documents = await supabaseStorageService.listUserDocuments(userId!, { caseId });
       
-      // Filter to only documents the user has access to
-      const userDocuments = documents.filter(doc => doc.user_id === userId || req.user?.role === 'admin');
-      
-      res.json(userDocuments);
+      res.json(documents);
     } catch (error) {
       console.error("Error fetching case documents:", error);
       res.status(500).json({ message: "Failed to fetch documents" });
@@ -732,29 +711,12 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // Get document from database
-      const document = await supabaseStorage.getDocument(documentId);
+      // Download file from Supabase Storage
+      const { buffer, metadata } = await supabaseStorageService.downloadFile(documentId, userId);
       
-      if (!document) {
-        console.log(`Document ${documentId} not found in database`);
-        return res.status(404).json({ message: "Document not found" });
-      }
-      
-      console.log(`Document found: ${document.original_name}, user: ${document.user_id}, requesting user: ${userId}`);
+      console.log(`Document found: ${metadata.originalName}, user: ${metadata.userId}, requesting user: ${userId}`);
 
-      // Check if user has access to this document
-      if (document.user_id !== userId) {
-        console.log(`Access denied: document user ${document.user_id} !== requesting user ${userId}`);
-        return res.status(403).json({ message: "Access denied" });
-      }
-
-      // Send file
-      const filePath = document.upload_path;
-      if (!filePath || !fs.existsSync(filePath)) {
-        return res.status(404).json({ message: "File not found on disk" });
-      }
-
-      const fileName = document.original_name || 'download';
+      const fileName = metadata.originalName || 'download';
       
       // Set appropriate headers for inline viewing (for preview) or download
       if (req.query.preview === 'true') {
@@ -762,10 +724,10 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
       } else {
         res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
       }
-      res.setHeader('Content-Type', document.mime_type || 'application/octet-stream');
+      res.setHeader('Content-Type', metadata.mimeType || 'application/octet-stream');
+      res.setHeader('Content-Length', buffer.length.toString());
       
-      const fileStream = fs.createReadStream(filePath);
-      fileStream.pipe(res);
+      res.send(buffer);
       
     } catch (error) {
       console.error("Error downloading document:", error);
@@ -803,7 +765,7 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
         updated_at: new Date().toISOString()
       };
 
-      const newCase = await supabaseStorage.createCase(caseData);
+      const newCase = await database.createCase(caseData);
 
       // Generate and save documents
       const { wordDocId, pdfDocId } = await aiTemplateService.saveGeneratedDocuments(
@@ -1099,7 +1061,7 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
       if (updateError) throw updateError;
 
       // Create timeline event
-      await supabaseStorage.createTimelineEvent({
+      await database.createTimelineEvent({
         case_id: document.case_id,
         title: 'Strategy Pack Sent',
         description: `AI-generated strategy pack sent to client via email`,
@@ -1348,7 +1310,7 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
   app.get('/api/calendar/events', authenticateUser, async (req: Request, res: Response) => {
     try {
       const userId = (req as any).user.id;
-      const events = await supabaseStorage.getUserCalendarEvents(userId);
+      const events = await database.getUserCalendarEvents(userId);
       res.json(events);
     } catch (error) {
       console.error('Error fetching calendar events:', error);
@@ -1359,7 +1321,7 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
   app.get('/api/calendar/events/case/:caseId', authenticateUser, async (req: Request, res: Response) => {
     try {
       const { caseId } = req.params;
-      const events = await supabaseStorage.getCaseCalendarEvents(parseInt(caseId));
+      const events = await database.getCaseCalendarEvents(parseInt(caseId));
       res.json(events);
     } catch (error) {
       console.error('Error fetching case calendar events:', error);

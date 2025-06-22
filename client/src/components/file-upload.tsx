@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useMutation } from '@tanstack/react-query';
 import { Upload, X, FileText, AlertCircle, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { supabaseStorageClient } from '@/lib/supabase-storage';
 
 interface FileUploadProps {
   onUploadSuccess?: () => void;
@@ -37,44 +38,40 @@ export default function FileUpload({
 
   const uploadMutation = useMutation({
     mutationFn: async ({ file, additionalData }: { file: File; additionalData: Record<string, any> }) => {
-      const formData = new FormData();
-      formData.append('file', file);
-      
-      // Add additional data to the form
-      Object.entries(additionalData).forEach(([key, value]) => {
-        formData.append(key, value.toString());
+      // Use Supabase Storage for file upload
+      return await supabaseStorageClient.uploadFile(file, {
+        caseId: additionalData.caseId,
+        contractId: additionalData.contractId,
+        category: additionalData.category,
+        description: additionalData.description,
       });
-
-      const response = await fetch('/api/documents/upload', {
-        method: 'POST',
-        body: formData,
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error || 'Upload failed');
-      }
-
-      return response.json();
     },
   });
 
-  const validateFile = (file: File): string | null => {
-    // Check file size
-    if (file.size > maxSize) {
-      return `File size must be less than ${Math.round(maxSize / (1024 * 1024))}MB`;
-    }
-
-    // Check file type
+  const validateFile = (file: File): string | undefined => {
+    // Use Supabase Storage client validation
     const allowedTypes = accept.split(',').map(type => type.trim());
-    const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
-    
-    if (!allowedTypes.includes(fileExtension)) {
-      return `File type not allowed. Accepted types: ${accept}`;
-    }
+    const mimeTypes = allowedTypes.map(ext => {
+      switch (ext) {
+        case '.pdf': return 'application/pdf';
+        case '.doc': return 'application/msword';
+        case '.docx': return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+        case '.jpg':
+        case '.jpeg': return 'image/jpeg';
+        case '.png': return 'image/png';
+        case '.gif': return 'image/gif';
+        case '.webp': return 'image/webp';
+        case '.txt': return 'text/plain';
+        default: return 'application/octet-stream';
+      }
+    });
 
-    return null;
+    const validation = supabaseStorageClient.validateFile(file, {
+      maxSize,
+      allowedTypes: mimeTypes
+    });
+
+    return validation.valid ? undefined : validation.error;
   };
 
   const handleFiles = (fileList: FileList) => {
@@ -87,7 +84,7 @@ export default function FileUpload({
         id: `${Date.now()}-${Math.random()}`,
         status: error ? 'error' : 'pending',
         progress: 0,
-        error,
+        error: error || undefined,
       };
       newFiles.push(uploadFile);
     });
