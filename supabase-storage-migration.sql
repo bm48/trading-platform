@@ -11,6 +11,31 @@ ADD COLUMN IF NOT EXISTS file_path varchar;
 ALTER TABLE documents 
 ALTER COLUMN upload_path DROP NOT NULL;
 
+-- Ensure correct column names exist (some may already exist)
+DO $$ 
+BEGIN
+    -- Check if caseid column exists, if not rename case_id
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'documents' AND column_name = 'caseid') THEN
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'documents' AND column_name = 'case_id') THEN
+            ALTER TABLE documents RENAME COLUMN case_id TO caseid;
+        END IF;
+    END IF;
+    
+    -- Check if contractid column exists, if not rename contract_id
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'documents' AND column_name = 'contractid') THEN
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'documents' AND column_name = 'contract_id') THEN
+            ALTER TABLE documents RENAME COLUMN contract_id TO contractid;
+        END IF;
+    END IF;
+    
+    -- Check if filename column exists, if not rename file_name
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'documents' AND column_name = 'filename') THEN
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'documents' AND column_name = 'file_name') THEN
+            ALTER TABLE documents RENAME COLUMN file_name TO filename;
+        END IF;
+    END IF;
+END $$;
+
 -- Create storage bucket policies for document access
 -- This creates a private bucket that requires authentication
 

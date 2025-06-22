@@ -110,14 +110,14 @@ export class SupabaseStorageService {
         .from(this.bucketName)
         .createSignedUrl(supabasePath, 3600); // 1 hour expiry
 
-      // Save file metadata to database
+      // Save file metadata to database (using correct snake_case field names)
       const { data: documentData, error: dbError } = await supabaseAdmin
         .from('documents')
         .insert({
           user_id: userId,
-          case_id: options.caseId || null,
-          contract_id: options.contractId || null,
-          file_name: fileName,
+          caseid: options.caseId || null,
+          contractid: options.contractId || null,
+          filename: fileName,
           original_name: file.originalname,
           file_path: urlData?.signedUrl || '',
           file_type: 'document',
@@ -148,9 +148,9 @@ export class SupabaseStorageService {
       return {
         id: documentData.id,
         userId: documentData.user_id,
-        caseId: documentData.case_id,
-        contractId: documentData.contract_id,
-        fileName: documentData.file_name,
+        caseId: documentData.caseid,
+        contractId: documentData.contractid,
+        fileName: documentData.filename,
         originalName: documentData.original_name,
         filePath: documentData.file_path,
         fileType: documentData.file_type,
@@ -205,9 +205,9 @@ export class SupabaseStorageService {
         metadata: {
           id: documentData.id,
           userId: documentData.user_id,
-          caseId: documentData.case_id,
-          contractId: documentData.contract_id,
-          fileName: documentData.file_name,
+          caseId: documentData.caseid,
+          contractId: documentData.contractid,
+          fileName: documentData.filename,
           originalName: documentData.original_name,
           filePath: documentData.file_path,
           fileType: documentData.file_type,
@@ -315,11 +315,11 @@ export class SupabaseStorageService {
         .eq('user_id', userId);
 
       if (options.caseId) {
-        query = query.eq('case_id', options.caseId);
+        query = query.eq('caseid', options.caseId);
       }
 
       if (options.contractId) {
-        query = query.eq('contract_id', options.contractId);
+        query = query.eq('contractid', options.contractId);
       }
 
       if (options.category) {
@@ -335,9 +335,9 @@ export class SupabaseStorageService {
       return documents?.map(doc => ({
         id: doc.id,
         userId: doc.user_id,
-        caseId: doc.case_id,
-        contractId: doc.contract_id,
-        fileName: doc.file_name,
+        caseId: doc.caseid,
+        contractId: doc.contractid,
+        fileName: doc.filename,
         originalName: doc.original_name,
         filePath: doc.file_path,
         fileType: doc.file_type,
