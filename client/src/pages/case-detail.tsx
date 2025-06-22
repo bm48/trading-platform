@@ -13,9 +13,7 @@ import { supabase } from '@/lib/supabase';
 import DashboardLayout from '@/components/dashboard-layout';
 import EnhancedFileUpload from '@/components/enhanced-file-upload';
 import DocumentPreview from '@/components/document-preview';
-import { MoodVisualization } from '@/components/mood-visualization';
-import { MoodTracker } from '@/components/mood-tracker';
-import { MoodData } from '@/lib/mood-utils';
+
 import { 
   formatCurrency, 
   formatDate, 
@@ -48,6 +46,8 @@ export default function CaseDetail() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState('overview');
   const [newNote, setNewNote] = useState('');
+  
+  // Remove mood tracking states and data
 
   const { data: caseData, isLoading } = useQuery<any>({
     queryKey: ['/api/cases', id],
@@ -193,16 +193,7 @@ export default function CaseDetail() {
   const analysis = caseData.ai_analysis || caseData.aiAnalysis;
   const strategy = caseData.strategy_pack || caseData.strategyPack;
 
-  // Create mood data object from case data
-  const moodData: MoodData = {
-    moodScore: caseData.mood_score || 5,
-    stressLevel: (caseData.stress_level as 'low' | 'medium' | 'high' | 'critical') || 'medium',
-    urgencyFeeling: (caseData.urgency_feeling as 'calm' | 'moderate' | 'urgent' | 'panic') || 'moderate',
-    confidenceLevel: caseData.confidence_level || 5,
-    clientSatisfaction: caseData.client_satisfaction || 5,
-    moodNotes: caseData.mood_notes || '',
-    lastMoodUpdate: caseData.last_mood_update || ''
-  };
+  // Removed mood tracking functionality
 
   return (
     <DashboardLayout>
@@ -246,10 +237,7 @@ export default function CaseDetail() {
               </div>
             </div>
 
-            {/* Mood Visualization */}
-            <div className="mb-6">
-              <MoodVisualization moodData={moodData} compact={true} />
-            </div>
+
 
             {/* Progress */}
             <div className="mb-4">
@@ -281,12 +269,11 @@ export default function CaseDetail() {
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="analysis">Analysis</TabsTrigger>
             <TabsTrigger value="strategy">Strategy</TabsTrigger>
             <TabsTrigger value="documents">Documents</TabsTrigger>
-            <TabsTrigger value="mood">Mood Tracker</TabsTrigger>
             <TabsTrigger value="timeline">Timeline</TabsTrigger>
           </TabsList>
 
@@ -650,36 +637,7 @@ export default function CaseDetail() {
             </div>
           </TabsContent>
 
-          {/* Mood Tracker Tab */}
-          <TabsContent value="mood" className="space-y-6">
-            <div className="grid lg:grid-cols-2 gap-6">
-              {/* Current Mood Visualization */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <MessageSquare className="h-5 w-5 mr-2" />
-                    Current Mood Status
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <MoodVisualization moodData={moodData} showDetails={true} />
-                </CardContent>
-              </Card>
 
-              {/* Update Mood */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Target className="h-5 w-5 mr-2" />
-                    Update Mood Tracking
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <MoodTracker caseId={parseInt(id!)} currentMoodData={moodData} />
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
 
           {/* Timeline Tab */}
           <TabsContent value="timeline" className="space-y-6">
