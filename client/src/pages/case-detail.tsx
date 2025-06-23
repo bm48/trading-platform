@@ -13,7 +13,6 @@ import { supabase } from '@/lib/supabase';
 import DashboardLayout from '@/components/dashboard-layout';
 import EnhancedFileUpload from '@/components/enhanced-file-upload';
 import DocumentPreview from '@/components/document-preview';
-import CaseOutcomeTracker from '@/components/case-outcome-tracker';
 
 import { 
   formatCurrency, 
@@ -270,13 +269,12 @@ export default function CaseDetail() {
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="analysis">Analysis</TabsTrigger>
             <TabsTrigger value="strategy">Strategy</TabsTrigger>
             <TabsTrigger value="documents">Documents</TabsTrigger>
             <TabsTrigger value="timeline">Timeline</TabsTrigger>
-            <TabsTrigger value="outcome">Outcome</TabsTrigger>
           </TabsList>
 
           {/* Overview Tab */}
@@ -707,14 +705,6 @@ export default function CaseDetail() {
                 </CardContent>
               </Card>
             </div>
-          </TabsContent>
-
-          {/* Outcome Tracking Tab */}
-          <TabsContent value="outcome" className="space-y-6">
-            <CaseOutcomeTracker 
-              caseData={caseData} 
-              onOutcomeUpdate={() => queryClient.invalidateQueries({ queryKey: ['/api/cases', id] })}
-            />
           </TabsContent>
         </Tabs>
       </div>
