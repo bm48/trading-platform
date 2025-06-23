@@ -242,7 +242,7 @@ export default function ValidatedCaseForm({ onClose, onSuccess }: ValidatedCaseF
                   <h4 className="font-medium mb-2">Email Communications</h4>
                   <EnhancedFileUpload
                     caseId={createdCaseId!}
-                    accept=".eml,.msg,.pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.webp"
+                    accept=".eml,.msg"
                     category="correspondence"
                     multiple={true}
                   />

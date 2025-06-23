@@ -220,6 +220,8 @@ export default function EnhancedFileUpload({
 
   const isImage = (mimeType: string | undefined) => mimeType && mimeType.startsWith('image/');
 
+  const inputId = `file-upload-input-${category}`;
+
   return (
     <div className={`space-y-4 ${className} animate-fade-in`}>
       {/* Upload Area */}
@@ -242,11 +244,11 @@ export default function EnhancedFileUpload({
             multiple={multiple}
             onChange={(e) => handleFileSelect(e.target.files)}
             className="hidden"
-            id="file-upload-input"
+            id={inputId}
           />
           <Button 
             variant="outline" 
-            onClick={() => document.getElementById('file-upload-input')?.click()}
+            onClick={() => document.getElementById(inputId)?.click()}
             className="btn-hover-lift animate-pulse-hover"
           >
             Choose Files
