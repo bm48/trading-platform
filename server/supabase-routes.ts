@@ -10,6 +10,8 @@ import { generateStrategyPackPDF, generateAIStrategyPackPDF } from "./pdf";
 import { calendarService } from "./calendar-service";
 import { adminService } from "./admin-service";
 import { adminAuthService, authenticateAdmin } from './admin-auth';
+import { outcomeTrackingService } from './outcome-tracking-service';
+import { insertCaseOutcomeSchema } from '@shared/schema';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -1317,6 +1319,74 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching roles:", error);
       res.status(500).json({ message: "Failed to fetch roles" });
+    }
+  });
+
+  // Case outcome tracking routes
+  app.put('/api/cases/:id/outcome', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const caseId = parseInt(req.params.id);
+      const userId = req.user!.id;
+      
+      // Validate outcome data
+      const outcomeData = insertCaseOutcomeSchema.parse(req.body);
+      
+      await outcomeTrackingService.updateCaseOutcome(caseId, userId, outcomeData);
+      
+      res.json({ 
+        success: true, 
+        message: 'Case outcome updated successfully' 
+      });
+    } catch (error) {
+      console.error('Error updating case outcome:', error);
+      res.status(500).json({ 
+        message: 'Failed to update case outcome',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Get user analytics
+  app.get('/api/analytics/overview', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const period = req.query.period as string;
+      
+      const analytics = await outcomeTrackingService.getUserAnalytics(userId, period);
+      
+      res.json(analytics);
+    } catch (error) {
+      console.error('Error getting user analytics:', error);
+      res.status(500).json({ message: 'Failed to get analytics' });
+    }
+  });
+
+  // Get success metrics history
+  app.get('/api/analytics/metrics', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const limit = parseInt(req.query.limit as string) || 12;
+      
+      const metrics = await outcomeTrackingService.getSuccessMetricsHistory(userId, limit);
+      
+      res.json(metrics);
+    } catch (error) {
+      console.error('Error getting success metrics:', error);
+      res.status(500).json({ message: 'Failed to get success metrics' });
+    }
+  });
+
+  // Get case outcome history
+  app.get('/api/cases/:id/outcome-history', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const caseId = parseInt(req.params.id);
+      
+      const history = await outcomeTrackingService.getCaseOutcomeHistory(caseId);
+      
+      res.json(history);
+    } catch (error) {
+      console.error('Error getting case outcome history:', error);
+      res.status(500).json({ message: 'Failed to get case outcome history' });
     }
   });
 

@@ -60,7 +60,7 @@ export const cases = pgTable("cases", {
   applicationId: integer("application_id"),
   title: varchar("title").notNull(),
   caseNumber: varchar("case_number").unique().notNull(),
-  status: varchar("status").default("active"), // active, resolved, on_hold
+  status: varchar("status").default("active"), // active, resolved, on_hold, closed
   issueType: varchar("issue_type").notNull(),
   amount: varchar("amount"),
   description: text("description"),
@@ -70,6 +70,20 @@ export const cases = pgTable("cases", {
   nextAction: varchar("next_action"),
   nextActionDue: timestamp("next_action_due"),
   progress: integer("progress").default(0), // 0-100
+  // Outcome tracking fields
+  outcome: varchar("outcome"), // successful, partial_success, unsuccessful, settled, ongoing
+  outcomeDescription: text("outcome_description"),
+  amountRecovered: decimal("amount_recovered", { precision: 10, scale: 2 }),
+  amountClaimed: decimal("amount_claimed", { precision: 10, scale: 2 }),
+  recoveryPercentage: decimal("recovery_percentage", { precision: 5, scale: 2 }),
+  resolutionMethod: varchar("resolution_method"), // negotiation, adjudication, litigation, settlement
+  daysToResolution: integer("days_to_resolution"),
+  clientSatisfactionScore: integer("client_satisfaction_score"), // 1-10
+  strategyEffectiveness: integer("strategy_effectiveness"), // 1-10
+  wouldRecommend: boolean("would_recommend"),
+  lessonsLearned: text("lessons_learned"),
+  closedAt: timestamp("closed_at"),
+  resolvedAt: timestamp("resolved_at"),
   moodScore: integer("mood_score").default(5), // 1-10 scale (1=very negative, 10=very positive)
   stressLevel: varchar("stress_level").default("medium"), // low, medium, high, critical
   urgencyFeeling: varchar("urgency_feeling").default("moderate"), // calm, moderate, urgent, panic
@@ -173,6 +187,49 @@ export const contracts = pgTable("contracts", {
   updated_at: timestamp("updated_at").defaultNow(),
 });
 
+// Success metrics tracking table
+export const successMetrics = pgTable("success_metrics", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull(), // UUID reference to users.id
+  metricType: varchar("metric_type").notNull(), // case_outcome, strategy_effectiveness, client_satisfaction
+  period: varchar("period").notNull(), // daily, weekly, monthly, yearly
+  periodDate: timestamp("period_date").notNull(),
+  totalCases: integer("total_cases").default(0),
+  successfulCases: integer("successful_cases").default(0),
+  partialSuccessCases: integer("partial_success_cases").default(0),
+  unsuccessfulCases: integer("unsuccessful_cases").default(0),
+  settledCases: integer("settled_cases").default(0),
+  successRate: decimal("success_rate", { precision: 5, scale: 2 }),
+  averageRecoveryRate: decimal("average_recovery_rate", { precision: 5, scale: 2 }),
+  averageDaysToResolution: decimal("average_days_to_resolution", { precision: 8, scale: 2 }),
+  averageClientSatisfaction: decimal("average_client_satisfaction", { precision: 3, scale: 2 }),
+  averageStrategyEffectiveness: decimal("average_strategy_effectiveness", { precision: 3, scale: 2 }),
+  totalAmountClaimed: decimal("total_amount_claimed", { precision: 12, scale: 2 }),
+  totalAmountRecovered: decimal("total_amount_recovered", { precision: 12, scale: 2 }),
+  mostSuccessfulStrategy: varchar("most_successful_strategy"),
+  mostSuccessfulIssueType: varchar("most_successful_issue_type"),
+  recommendationRate: decimal("recommendation_rate", { precision: 5, scale: 2 }),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Case outcome history for tracking changes over time
+export const caseOutcomeHistory = pgTable("case_outcome_history", {
+  id: serial("id").primaryKey(),
+  caseId: integer("case_id").notNull(),
+  userId: varchar("user_id").notNull(),
+  previousOutcome: varchar("previous_outcome"),
+  newOutcome: varchar("new_outcome"),
+  previousStatus: varchar("previous_status"),
+  newStatus: varchar("new_status"),
+  changeReason: text("change_reason"),
+  amountRecovered: decimal("amount_recovered", { precision: 10, scale: 2 }),
+  strategyUsed: varchar("strategy_used"),
+  milestoneReached: varchar("milestone_reached"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Schema validation
 export const insertApplicationSchema = createInsertSchema(applications).omit({
   id: true,
@@ -251,6 +308,35 @@ export type InsertTimelineEvent = z.infer<typeof insertTimelineEventSchema>;
 export type TimelineEvent = typeof timelineEvents.$inferSelect;
 export type InsertContract = z.infer<typeof insertContractSchema>;
 export type Contract = typeof contracts.$inferSelect;
+
+// Outcome tracking validation schemas
+export const insertCaseOutcomeSchema = z.object({
+  outcome: z.enum(["successful", "partial_success", "unsuccessful", "settled", "ongoing"]),
+  outcomeDescription: z.string().optional(),
+  amountRecovered: z.number().optional(),
+  amountClaimed: z.number().optional(),
+  resolutionMethod: z.enum(["negotiation", "adjudication", "litigation", "settlement"]).optional(),
+  clientSatisfactionScore: z.number().min(1).max(10).optional(),
+  strategyEffectiveness: z.number().min(1).max(10).optional(),
+  wouldRecommend: z.boolean().optional(),
+  lessonsLearned: z.string().optional(),
+});
+
+export const insertSuccessMetricSchema = createInsertSchema(successMetrics).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertCaseOutcomeHistorySchema = createInsertSchema(caseOutcomeHistory).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Types for outcome tracking
+export type SuccessMetric = typeof successMetrics.$inferSelect;
+export type CaseOutcomeHistory = typeof caseOutcomeHistory.$inferSelect;
+export type CaseOutcomeUpdate = z.infer<typeof insertCaseOutcomeSchema>;
 export type InsertCalendarIntegration = z.infer<typeof insertCalendarIntegrationSchema>;
 export type CalendarIntegration = typeof calendarIntegrations.$inferSelect;
 export type InsertCalendarEvent = z.infer<typeof insertCalendarEventSchema>;

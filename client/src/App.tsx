@@ -15,6 +15,7 @@ import { AdminProtectedRoute } from "@/components/admin-protected-route";
 import CaseDetail from "@/pages/case-detail";
 import ContractDetail from "@/pages/contract-detail";
 import Calendar from "@/pages/calendar";
+import Analytics from "@/pages/analytics";
 import Checkout from "@/pages/checkout";
 import Settings from "@/pages/settings";
 import Profile from "@/pages/profile";
@@ -65,6 +66,9 @@ function Router() {
       </Route>
       <Route path="/calendar">
         <ProtectedRoute component={Calendar} />
+      </Route>
+      <Route path="/analytics">
+        <ProtectedRoute component={Analytics} />
       </Route>
       <Route path="/checkout">
         <ProtectedRoute component={Checkout} />
