@@ -10,86 +10,46 @@ export interface AdminSession {
 
 export class AdminAuthService {
   private fallbackSessions = new Map<string, AdminSession>();
-  // Authenticate admin with email/password - fallback system
+  
+  // Authenticate admin with hardcoded credentials only
   async authenticateAdmin(email: string, password: string): Promise<string | null> {
     const ADMIN_EMAIL = 'hello@projectresolveai.com';
     const ADMIN_PASSWORD = 'helloprojectresolveai';
 
-    try {
-      // Try Supabase Auth first
-      const { data: authData, error: authError } = await supabaseAdmin.auth.signInWithPassword({
-        email,
-        password
-      });
+    // Check hardcoded credentials
+    if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+      const sessionId = `admin_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const expiresAt = new Date();
+      expiresAt.setHours(expiresAt.getHours() + 24);
 
-      if (!authError && authData.user) {
-        // Check if user has admin role
-        const userRole = authData.user.user_metadata?.role || authData.user.app_metadata?.role;
-        const isAdmin = userRole === 'admin' || authData.user.user_metadata?.is_admin === true;
+      const adminSession: AdminSession = {
+        isAdmin: true,
+        email: ADMIN_EMAIL,
+        sessionId,
+        expiresAt,
+        userId: 'admin_user'
+      };
 
-        if (isAdmin) {
-          const sessionId = `admin_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-          const expiresAt = new Date();
-          expiresAt.setHours(expiresAt.getHours() + 24);
+      // Store in fallback sessions (memory)
+      this.fallbackSessions.set(sessionId, adminSession);
 
-          // Try to create session in database
-          try {
-            await supabaseAdmin
-              .from('admin_sessions')
-              .insert({
-                user_id: authData.user.id,
-                session_id: sessionId,
-                expires_at: expiresAt.toISOString()
-              });
-          } catch (sessionError) {
-            console.error('Database session creation failed, using fallback:', sessionError);
-          }
-
-          return sessionId;
-        }
+      // Also try to store in database if available
+      try {
+        await supabaseAdmin
+          .from('admin_sessions')
+          .insert({
+            user_id: 'admin_user',
+            session_id: sessionId,
+            expires_at: expiresAt.toISOString()
+          });
+      } catch (sessionError) {
+        console.log('Database session creation failed, using memory fallback:', sessionError);
       }
 
-      // Fallback to hardcoded credentials if Supabase fails
-      if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-        const sessionId = `admin_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        const expiresAt = new Date();
-        expiresAt.setHours(expiresAt.getHours() + 24);
-
-        // Store in memory as fallback
-        this.fallbackSessions.set(sessionId, {
-          isAdmin: true,
-          email: ADMIN_EMAIL,
-          sessionId,
-          expiresAt,
-          userId: 'fallback-admin-user'
-        });
-
-        return sessionId;
-      }
-
-      return null;
-    } catch (error) {
-      console.error('Admin authentication error:', error);
-      
-      // Final fallback to hardcoded credentials
-      if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-        const sessionId = `admin_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        const expiresAt = new Date();
-        expiresAt.setHours(expiresAt.getHours() + 24);
-
-        this.fallbackSessions.set(sessionId, {
-          isAdmin: true,
-          email: ADMIN_EMAIL,
-          sessionId,
-          expiresAt,
-          userId: 'fallback-admin-user'
-        });
-
-        return sessionId;
-      }
-
-      return null;
+      return sessionId;
     }
+
+    return null;
   }
 
   // Validate admin session with fallback support
@@ -98,34 +58,38 @@ export class AdminAuthService {
       // Check fallback sessions first
       const fallbackSession = this.fallbackSessions.get(sessionId);
       if (fallbackSession) {
-        // Check if session expired
-        if (new Date() > fallbackSession.expiresAt) {
+        if (fallbackSession.expiresAt > new Date()) {
+          return fallbackSession;
+        } else {
           this.fallbackSessions.delete(sessionId);
-          return null;
         }
-        return fallbackSession;
       }
 
-      // Check session in database
+      // Try to get from database
       const { data: sessionData, error } = await supabaseAdmin
         .from('admin_sessions')
-        .select('*, auth_users:user_id(email)')
+        .select('*')
         .eq('session_id', sessionId)
-        .gt('expires_at', new Date().toISOString())
         .single();
 
-      if (error || !sessionData) {
-        console.error('Session validation error:', error);
-        return null;
+      if (!error && sessionData) {
+        const session: AdminSession = {
+          isAdmin: true,
+          email: 'hello@projectresolveai.com',
+          sessionId: sessionData.session_id,
+          expiresAt: new Date(sessionData.expires_at),
+          userId: sessionData.user_id
+        };
+
+        if (session.expiresAt > new Date()) {
+          return session;
+        } else {
+          // Session expired, clean it up
+          await this.logoutAdmin(sessionId);
+        }
       }
 
-      return {
-        isAdmin: true,
-        email: sessionData.auth_users?.email || '',
-        sessionId: sessionData.session_id,
-        expiresAt: new Date(sessionData.expires_at),
-        userId: sessionData.user_id
-      };
+      return null;
     } catch (error) {
       console.error('Session validation error:', error);
       return null;
@@ -176,15 +140,14 @@ export const authenticateAdmin = async (req: any, res: any, next: any) => {
     // Clean expired sessions periodically
     await adminAuthService.cleanExpiredSessions();
 
-    const sessionId = req.headers['x-admin-session'] || req.cookies?.adminSession;
-    
+    const sessionId = req.cookies?.admin_session_id;
     if (!sessionId) {
-      return res.status(401).json({ message: 'Admin authentication required' });
+      return res.status(401).json({ message: 'No admin session' });
     }
 
     const session = await adminAuthService.validateAdminSession(sessionId);
     if (!session) {
-      return res.status(401).json({ message: 'Invalid or expired admin session' });
+      return res.status(401).json({ message: 'Invalid admin session' });
     }
 
     req.adminSession = session;
