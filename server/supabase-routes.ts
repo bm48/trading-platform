@@ -151,10 +151,10 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
       console.log('Application created successfully:', application);
 
       // Send welcome email (non-blocking)
-      if (application.data.email && (application.data.fullName || application.data.full_name)) {
+      if (application.email && (application.full_name || applicationData.fullName)) {
         try {
-          const name = application.data.fullName || application.data.full_name;
-          await sendWelcomeEmail(application.data.email, name);
+          const name = application.full_name || applicationData.fullName;
+          await sendWelcomeEmail(application.email, name);
           console.log('Welcome email sent successfully');
         } catch (emailError) {
           console.warn('Failed to send welcome email:', emailError);
@@ -162,7 +162,7 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
         }
       }
 
-      res.status(201).json(application);
+      res.status(201).json({ data: application, error: null });
     } catch (error) {
       console.error("Error creating application:", error);
       console.error("Error details:", {
