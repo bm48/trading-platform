@@ -482,44 +482,20 @@ export class SupabaseStorage {
   }
 
   // Application operations
-  async createApplication(application: any): Promise<Application> {
+  // Application operations - fully integrated with Supabase
+  async createApplication(applicationData: any): Promise<Application> {
     try {
-      console.log('Creating application with data:', application);
+      console.log('Creating application with Supabase:', applicationData);
       
-      // Clean and validate required fields
-      if (!application.fullName || !application.phone || !application.email || 
-          !application.trade || !application.state || !application.issueType || 
-          !application.description) {
-        throw new Error('Missing required fields for application');
-      }
-
-      // Map frontend camelCase to database snake_case for Supabase
-      const dbData = {
-        user_id: application.user_id || application.userId || null,
-        full_name: application.fullName,
-        phone: application.phone,
-        email: application.email,
-        trade: application.trade,
-        state: application.state,
-        issue_type: application.issueType,
-        amount: application.amount ? parseFloat(application.amount.toString()) : null,
-        start_date: application.startDate ? new Date(application.startDate).toISOString() : null,
-        description: application.description,
-        status: 'pending'
-      };
-
-      console.log('Inserting to Supabase with data:', dbData);
-
       const { data, error } = await supabase
         .from('applications')
-        .insert(dbData)
+        .insert(applicationData)
         .select()
         .single();
 
       if (error) {
         console.error('Supabase error creating application:', error);
-        console.error('Full error details:', JSON.stringify(error, null, 2));
-        throw new Error(`Database error: ${error.message || error.details || 'Tables may not exist in Supabase database'}`);
+        throw new Error(`Database error: ${error.message}`);
       }
 
       console.log('Application created successfully in Supabase:', data);
@@ -527,6 +503,46 @@ export class SupabaseStorage {
     } catch (error) {
       console.error('Error creating application:', error);
       throw error;
+    }
+  }
+
+  async getApplication(id: number): Promise<Application | undefined> {
+    try {
+      const { data, error } = await supabase
+        .from('applications')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching application:', error);
+        return undefined;
+      }
+      
+      return data as Application;
+    } catch (error) {
+      console.error('Error fetching application:', error);
+      return undefined;
+    }
+  }
+
+  async getUserApplications(userId: string): Promise<Application[]> {
+    try {
+      const { data, error } = await supabase
+        .from('applications')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error('Error fetching user applications:', error);
+        return [];
+      }
+      
+      return data as Application[];
+    } catch (error) {
+      console.error('Error fetching user applications:', error);
+      return [];
     }
   }
 

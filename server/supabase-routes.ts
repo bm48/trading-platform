@@ -1,5 +1,6 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
+import { supabase } from "./db";
 import { supabaseAdmin, userManagement, database } from "./supabase";
 import { authenticateUser, optionalAuth } from "./supabase-auth";
 import { supabaseStorageService } from "./supabase-storage-service";
@@ -130,7 +131,7 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     try {
       console.log('Received application data:', req.body);
       
-      // Validate required fields
+      // Validate required fields (using camelCase from frontend)
       const requiredFields = ['fullName', 'phone', 'email', 'trade', 'state', 'issueType', 'description'];
       const missingFields = requiredFields.filter(field => !req.body[field]);
       
@@ -140,21 +141,44 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
         });
       }
 
+      // Map frontend camelCase to database snake_case
       const applicationData = {
-        ...req.body,
         user_id: req.user?.id || null,
-        created_at: new Date().toISOString()
+        full_name: req.body.fullName,
+        phone: req.body.phone,
+        email: req.body.email,
+        trade: req.body.trade,
+        state: req.body.state,
+        issue_type: req.body.issueType,
+        amount: req.body.amount ? parseFloat(req.body.amount) : null,
+        start_date: req.body.startDate ? new Date(req.body.startDate).toISOString() : null,
+        description: req.body.description,
+        status: 'pending'
       };
 
-      console.log('Creating application with database...');
-      const application = await database.createApplication(applicationData);
+      console.log('Creating application with Supabase...');
+      
+      // Direct Supabase insertion
+      const { data: application, error } = await supabase
+        .from('applications')
+        .insert(applicationData)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Supabase error creating application:', error);
+        return res.status(500).json({ 
+          message: 'Failed to create application',
+          error: error.message 
+        });
+      }
+
       console.log('Application created successfully:', application);
 
       // Send welcome email (non-blocking)
-      if (application.email && (application.full_name || applicationData.fullName)) {
+      if (application.email && application.full_name) {
         try {
-          const name = application.full_name || applicationData.fullName;
-          await sendWelcomeEmail(application.email, name);
+          await sendWelcomeEmail(application.email, application.full_name);
           console.log('Welcome email sent successfully');
         } catch (emailError) {
           console.warn('Failed to send welcome email:', emailError);

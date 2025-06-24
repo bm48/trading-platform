@@ -34,23 +34,23 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Applications (initial form submissions)
+// Applications (initial form submissions) - Supabase table structure
 export const applications = pgTable("applications", {
   id: serial("id").primaryKey(),
-  userId: varchar("user_id"), // UUID reference to users.id, nullable for anonymous submissions
-  fullName: varchar("full_name").notNull(),
+  user_id: varchar("user_id"), // UUID reference to auth.users.id, nullable for anonymous submissions
+  full_name: varchar("full_name").notNull(),
   phone: varchar("phone").notNull(),
   email: varchar("email").notNull(),
   trade: varchar("trade").notNull(),
   state: varchar("state").notNull(),
-  issueType: varchar("issue_type").notNull(),
+  issue_type: varchar("issue_type").notNull(),
   amount: decimal("amount"),
-  startDate: timestamp("start_date"),
+  start_date: timestamp("start_date"),
   description: text("description").notNull(),
   status: varchar("status").default("pending"), // pending, approved, rejected
-  aiAnalysis: jsonb("ai_analysis"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  ai_analysis: jsonb("ai_analysis"),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
 });
 
 // Cases (after payment and detailed processing)
@@ -241,8 +241,10 @@ export const insertCalendarEventSchema = createInsertSchema(calendarEvents).omit
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
-export type InsertApplication = z.infer<typeof insertApplicationSchema>;
+
+// Application types for Supabase integration
 export type Application = typeof applications.$inferSelect;
+export type InsertApplication = typeof applications.$inferInsert;
 export type InsertCase = z.infer<typeof insertCaseSchema>;
 export type Case = typeof cases.$inferSelect;
 export type InsertDocument = z.infer<typeof insertDocumentSchema>;
@@ -255,3 +257,11 @@ export type InsertCalendarIntegration = z.infer<typeof insertCalendarIntegration
 export type CalendarIntegration = typeof calendarIntegrations.$inferSelect;
 export type InsertCalendarEvent = z.infer<typeof insertCalendarEventSchema>;
 export type CalendarEvent = typeof calendarEvents.$inferSelect;
+
+// Create insert schema for applications
+export const insertApplicationSchema = createInsertSchema(applications).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
+export type InsertApplicationType = z.infer<typeof insertApplicationSchema>;
