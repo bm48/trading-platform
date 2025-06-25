@@ -30,7 +30,24 @@ import {
 import { Link } from 'wouter';
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
+  const { toast } = useToast();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast({
+        title: "Signed Out",
+        description: "You have been successfully signed out",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Sign Out Failed",
+        description: error.message || "Failed to sign out",
+        variant: "destructive",
+      });
+    }
+  };
   const [showNewCaseForm, setShowNewCaseForm] = useState(false);
   const [showNewContractForm, setShowNewContractForm] = useState(false);
   

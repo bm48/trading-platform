@@ -1,92 +1,91 @@
-import { useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
-import { useEffect, useState } from "react";
-import type { User } from "@supabase/supabase-js";
-import { useToast } from "@/hooks/use-toast";
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
+import type { User, Session } from '@supabase/supabase-js';
+
+interface AuthState {
+  user: User | null;
+  session: Session | null;
+  loading: boolean;
+  isAuthenticated: boolean;
+}
 
 export function useAuth() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState<User | null>(null);
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
+  const [authState, setAuthState] = useState<AuthState>({
+    user: null,
+    session: null,
+    loading: true,
+    isAuthenticated: false,
+  });
 
   useEffect(() => {
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setIsLoading(false);
-    });
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      setIsLoading(false);
+    const getInitialSession = async () => {
+      const { data: { session }, error } = await supabase.auth.getSession();
       
-      // Clear all queries when auth state changes
-      queryClient.invalidateQueries();
-    });
-
-    return () => subscription.unsubscribe();
-  }, [queryClient]);
-
-  const logout = async () => {
-    try {
-      console.log("Starting logout process...");
-      
-      // Sign out from Supabase
-      const { error } = await supabase.auth.signOut();
       if (error) {
-        console.error("Supabase logout error:", error);
-        throw error;
+        console.error('Error getting session:', error);
       }
       
-      // Clear all cached queries
-      queryClient.clear();
-      
-      // Clear local user state
-      setUser(null);
-      
-      // Show success message
-      toast({
-        title: "Logged out successfully",
-        description: "You have been signed out of your account.",
+      setAuthState({
+        user: session?.user || null,
+        session,
+        loading: false,
+        isAuthenticated: !!session?.user,
       });
-      
-      console.log("Logout successful, redirecting...");
-      
-      // Small delay before redirect to allow toast to show
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 1000);
-      
-    } catch (error) {
-      console.error("Error during logout:", error);
-      
-      // Show error message
-      toast({
-        title: "Logout error",
-        description: "There was an issue logging out. Redirecting anyway...",
-        variant: "destructive",
-      });
-      
-      // Clear local state and redirect even if there's an error
-      setUser(null);
-      queryClient.clear();
-      
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 1500);
+    };
+
+    getInitialSession();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.email);
+        
+        setAuthState({
+          user: session?.user || null,
+          session,
+          loading: false,
+          isAuthenticated: !!session?.user,
+        });
+      }
+    );
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const signInWithGoogle = async () => {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent',
+        },
+      },
+    });
+
+    if (error) {
+      console.error('Error signing in with Google:', error);
+      throw error;
+    }
+
+    return data;
+  };
+
+  const signOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error('Error signing out:', error);
+      throw error;
     }
   };
 
   return {
-    user,
-    isLoading,
-    isAuthenticated: !!user,
-    role: user?.user_metadata?.role || 'user',
-    isAdmin: user?.user_metadata?.role === 'admin',
-    logout,
+    ...authState,
+    signInWithGoogle,
+    signOut,
   };
 }

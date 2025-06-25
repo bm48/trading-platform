@@ -180,16 +180,7 @@ export const contracts = pgTable("contracts", {
   updated_at: timestamp("updated_at").defaultNow(),
 });
 
-// Schema validation
-export const insertApplicationSchema = createInsertSchema(applications).omit({
-  id: true,
-  userId: true,
-  status: true,
-  createdAt: true,
-  updatedAt: true,
-}).extend({
-  startDate: z.string().optional().transform((val) => val ? new Date(val) : undefined),
-});
+// Schema validation (moved to end of file to avoid duplicates)
 
 export const insertCaseSchema = createInsertSchema(cases).omit({
   id: true,
@@ -246,7 +237,7 @@ export const insertCalendarEventSchema = createInsertSchema(calendarEvents).omit
 });
 
 // Types
-export type UpsertUser = typeof users.$inferInsert;
+export type InsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 
 // Application types for Supabase integration
@@ -265,10 +256,14 @@ export type CalendarIntegration = typeof calendarIntegrations.$inferSelect;
 export type InsertCalendarEvent = z.infer<typeof insertCalendarEventSchema>;
 export type CalendarEvent = typeof calendarEvents.$inferSelect;
 
-// Create insert schema for applications
+// Application insert schema with proper validation
 export const insertApplicationSchema = createInsertSchema(applications).omit({
   id: true,
+  user_id: true,
+  status: true,
   created_at: true,
   updated_at: true,
+}).extend({
+  start_date: z.string().optional().transform((val) => val ? new Date(val) : undefined),
 });
 export type InsertApplicationType = z.infer<typeof insertApplicationSchema>;

@@ -9,10 +9,23 @@ import { scrollToElement } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import { authHelpers } from '@/lib/supabase';
 import AdminLogin from './admin-login'
 
 export default function Landing() {
+  const { isAuthenticated, signInWithGoogle } = useAuth();
+  const { toast } = useToast();
+
+  const handleGoogleSignIn = async () => {
+    try {
+      await signInWithGoogle();
+    } catch (error: any) {
+      toast({
+        title: "Sign In Failed",
+        description: error.message || "Failed to sign in with Google",
+        variant: "destructive",
+      });
+    }
+  };
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [isSignUpMode, setIsSignUpMode] = useState(false);
