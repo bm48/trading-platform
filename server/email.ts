@@ -244,3 +244,71 @@ export async function sendStrategyPackEmail(
     return false;
   }
 }
+
+export async function sendApplicationConfirmationEmail(
+  email: string,
+  fullName: string,
+  applicationId: number
+): Promise<void> {
+  if (!EMAIL_ENABLED) {
+    console.log(`Application confirmation email would be sent to ${email} (${fullName}) for application #${applicationId}`);
+    return;
+  }
+
+  try {
+    const mailOptions = {
+      from: `"Project Resolve AI" <${SMTP_FROM}>`,
+      to: email,
+      subject: 'Application Received - Project Resolve AI',
+      html: `
+        <div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif; background: #F8F9FA;">
+          <div style="background: linear-gradient(135deg, #1565C0 0%, #0D47A1 100%); color: white; padding: 30px; text-align: center;">
+            <h1 style="margin: 0; font-size: 28px; font-weight: bold;">Project Resolve AI</h1>
+            <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">Legal Support for Australian Tradespeople</p>
+          </div>
+          
+          <div style="padding: 40px 30px; background: white; margin: 0;">
+            <h2 style="color: #1565C0; margin-top: 0;">Application Received Successfully!</h2>
+            
+            <p>Hi ${fullName},</p>
+            
+            <p>Thank you for submitting your application to Project Resolve AI. We've received your case details and our AI is now reviewing your situation.</p>
+            
+            <div style="background: #E3F2FD; padding: 20px; border-radius: 8px; border-left: 4px solid #1565C0; margin: 20px 0;">
+              <h3 style="color: #1565C0; margin-top: 0;">Application #${applicationId}</h3>
+              <p style="margin: 10px 0 0 0; color: #37474F;">Your application has been assigned ID #${applicationId} for tracking.</p>
+            </div>
+            
+            <div style="background: #FFF3E0; padding: 20px; border-radius: 8px; border-left: 4px solid #FF8F00; margin: 20px 0;">
+              <h3 style="color: #F57C00; margin-top: 0;">What happens next?</h3>
+              <ol style="color: #37474F; padding-left: 20px; margin: 10px 0;">
+                <li><strong>AI Review (Within 24 hours)</strong> - Our AI analyzes your case</li>
+                <li><strong>Approval & Payment Link</strong> - If approved, you'll receive a payment link for $299</li>
+                <li><strong>Detailed Intake Form</strong> - Complete our comprehensive questionnaire</li>
+                <li><strong>Strategy Pack Creation</strong> - Custom AI-generated legal strategy and documents</li>
+                <li><strong>Dashboard Access</strong> - Full access to case management tools</li>
+              </ol>
+            </div>
+            
+            <p style="color: #37474F;">We'll notify you as soon as your application has been reviewed. Check your email regularly for updates.</p>
+            
+            <p style="color: #78909C; font-size: 14px; margin-top: 30px;">
+              If you have any questions, please contact our support team. We're here to help you resolve your legal issues.
+            </p>
+          </div>
+          
+          <div style="background: #37474F; color: white; padding: 20px; text-align: center; font-size: 14px;">
+            <p style="margin: 0;">© 2024 Project Resolve AI - Legal Support for Australian Tradespeople</p>
+            <p style="margin: 5px 0 0 0; color: #B0BEC5;">This platform provides information services, not legal advice.</p>
+          </div>
+        </div>
+      `,
+    };
+
+    await transporter!.sendMail(mailOptions);
+    console.log(`Application confirmation email sent successfully to ${email}`);
+  } catch (error) {
+    console.error('Error sending application confirmation email:', error);
+    throw error;
+  }
+}

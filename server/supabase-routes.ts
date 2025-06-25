@@ -6,7 +6,7 @@ import { authenticateUser, optionalAuth } from "./supabase-auth";
 import { supabaseStorageService } from "./supabase-storage-service";
 import { supabaseStorage } from "./supabase-storage";
 import { analyzeCase, generateStrategyPack } from "./openai";
-import { sendWelcomeEmail, sendApprovalEmail, sendRejectionEmail, sendStrategyPackEmail } from "./email";
+import { sendWelcomeEmail, sendApprovalEmail, sendRejectionEmail, sendStrategyPackEmail, sendApplicationConfirmationEmail } from "./email";
 import { generateStrategyPackPDF, generateAIStrategyPackPDF } from "./pdf";
 import { calendarService } from "./calendar-service";
 import { adminService } from "./admin-service";
@@ -186,6 +186,16 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
         }
       }
 
+      // Send application notification email
+      if (application.email && application.full_name) {
+        try {
+          await sendApplicationConfirmationEmail(application.email, application.full_name, application.id);
+          console.log('Application confirmation email sent successfully');
+        } catch (emailError) {
+          console.warn('Failed to send application confirmation email:', emailError);
+        }
+      }
+
       res.status(201).json({ data: application, error: null });
     } catch (error) {
       console.error("Error creating application:", error);
@@ -198,6 +208,128 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
         message: "Failed to create application",
         details: error instanceof Error ? error.message : 'Unknown error'
       });
+    }
+  });
+
+  // Get application by ID for status tracking
+  app.get('/api/applications/:id', optionalAuth, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      
+      const { data: application, error } = await supabase
+        .from('applications')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching application:', error);
+        return res.status(404).json({ message: 'Application not found' });
+      }
+
+      res.json(application);
+    } catch (error) {
+      console.error('Error fetching application:', error);
+      res.status(500).json({ message: 'Failed to fetch application' });
+    }
+  });
+
+  // Submit intake form for application
+  app.post('/api/applications/:id/intake', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const intakeData = req.body;
+
+      // Update application with intake data
+      const { data: application, error } = await supabase
+        .from('applications')
+        .update({
+          workflow_stage: 'pdf_generation',
+          intake_completed: true,
+          ai_analysis: intakeData,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .eq('user_id', req.user?.id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating application with intake:', error);
+        return res.status(500).json({ message: 'Failed to submit intake form' });
+      }
+
+      // Trigger AI strategy generation (async)
+      try {
+        console.log(`Starting AI strategy generation for application ${id}`);
+        
+        // Simulate AI processing delay and then update to dashboard_access
+        setTimeout(async () => {
+          await supabase
+            .from('applications')
+            .update({
+              workflow_stage: 'dashboard_access',
+              pdf_generated: true,
+              dashboard_access_granted: true,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', id);
+        }, 5000);
+      } catch (aiError) {
+        console.warn('AI generation trigger failed:', aiError);
+      }
+
+      res.json({ data: application, message: 'Intake form submitted successfully' });
+    } catch (error) {
+      console.error('Error submitting intake form:', error);
+      res.status(500).json({ message: 'Failed to submit intake form' });
+    }
+  });
+
+  // Admin route to approve/reject applications
+  app.post('/api/admin/applications/:id/review', authenticateAdmin, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { decision, notes } = req.body;
+
+      const updateData: any = {
+        status: decision,
+        updated_at: new Date().toISOString()
+      };
+
+      if (decision === 'approved') {
+        updateData.workflow_stage = 'payment_pending';
+      } else {
+        updateData.workflow_stage = 'rejected';
+      }
+
+      const { data: application, error } = await supabase
+        .from('applications')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating application status:', error);
+        return res.status(500).json({ message: 'Failed to update application' });
+      }
+
+      // Send appropriate email
+      try {
+        if (decision === 'approved') {
+          await sendApprovalEmail(application.email, application.full_name, application.id);
+        } else {
+          await sendRejectionEmail(application.email, application.full_name, notes || 'Application did not meet requirements');
+        }
+      } catch (emailError) {
+        console.warn('Failed to send notification email:', emailError);
+      }
+
+      res.json({ data: application, message: `Application ${decision} successfully` });
+    } catch (error) {
+      console.error('Error reviewing application:', error);
+      res.status(500).json({ message: 'Failed to review application' });
     }
   });
 

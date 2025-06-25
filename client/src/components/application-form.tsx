@@ -100,12 +100,17 @@ export default function ApplicationForm() {
     mutationFn: async (data: ApplicationFormData) => {
       return await apiRequest('POST', '/api/applications', data);
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast({
         title: "Application Submitted Successfully!",
         description: "Check your email for confirmation and next steps.",
       });
       setFormData(initialFormData);
+      
+      // Redirect to application status page
+      if (data?.data?.id) {
+        window.location.href = `/application-status/${data.data.id}`;
+      }
     },
     onError: (error: any) => {
       toast({

@@ -34,7 +34,7 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Applications (initial form submissions) - Supabase table structure
+// Applications (initial form submissions) - Supabase table structure with workflow stages
 export const applications = pgTable("applications", {
   id: serial("id").primaryKey(),
   user_id: varchar("user_id"), // UUID reference to auth.users.id, nullable for anonymous submissions
@@ -48,6 +48,13 @@ export const applications = pgTable("applications", {
   start_date: timestamp("start_date"),
   description: text("description").notNull(),
   status: varchar("status").default("pending"), // pending, approved, rejected
+  workflow_stage: varchar("workflow_stage").default("submitted"), // submitted, ai_reviewed, payment_pending, intake_pending, pdf_generation, dashboard_access
+  payment_status: varchar("payment_status").default("pending"), // pending, completed, failed
+  payment_amount: decimal("payment_amount").default("299.00"),
+  intake_completed: boolean("intake_completed").default(false),
+  pdf_generated: boolean("pdf_generated").default(false),
+  dashboard_access_granted: boolean("dashboard_access_granted").default(false),
+  monthly_subscription_offered: boolean("monthly_subscription_offered").default(false),
   ai_analysis: jsonb("ai_analysis"),
   created_at: timestamp("created_at").defaultNow(),
   updated_at: timestamp("updated_at").defaultNow(),
