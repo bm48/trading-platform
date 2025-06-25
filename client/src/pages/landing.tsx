@@ -12,8 +12,16 @@ import { useToast } from '@/hooks/use-toast';
 import AdminLogin from './admin-login'
 
 export default function Landing() {
-  const { isAuthenticated, signInWithGoogle } = useAuth();
+  const { user, isAuthenticated, signInWithGoogle, signOut } = useAuth();
+  const queryClient = useQueryClient();
   const { toast } = useToast();
+  
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showAdminLogin, setShowAdminLogin] = useState(false);
+  const [isSignUpMode, setIsSignUpMode] = useState(false);
+  const [adminEmail, setAdminEmail] = useState('hello@projectresolveai.com');
+  const [adminPassword, setAdminPassword] = useState('');
+  const [adminLoading, setAdminLoading] = useState(false);
 
   const handleGoogleSignIn = async () => {
     try {
@@ -26,20 +34,10 @@ export default function Landing() {
       });
     }
   };
-  const [showLoginModal, setShowLoginModal] = useState(false);
-  const [showAdminLogin, setShowAdminLogin] = useState(false);
-  const [isSignUpMode, setIsSignUpMode] = useState(false);
-  const [adminEmail, setAdminEmail] = useState('hello@projectresolveai.com');
-  const [adminPassword, setAdminPassword] = useState('');
-  const [adminLoading, setAdminLoading] = useState(false);
-  const { user, isAuthenticated } = useAuth();
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
 
   const handleLogout = async () => {
     try {
-      const { error } = await authHelpers.signOut();
-      if (error) throw error;
+      await signOut();
       
       // Clear all cached queries
       queryClient.clear();
