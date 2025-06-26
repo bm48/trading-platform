@@ -12,7 +12,7 @@ import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 
 // Check if Stripe is configured
-const STRIPE_ENABLED = !!import.meta.env.VITE_STRIPE_PUBLIC_KEY;
+const STRIPE_ENABLED = !!import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
 import { formatCurrency } from '@/lib/utils';
 import { 
   Shield, 
@@ -26,7 +26,7 @@ import {
   ArrowLeft
 } from 'lucide-react';
 
-const stripePromise = STRIPE_ENABLED ? loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY) : null;
+const stripePromise = STRIPE_ENABLED ? loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY) : null;
 
 interface CheckoutFormProps {
   clientSecret: string;
