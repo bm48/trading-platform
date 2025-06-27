@@ -30,7 +30,7 @@ export default function Landing() {
   // Handle authentication state changes - close modals and redirect if authenticated
   useEffect(() => {
     if (isAuthenticated && user) {
-      console.log('User is authenticated on landing page, closing modals');
+      console.log('User is authenticated on landing page, redirecting to dashboard');
       
       // Close any open modals
       setShowLoginModal(false);
@@ -41,21 +41,24 @@ export default function Landing() {
       const accessToken = hashParams.get('access_token');
       
       if (accessToken) {
-        console.log('OAuth callback detected on landing page, redirecting to dashboard');
+        console.log('OAuth callback detected on landing page with access token');
         // Clear the hash to clean up URL
         window.history.replaceState(null, '', window.location.pathname);
-        
-        // Check for pending workflow
-        const redirectAfterAuth = sessionStorage.getItem('redirectAfterAuth');
-        const pendingApplicationId = sessionStorage.getItem('pendingApplicationId');
-        
-        if (redirectAfterAuth === 'checkout-subscription' && pendingApplicationId) {
-          sessionStorage.removeItem('redirectAfterAuth');
-          sessionStorage.removeItem('pendingApplicationId');
-          setLocation('/checkout?subscription=monthly');
-        } else {
-          setLocation('/dashboard');
-        }
+      }
+      
+      // Always redirect authenticated users to dashboard from landing page
+      // Check for pending workflow first
+      const redirectAfterAuth = sessionStorage.getItem('redirectAfterAuth');
+      const pendingApplicationId = sessionStorage.getItem('pendingApplicationId');
+      
+      if (redirectAfterAuth === 'checkout-subscription' && pendingApplicationId) {
+        console.log('Redirecting to checkout subscription flow');
+        sessionStorage.removeItem('redirectAfterAuth');
+        sessionStorage.removeItem('pendingApplicationId');
+        setLocation('/checkout?subscription=monthly');
+      } else {
+        console.log('Redirecting authenticated user to dashboard');
+        setLocation('/dashboard');
       }
     }
   }, [isAuthenticated, user, setLocation]);
