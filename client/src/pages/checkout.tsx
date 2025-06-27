@@ -21,6 +21,114 @@ import {
 
 const stripePromise = STRIPE_ENABLED ? loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY) : null;
 
+interface DemoPaymentFormProps {
+  onComplete: () => void;
+}
+
+function DemoPaymentForm({ onComplete }: DemoPaymentFormProps) {
+  const [formData, setFormData] = useState({
+    cardNumber: '',
+    expiry: '',
+    cvc: '',
+    name: ''
+  });
+  const [isFormValid, setIsFormValid] = useState(false);
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  // Check if form is valid
+  useEffect(() => {
+    const isValid = formData.cardNumber.replace(/\s/g, '').length >= 16 && 
+                   formData.expiry.length >= 5 && 
+                   formData.cvc.length >= 3 && 
+                   formData.name.length >= 2;
+    setIsFormValid(isValid);
+  }, [formData]);
+
+  const formatCardNumber = (value: string) => {
+    return value.replace(/\s+/g, '').replace(/(\d{4})(?=\d)/g, '$1 ').trim().slice(0, 19);
+  };
+
+  const formatExpiry = (value: string) => {
+    return value.replace(/\D/g, '').replace(/(\d{2})(\d)/, '$1/$2').slice(0, 5);
+  };
+
+  const formatCVC = (value: string) => {
+    return value.replace(/\D/g, '').slice(0, 4);
+  };
+
+  return (
+    <div className="py-8">
+      <h3 className="text-lg font-semibold mb-4 text-center">Payment Details</h3>
+      <p className="text-gray-600 mb-6 text-center">Enter your payment information to complete your $49/month subscription.</p>
+      
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Card Number</label>
+          <input 
+            type="text" 
+            placeholder="1234 5678 9012 3456" 
+            value={formData.cardNumber}
+            onChange={(e) => handleInputChange('cardNumber', formatCardNumber(e.target.value))}
+            className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          />
+        </div>
+        
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Expiry Date</label>
+            <input 
+              type="text" 
+              placeholder="MM/YY" 
+              value={formData.expiry}
+              onChange={(e) => handleInputChange('expiry', formatExpiry(e.target.value))}
+              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">CVC</label>
+            <input 
+              type="text" 
+              placeholder="123" 
+              value={formData.cvc}
+              onChange={(e) => handleInputChange('cvc', formatCVC(e.target.value))}
+              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+        </div>
+        
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Cardholder Name</label>
+          <input 
+            type="text" 
+            placeholder="Full name as shown on card" 
+            value={formData.name}
+            onChange={(e) => handleInputChange('name', e.target.value)}
+            className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          />
+        </div>
+      </div>
+      
+      <Button 
+        onClick={onComplete}
+        disabled={!isFormValid}
+        className="w-full mt-6"
+        size="lg"
+      >
+        Subscribe for $49/month
+      </Button>
+      
+      {!isFormValid && (
+        <p className="text-sm text-gray-500 text-center mt-2">
+          Please fill out all fields to continue
+        </p>
+      )}
+    </div>
+  );
+}
+
 interface CheckoutFormProps {
   clientSecret: string;
   onSuccess: () => void;
@@ -270,59 +378,7 @@ export default function Checkout() {
                     <p className="text-gray-600">Setting up payment...</p>
                   </div>
                 ) : paymentIntent?.demo_mode ? (
-                  <div className="text-center py-8">
-                    <h3 className="text-lg font-semibold mb-4">Demo Payment Form</h3>
-                    <p className="text-gray-600 mb-6">Fill out this demo payment form to complete your $49/month subscription.</p>
-                    <div className="bg-gray-100 p-6 rounded-lg mb-6 text-left">
-                      <div className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Card Number</label>
-                          <input 
-                            type="text" 
-                            placeholder="4242 4242 4242 4242" 
-                            className="w-full p-3 border border-gray-300 rounded-md"
-                            readOnly 
-                          />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Expiry</label>
-                            <input 
-                              type="text" 
-                              placeholder="12/25" 
-                              className="w-full p-3 border border-gray-300 rounded-md"
-                              readOnly 
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">CVC</label>
-                            <input 
-                              type="text" 
-                              placeholder="123" 
-                              className="w-full p-3 border border-gray-300 rounded-md"
-                              readOnly 
-                            />
-                          </div>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Cardholder Name</label>
-                          <input 
-                            type="text" 
-                            placeholder="John Smith" 
-                            className="w-full p-3 border border-gray-300 rounded-md"
-                            readOnly 
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    <Button 
-                      onClick={handlePaymentSuccess}
-                      className="w-full"
-                      size="lg"
-                    >
-                      Subscribe for $49/month
-                    </Button>
-                  </div>
+                  <DemoPaymentForm onComplete={handlePaymentSuccess} />
                 ) : paymentIntent?.client_secret ? (
                   <Elements stripe={stripePromise} options={{ clientSecret: paymentIntent.client_secret }}>
                     <CheckoutForm 
