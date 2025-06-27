@@ -1734,9 +1734,10 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'Case not found' });
       }
 
-      // Check case ownership 
-      if (caseData.userId !== userId) {
-        console.log(`Access denied: Case belongs to ${caseData.userId}, request from ${userId}`);
+      // Check case ownership - database returns user_id column, not userId
+      const caseUserId = (caseData as any).user_id || caseData.userId;
+      if (caseUserId !== userId) {
+        console.log(`Access denied: Case belongs to ${caseUserId}, request from ${userId}`);
         return res.status(403).json({ message: 'Access denied' });
       }
 
@@ -1770,8 +1771,9 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'Case not found' });
       }
 
-      // Check case ownership
-      if (caseData.userId !== userId) {
+      // Check case ownership - database returns user_id column, not userId
+      const caseUserId = (caseData as any).user_id || caseData.userId;
+      if (caseUserId !== userId) {
         return res.status(403).json({ message: 'Access denied' });
       }
 
