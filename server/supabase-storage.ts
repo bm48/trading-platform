@@ -1,5 +1,5 @@
 import { supabase } from "./db";
-import type { User, Case, Contract, Document, TimelineEvent, Application, CalendarIntegration, CalendarEvent, Notification, InsertNotification } from '@shared/schema';
+import type { User, Case, Contract, Document, TimelineEvent, Application, CalendarIntegration, CalendarEvent, Notification, InsertNotification, AiDocument, InsertAiDocument } from '@shared/schema';
 import type { NotificationFilters } from './notification-service';
 
 // Supabase-based storage implementation
@@ -1046,6 +1046,159 @@ export class SupabaseStorage {
       console.error('Error deleting expired notifications:', error);
       throw new Error(`Failed to delete expired notifications: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
+  }
+
+  // AI-Generated Documents operations
+  async createAiDocument(documentData: InsertAiDocument): Promise<AiDocument> {
+    try {
+      const { data, error } = await supabase
+        .from('ai_generated_documents')
+        .insert(documentData)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating AI document:', error);
+        throw new Error(`Failed to create AI document: ${error.message}`);
+      }
+
+      return data as AiDocument;
+    } catch (error) {
+      console.error('Error creating AI document:', error);
+      throw new Error(`Failed to create AI document: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  async getAiDocument(documentId: number): Promise<AiDocument | undefined> {
+    try {
+      const { data, error } = await supabase
+        .from('ai_generated_documents')
+        .select('*')
+        .eq('id', documentId)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          return undefined;
+        }
+        console.error('Error fetching AI document:', error);
+        throw new Error(`Failed to fetch AI document: ${error.message}`);
+      }
+
+      return data as AiDocument;
+    } catch (error) {
+      console.error('Error fetching AI document:', error);
+      throw new Error(`Failed to fetch AI document: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  async getAiDocumentsByCase(caseId: number): Promise<AiDocument[]> {
+    try {
+      const { data, error } = await supabase
+        .from('ai_generated_documents')
+        .select('*')
+        .eq('case_id', caseId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching AI documents by case:', error);
+        throw new Error(`Failed to fetch AI documents: ${error.message}`);
+      }
+
+      return (data || []) as AiDocument[];
+    } catch (error) {
+      console.error('Error fetching AI documents by case:', error);
+      throw new Error(`Failed to fetch AI documents: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  async getAiDocumentsByUser(userId: string): Promise<AiDocument[]> {
+    try {
+      const { data, error } = await supabase
+        .from('ai_generated_documents')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching AI documents by user:', error);
+        throw new Error(`Failed to fetch AI documents: ${error.message}`);
+      }
+
+      return (data || []) as AiDocument[];
+    } catch (error) {
+      console.error('Error fetching AI documents by user:', error);
+      throw new Error(`Failed to fetch AI documents: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  async getPendingAiDocuments(): Promise<AiDocument[]> {
+    try {
+      const { data, error } = await supabase
+        .from('ai_generated_documents')
+        .select('*')
+        .eq('status', 'pending_review')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching pending AI documents:', error);
+        throw new Error(`Failed to fetch pending AI documents: ${error.message}`);
+      }
+
+      return (data || []) as AiDocument[];
+    } catch (error) {
+      console.error('Error fetching pending AI documents:', error);
+      throw new Error(`Failed to fetch pending AI documents: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  async updateAiDocumentStatus(
+    documentId: number, 
+    status: string, 
+    adminNotes?: string, 
+    reviewedBy?: string
+  ): Promise<AiDocument> {
+    try {
+      const updateData: any = {
+        status,
+        updated_at: new Date().toISOString()
+      };
+
+      if (adminNotes) {
+        updateData.admin_notes = adminNotes;
+      }
+
+      if (reviewedBy) {
+        updateData.reviewed_by = reviewedBy;
+        updateData.reviewed_at = new Date().toISOString();
+      }
+
+      if (status === 'sent') {
+        updateData.sent_at = new Date().toISOString();
+      }
+
+      const { data, error } = await supabase
+        .from('ai_generated_documents')
+        .update(updateData)
+        .eq('id', documentId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating AI document status:', error);
+        throw new Error(`Failed to update AI document: ${error.message}`);
+      }
+
+      return data as AiDocument;
+    } catch (error) {
+      console.error('Error updating AI document status:', error);
+      throw new Error(`Failed to update AI document: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  // Expose Supabase client for file operations
+  get supabase() {
+    return supabase;
   }
 }
 

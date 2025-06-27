@@ -364,6 +364,32 @@ export const insertApplicationSchema = createInsertSchema(applications).omit({
 });
 export type InsertApplicationType = z.infer<typeof insertApplicationSchema>;
 
+// AI-Generated Documents table for admin approval workflow
+export const aiGeneratedDocuments = pgTable("ai_generated_documents", {
+  id: serial("id").primaryKey(),
+  case_id: integer("case_id").notNull(),
+  user_id: varchar("user_id").notNull(),
+  document_type: varchar("document_type").notNull(), // strategy_pack, demand_letter, payment_claim, etc.
+  title: varchar("title").notNull(),
+  ai_content: jsonb("ai_content").notNull(), // OpenAI generated content structure
+  template_used: varchar("template_used"), // Which template was used
+  pdf_file_path: varchar("pdf_file_path"), // Path to generated PDF in Supabase Storage
+  word_file_path: varchar("word_file_path"), // Path to editable Word doc in Supabase Storage
+  status: varchar("status").default("pending_review"), // pending_review, approved, rejected, sent
+  admin_notes: text("admin_notes"), // Admin feedback/notes
+  reviewed_by: varchar("reviewed_by"), // Admin user ID who reviewed
+  reviewed_at: timestamp("reviewed_at"),
+  sent_at: timestamp("sent_at"), // When document was sent to client
+  metadata: jsonb("metadata"), // Additional context from case data
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  caseIdIdx: index("ai_documents_case_id_idx").on(table.case_id),
+  userIdIdx: index("ai_documents_user_id_idx").on(table.user_id),
+  statusIdx: index("ai_documents_status_idx").on(table.status),
+  documentTypeIdx: index("ai_documents_type_idx").on(table.document_type),
+}));
+
 // Notification schemas and types
 export const insertNotificationSchema = createInsertSchema(notifications).omit({
   id: true,
@@ -373,3 +399,14 @@ export const insertNotificationSchema = createInsertSchema(notifications).omit({
 });
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
 export type Notification = typeof notifications.$inferSelect;
+
+// AI-Generated Documents schemas and types
+export const insertAiDocumentSchema = createInsertSchema(aiGeneratedDocuments).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+  reviewed_at: true,
+  sent_at: true,
+});
+export type InsertAiDocument = z.infer<typeof insertAiDocumentSchema>;
+export type AiDocument = typeof aiGeneratedDocuments.$inferSelect;

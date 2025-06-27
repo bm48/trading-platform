@@ -13,6 +13,7 @@ import { adminService } from "./admin-service";
 import { adminAuthService, authenticateAdmin } from './admin-auth';
 import { legalInsightsService } from './legal-insights-service';
 import { notificationService } from './notification-service';
+import { aiPDFService } from './ai-pdf-service';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -1714,6 +1715,93 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error generating case-specific insights:', error);
       res.status(500).json({ message: 'Failed to generate case-specific insights' });
+    }
+  });
+
+  // AI Document Generation Routes
+  app.post('/api/cases/:caseId/generate-document', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      const { caseId } = req.params;
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+
+      // Get the case to verify ownership
+      const caseData = await supabaseStorage.getCase(parseInt(caseId));
+      if (!caseData) {
+        return res.status(404).json({ message: 'Case not found' });
+      }
+
+      if (caseData.userId !== userId) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+
+      // Generate the AI document
+      console.log(`Generating AI document for case ${caseId}`);
+      const documentId = await aiPDFService.generateAndSaveResolveDocument(caseData);
+      
+      res.json({ 
+        message: 'Document generated successfully', 
+        documentId,
+        status: 'pending_review'
+      });
+    } catch (error) {
+      console.error('Error generating AI document:', error);
+      res.status(500).json({ message: 'Failed to generate document' });
+    }
+  });
+
+  app.get('/api/cases/:caseId/ai-documents', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      const { caseId } = req.params;
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+
+      // Get the case to verify ownership
+      const caseData = await supabaseStorage.getCase(parseInt(caseId));
+      if (!caseData) {
+        return res.status(404).json({ message: 'Case not found' });
+      }
+
+      if (caseData.userId !== userId) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+
+      const documents = await supabaseStorage.getAiDocumentsByCase(parseInt(caseId));
+      res.json(documents);
+    } catch (error) {
+      console.error('Error fetching AI documents:', error);
+      res.status(500).json({ message: 'Failed to fetch AI documents' });
+    }
+  });
+
+  app.get('/api/ai-documents/:documentId', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      const { documentId } = req.params;
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+
+      const document = await supabaseStorage.getAiDocument(parseInt(documentId));
+      if (!document) {
+        return res.status(404).json({ message: 'Document not found' });
+      }
+
+      if (document.user_id !== userId) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+
+      res.json(document);
+    } catch (error) {
+      console.error('Error fetching AI document:', error);
+      res.status(500).json({ message: 'Failed to fetch document' });
     }
   });
 

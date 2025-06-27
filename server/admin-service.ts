@@ -92,7 +92,7 @@ export class AdminService {
       
       // Pending documents for review
       supabaseAdmin
-        .from('ai_generations')
+        .from('ai_generated_documents')
         .select('*', { count: 'exact', head: true })
         .in('status', ['draft', 'reviewed']),
       
@@ -144,7 +144,7 @@ export class AdminService {
   async getPendingDocuments(): Promise<PendingDocument[]> {
     try {
       const { data: generations, error } = await supabaseAdmin
-        .from('ai_generations')
+        .from('ai_generated_documents')
         .select(`
           *,
           cases!inner (
