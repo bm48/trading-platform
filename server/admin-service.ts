@@ -46,6 +46,8 @@ export class AdminService {
   async getAdminStats(): Promise<AdminStats> {
     const today = new Date().toISOString().split('T')[0];
     
+    console.log('Getting admin stats for date:', today);
+    
     const [
       usersCount,
       newUsersToday,
@@ -94,11 +96,25 @@ export class AdminService {
       ])
     ]);
 
+    // Debug logging
+    console.log('Raw query results:', {
+      usersCount: usersCount.count,
+      usersError: usersCount.error,
+      newUsersToday: newUsersToday.count,
+      newUsersError: newUsersToday.error,
+      casesStats: casesStats.map(s => ({ count: s.count, error: s.error })),
+      applicationsCount: applicationsCount.count,
+      applicationsError: applicationsCount.error,
+      documentsCount: documentsCount.count,
+      documentsError: documentsCount.error,
+      subscriptionsStats: subscriptionsStats.map(s => ({ count: s.count, error: s.error }))
+    });
+
     // Calculate total revenue (simplified - would need proper payment tracking)
     const activeSubsCount = subscriptionsStats[0].count || 0;
     const estimatedRevenue = activeSubsCount * 49; // $49/month
 
-    return {
+    const result = {
       totalUsers: usersCount.count || 0,
       newUsersToday: newUsersToday.count || 0,
       totalCases: casesStats[0].count || 0,
@@ -108,6 +124,9 @@ export class AdminService {
       totalRevenue: estimatedRevenue,
       activeSubscriptions: activeSubsCount
     };
+    
+    console.log('Final admin stats result:', result);
+    return result;
   }
 
   // Get pending documents for admin review

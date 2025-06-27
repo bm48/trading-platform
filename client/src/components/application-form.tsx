@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useLocation } from 'wouter';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -95,6 +96,7 @@ const issueTypes = [
 export default function ApplicationForm() {
   const [formData, setFormData] = useState<ApplicationFormData>(initialFormData);
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
 
   const submitApplication = useMutation({
     mutationFn: async (data: ApplicationFormData) => {
@@ -113,8 +115,11 @@ export default function ApplicationForm() {
         sessionStorage.setItem('redirectAfterAuth', 'checkout-subscription');
       }
       
-      // Redirect to signup/login instead of application status
-      window.location.href = `/?showLogin=true&signup=true`;
+      // Redirect to signup page after a brief delay
+      setTimeout(() => {
+        // Create a signup route or trigger signup modal
+        window.location.href = '/auth?mode=signup&redirect=checkout';
+      }, 1500);
     },
     onError: (error: any) => {
       toast({

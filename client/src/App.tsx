@@ -23,6 +23,7 @@ import Profile from "@/pages/profile";
 import IntakeForm from "@/pages/intake-form";
 import TermsOfService from "@/pages/terms-of-service";
 import AuthCallback from "@/pages/auth-callback";
+import Auth from "@/pages/auth";
 import NotFound from "@/pages/not-found";
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
@@ -91,6 +92,7 @@ function Router() {
         <ProtectedRoute component={IntakeForm} />
       </Route>
       <Route path="/terms-of-service" component={TermsOfService} />
+      <Route path="/auth" component={Auth} />
       <Route path="/auth/callback" component={AuthCallback} />
       <Route path="/application/:id/complete">
         <ProtectedRoute component={Checkout} />
