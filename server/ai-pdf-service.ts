@@ -463,17 +463,10 @@ Return your response as JSON with this exact structure based on the RESOLVE temp
       const aiDocument = await supabaseStorage.createAiDocument({
         case_id: caseId,
         user_id: userId,
-        document_type: 'strategy_pack',
-        title: `RESOLVE Strategy Pack - ${documentData.clientName}`,
+        type: 'strategy_pack', // Database column is 'type', not 'document_type'
         ai_content: documentData,
-        template_used: 'resolve_tradies_template',
         pdf_file_path: storagePath,
-        status: 'pending_review',
-        metadata: {
-          generated_at: new Date().toISOString(),
-          case_amount: documentData.amount,
-          issue_type: documentData.issueType
-        }
+        status: 'pending_review'
       });
 
       // Clean up local file
