@@ -67,16 +67,18 @@ export function NotificationCenter() {
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
 
-  // Fetch notifications
-  const { data: notifications = [], isLoading } = useQuery({
+  // Fetch notifications with error handling
+  const { data: notifications = [], isLoading, error: notificationsError } = useQuery({
     queryKey: ['/api/notifications'],
     refetchInterval: 30000, // Refresh every 30 seconds
+    retry: false, // Don't retry failed requests
   });
 
-  // Fetch notification summary
-  const { data: summary } = useQuery<NotificationSummary>({
+  // Fetch notification summary with error handling
+  const { data: summary, error: summaryError } = useQuery<NotificationSummary>({
     queryKey: ['/api/notifications/summary'],
     refetchInterval: 30000,
+    retry: false, // Don't retry failed requests
   });
 
   // Mark as read mutation
@@ -129,8 +131,14 @@ export function NotificationCenter() {
     },
   });
 
+  // Check if notifications are unavailable
+  const notificationsUnavailable = notificationsError || summaryError;
+  
+  // Get badge count for unread notifications
+  const unreadCount = summary?.unread || 0;
+
   // Filter notifications based on active tab
-  const filteredNotifications = (notifications as Notification[]).filter((notif: Notification) => {
+  const filteredNotifications = notificationsUnavailable ? [] : (notifications as Notification[]).filter((notif: Notification) => {
     if (activeTab === 'all') return notif.status !== 'archived';
     if (activeTab === 'unread') return notif.status === 'unread';
     if (activeTab === 'critical') return notif.priority === 'critical' && notif.status !== 'archived';
@@ -232,7 +240,12 @@ export function NotificationCenter() {
               
               <TabsContent value={activeTab} className="mt-0">
                 <ScrollArea className="h-96">
-                  {isLoading ? (
+                  {notificationsUnavailable ? (
+                    <div className="p-4 text-center text-muted-foreground">
+                      <p>Notifications are temporarily unavailable</p>
+                      <p className="text-sm text-gray-400 mt-1">Please try again later</p>
+                    </div>
+                  ) : isLoading ? (
                     <div className="p-4 text-center text-muted-foreground">
                       Loading notifications...
                     </div>

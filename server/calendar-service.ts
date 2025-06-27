@@ -31,10 +31,16 @@ export class CalendarService {
   constructor() {
     // Initialize Google OAuth client only if credentials are available
     if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
+      // Use our application's callback URL instead of Supabase
+      const redirectUri = process.env.GOOGLE_REDIRECT_URI || 
+        (process.env.NODE_ENV === 'production' 
+          ? `${process.env.REPLIT_DEV_DOMAIN || 'https://your-app-domain.replit.app'}/api/calendar/auth/google/callback`
+          : 'http://localhost:5000/api/calendar/auth/google/callback');
+        
       this.googleAuth = new google.auth.OAuth2(
         GOOGLE_CLIENT_ID,
         GOOGLE_CLIENT_SECRET,
-        GOOGLE_REDIRECT_URI
+        redirectUri
       );
     }
 
@@ -61,11 +67,15 @@ export class CalendarService {
       'https://www.googleapis.com/auth/calendar.events'
     ];
 
+    const redirectUri = process.env.NODE_ENV === 'production' 
+      ? `${process.env.REPLIT_DEV_DOMAIN || 'https://your-app-domain.replit.app'}/api/calendar/auth/google/callback`
+      : 'http://localhost:5000/api/calendar/auth/google/callback';
+      
     return this.googleAuth.generateAuthUrl({
       access_type: 'offline',
       scope: scopes,
       prompt: 'consent',
-      redirect_uri: GOOGLE_REDIRECT_URI
+      redirect_uri: redirectUri
     });
   }
 

@@ -1647,6 +1647,35 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Stripe Payment Routes
+  app.post('/api/stripe/create-payment-intent', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const userId = (req as any).user.id;
+      const { plan, amount } = req.body;
+
+      // Check if Stripe is configured
+      if (!process.env.STRIPE_PUBLISHABLE_KEY) {
+        return res.status(400).json({ 
+          message: 'Payment processing is not configured. Please contact support.' 
+        });
+      }
+
+      // For now, return a mock payment intent since Stripe is not fully configured
+      // In production, this would create a real Stripe payment intent
+      const mockClientSecret = `pi_mock_${Date.now()}_secret_${Math.random().toString(36).substring(2)}`;
+      
+      res.json({
+        client_secret: mockClientSecret,
+        amount: amount || 4900,
+        currency: 'aud',
+        status: 'requires_payment_method'
+      });
+    } catch (error) {
+      console.error('Error creating payment intent:', error);
+      res.status(500).json({ message: 'Failed to create payment intent' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
