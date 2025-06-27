@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useLocation } from 'wouter';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -7,20 +8,22 @@ import { Shield, Check, Clock, Users, DollarSign, FileText, Calendar, Download, 
 import LoginModal from '@/components/login-modal';
 import { scrollToElement } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
+import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import AdminLogin from './admin-login'
 
 export default function Landing() {
   const { user, isAuthenticated, signInWithGoogle, signOut } = useAuth();
+  const { loginAdmin } = useAdminAuth();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [isSignUpMode, setIsSignUpMode] = useState(false);
   const [adminEmail, setAdminEmail] = useState('hello@projectresolveai.com');
-  const [adminPassword, setAdminPassword] = useState('');
+  const [adminPassword, setAdminPassword] = useState('helloresolveaiproject');
   const [adminLoading, setAdminLoading] = useState(false);
 
   const handleGoogleSignIn = async () => {
@@ -75,29 +78,22 @@ export default function Landing() {
     setAdminLoading(true);
 
     try {
-      const response = await fetch('/api/admin/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({ email: adminEmail, password: adminPassword }),
-      });
+      const success = await loginAdmin(adminEmail, adminPassword);
 
-      const data = await response.json();
-
-      if (response.ok && data.success) {
+      if (success) {
         toast({
           title: "Login Successful",
           description: "Welcome to the admin panel",
         });
         setShowAdminLogin(false);
-        // Redirect to admin page
-        window.location.href = '/admin';
+        // Small delay to ensure state is updated, then redirect
+        setTimeout(() => {
+          setLocation('/admin');
+        }, 100);
       } else {
         toast({
           title: "Login Failed",
-          description: data.message || "Invalid credentials",
+          description: "Invalid credentials",
           variant: "destructive",
         });
       }
