@@ -1255,6 +1255,13 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
   app.get('/api/calendar/auth/google', authenticateUser, async (req: Request, res: Response) => {
     try {
       const authUrl = await calendarService.getGoogleAuthUrl();
+      
+      if (!authUrl) {
+        return res.status(400).json({ 
+          message: 'Google Calendar integration is not configured. Please contact support.' 
+        });
+      }
+      
       res.json({ authUrl });
     } catch (error) {
       console.error('Error getting Google auth URL:', error);

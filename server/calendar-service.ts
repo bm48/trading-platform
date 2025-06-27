@@ -52,7 +52,8 @@ export class CalendarService {
   // Google Calendar Methods
   async getGoogleAuthUrl(): Promise<string> {
     if (!this.googleAuth) {
-      throw new Error('Google Calendar integration not configured. Please contact support for setup.');
+      // Return a user-friendly message instead of throwing an error
+      return '';
     }
 
     const scopes = [

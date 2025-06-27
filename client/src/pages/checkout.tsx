@@ -85,7 +85,7 @@ function CheckoutForm({ clientSecret, onSuccess }: CheckoutFormProps) {
 }
 
 export default function Checkout() {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
@@ -93,13 +93,25 @@ export default function Checkout() {
 
   // Create payment intent for monthly subscription
   const createPaymentMutation = useMutation({
-    mutationFn: () => apiRequest('/api/stripe/create-payment-intent', {
-      method: 'POST',
-      body: JSON.stringify({ 
-        plan: 'subscription',
-        amount: 4900, // $49.00 in cents
-      }),
-    }),
+    mutationFn: async () => {
+      const response = await fetch('/api/stripe/create-payment-intent', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token || ''}`,
+        },
+        body: JSON.stringify({ 
+          plan: 'subscription',
+          amount: 4900, // $49.00 in cents
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to create payment intent');
+      }
+      
+      return response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/subscription/status'] });
     },
