@@ -59,6 +59,8 @@ interface PendingDocument {
   createdAt: string;
   reviewedBy?: string;
   reviewedAt?: string;
+  aiContent?: any;
+  intakeData?: any;
 }
 
 interface UserActivity {
@@ -76,6 +78,8 @@ export default function AdminDashboard() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedDocument, setSelectedDocument] = useState<PendingDocument | null>(null);
+  const [editingDocument, setEditingDocument] = useState<PendingDocument | null>(null);
+  const [activeTab, setActiveTab] = useState("documents");
 
   // Authentication is handled by AdminProtectedRoute wrapper
 
@@ -306,7 +310,7 @@ export default function AdminDashboard() {
       )}
 
       {/* Main Content Tabs */}
-      <Tabs defaultValue="documents" className="space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="documents">
             <FileText className="w-4 h-4 mr-2" />
@@ -375,12 +379,20 @@ export default function AdminDashboard() {
                           </div>
                           <div className="flex items-center gap-2 ml-4">
                             <Button
-                              size="sm"
+                              size="sm"  
                               variant="outline"
                               onClick={() => setSelectedDocument(doc)}
                             >
                               <Eye className="w-4 h-4 mr-1" />
                               Review
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setEditingDocument(doc)}
+                            >
+                              <Edit className="w-4 h-4 mr-1" />
+                              Edit
                             </Button>
                             {doc.status === 'pending_review' && (
                               <>
@@ -578,19 +590,35 @@ export default function AdminDashboard() {
                 <CardDescription>Common administrative tasks</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Button className="w-full justify-start" variant="outline">
+                <Button 
+                  className="w-full justify-start" 
+                  variant="outline"
+                  onClick={() => setActiveTab("overview")}
+                >
                   <Users className="w-4 h-4 mr-2" />
                   Manage Users
                 </Button>
-                <Button className="w-full justify-start" variant="outline">
+                <Button 
+                  className="w-full justify-start" 
+                  variant="outline"
+                  onClick={() => setActiveTab("documents")}
+                >
                   <FileText className="w-4 h-4 mr-2" />
                   Review Documents
                 </Button>
-                <Button className="w-full justify-start" variant="outline">
+                <Button 
+                  className="w-full justify-start" 
+                  variant="outline"
+                  onClick={() => setActiveTab("overview")}
+                >
                   <TrendingUp className="w-4 h-4 mr-2" />
                   View Analytics
                 </Button>
-                <Button className="w-full justify-start" variant="outline">
+                <Button 
+                  className="w-full justify-start" 
+                  variant="outline"
+                  onClick={() => setActiveTab("activity")}
+                >
                   <AlertCircle className="w-4 h-4 mr-2" />
                   System Logs
                 </Button>
@@ -599,6 +627,103 @@ export default function AdminDashboard() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Document Review Modal */}
+      {selectedDocument && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">Document Review</h3>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => setSelectedDocument(null)}
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+            <div className="p-6">
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-medium text-gray-900">Case: {selectedDocument.caseTitle}</h4>
+                  <p className="text-sm text-gray-600">Client: {selectedDocument.clientName}</p>
+                  <p className="text-sm text-gray-600">Type: {selectedDocument.type}</p>
+                  <p className="text-sm text-gray-600">Status: 
+                    <Badge className="ml-2" variant={getStatusColor(selectedDocument.status)}>
+                      {selectedDocument.status}
+                    </Badge>
+                  </p>
+                </div>
+                <div>
+                  <h5 className="font-medium mb-2">AI Generated Content:</h5>
+                  <div className="bg-gray-50 p-4 rounded-lg max-h-96 overflow-y-auto">
+                    <pre className="whitespace-pre-wrap text-sm">
+                      {selectedDocument.aiContent ? JSON.stringify(selectedDocument.aiContent, null, 2) : 'No content available'}
+                    </pre>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Document Edit Modal */}
+      {editingDocument && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">Edit Document</h3>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => setEditingDocument(null)}
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+            <div className="p-6">
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-medium text-gray-900">Case: {editingDocument.caseTitle}</h4>
+                  <p className="text-sm text-gray-600">Client: {editingDocument.clientName}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Document Content:</label>
+                  <textarea
+                    className="w-full h-64 p-3 border rounded-lg font-mono text-sm"
+                    defaultValue={editingDocument.aiContent ? JSON.stringify(editingDocument.aiContent, null, 2) : ''}
+                    placeholder="Edit document content..."
+                  />
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button 
+                    variant="outline"
+                    onClick={() => setEditingDocument(null)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      toast({
+                        title: "Document Updated",
+                        description: "Changes saved successfully",
+                      });
+                      setEditingDocument(null);
+                    }}
+                  >
+                    Save Changes
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

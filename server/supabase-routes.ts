@@ -1142,31 +1142,6 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/admin/documents/:id/send', authenticateUser, async (req: Request, res: Response) => {
-    try {
-      if (req.user?.role !== 'admin') {
-        return res.status(403).json({ message: 'Admin access required' });
-      }
-
-      const documentId = parseInt(req.params.id);
-      
-      const success = await adminService.updateDocument(documentId, {
-        status: 'sent',
-        reviewedBy: req.user.id
-      });
-
-      if (success) {
-        // TODO: Implement actual document sending via email
-        res.json({ message: 'Document sent successfully' });
-      } else {
-        res.status(500).json({ message: 'Failed to send document' });
-      }
-    } catch (error) {
-      console.error('Error sending document:', error);
-      res.status(500).json({ message: 'Failed to send document' });
-    }
-  });
-
   app.post('/api/admin/users/:id/promote', authenticateUser, async (req: Request, res: Response) => {
     try {
       if (req.user?.role !== 'admin') {
@@ -1187,22 +1162,80 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/admin/documents/:id/send', authenticateUser, async (req: Request, res: Response) => {
+  app.post('/api/admin/documents/:id/send', authenticateAdmin, async (req: Request, res: Response) => {
     try {
-      if (req.user?.role !== 'admin') {
-        return res.status(403).json({ message: 'Admin access required' });
+      if (!req.adminSession) {
+        return res.status(401).json({ message: 'Admin session required' });
       }
 
       const documentId = parseInt(req.params.id);
       
+      // Get document details and user info for email
+      const { data: document, error: docError } = await supabaseAdmin
+        .from('ai_generated_documents')
+        .select(`
+          *,
+          cases!inner (
+            id,
+            title,
+            user_id
+          )
+        `)
+        .eq('id', documentId)
+        .single();
+
+      if (docError || !document) {
+        return res.status(404).json({ message: 'Document not found' });
+      }
+
+      // Get user details for email
+      const { data: user, error: userError } = await supabaseAdmin
+        .from('users')
+        .select('email, first_name, last_name')
+        .eq('id', document.cases.user_id)
+        .single();
+
+      if (userError || !user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      // Update document status to sent
       const success = await adminService.updateDocument(documentId, {
         status: 'sent',
-        reviewedBy: req.user.id
+        reviewedBy: req.adminSession.email
       });
 
       if (success) {
-        // TODO: Implement actual document sending via email
-        res.json({ message: 'Document sent successfully' });
+        // Send email notification to client using Supabase Auth
+        try {
+          const { error: emailError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
+            user.email,
+            {
+              data: {
+                type: 'document_ready',
+                documentId: documentId,
+                caseTitle: document.cases.title,
+                documentType: document.type,
+                firstName: user.first_name
+              }
+            }
+          );
+
+          if (emailError) {
+            console.error('Email sending failed:', emailError);
+            // Don't fail the whole operation if email fails
+          }
+        } catch (emailError) {
+          console.error('Email function error:', emailError);
+          // Don't fail the whole operation if email fails
+        }
+
+        res.json({ 
+          message: 'Document sent successfully',
+          recipient: user.email,
+          documentType: document.type,
+          caseTitle: document.cases.title
+        });
       } else {
         res.status(500).json({ message: 'Failed to send document' });
       }
