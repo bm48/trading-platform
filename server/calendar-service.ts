@@ -25,28 +25,36 @@ interface CalendarEventData {
 }
 
 export class CalendarService {
-  private googleAuth: OAuth2Client;
-  private msalClient: PublicClientApplication;
+  private googleAuth?: OAuth2Client;
+  private msalClient?: PublicClientApplication;
 
   constructor() {
-    // Initialize Google OAuth client
-    this.googleAuth = new google.auth.OAuth2(
-      GOOGLE_CLIENT_ID,
-      GOOGLE_CLIENT_SECRET,
-      GOOGLE_REDIRECT_URI
-    );
+    // Initialize Google OAuth client only if credentials are available
+    if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
+      this.googleAuth = new google.auth.OAuth2(
+        GOOGLE_CLIENT_ID,
+        GOOGLE_CLIENT_SECRET,
+        GOOGLE_REDIRECT_URI
+      );
+    }
 
-    // Initialize Microsoft MSAL client
-    this.msalClient = new PublicClientApplication({
-      auth: {
-        clientId: MICROSOFT_CLIENT_ID!,
-        authority: `https://login.microsoftonline.com/${MICROSOFT_TENANT_ID}`,
-      },
-    });
+    // Initialize Microsoft MSAL client only if credentials are available
+    if (MICROSOFT_CLIENT_ID) {
+      this.msalClient = new PublicClientApplication({
+        auth: {
+          clientId: MICROSOFT_CLIENT_ID,
+          authority: `https://login.microsoftonline.com/${MICROSOFT_TENANT_ID}`,
+        },
+      });
+    }
   }
 
   // Google Calendar Methods
   async getGoogleAuthUrl(): Promise<string> {
+    if (!this.googleAuth) {
+      throw new Error('Google Calendar integration not configured. Please contact support for setup.');
+    }
+
     const scopes = [
       'https://www.googleapis.com/auth/calendar',
       'https://www.googleapis.com/auth/calendar.events'

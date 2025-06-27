@@ -102,8 +102,9 @@ export const adminAuthService = new AdminAuthService();
 // Middleware for admin authentication
 export const authenticateAdmin = async (req: any, res: any, next: any) => {
   try {
-    // Check for session token in cookies or Authorization header
+    // Check for session token in cookies, Authorization header, or x-admin-session header
     const sessionToken = req.cookies?.adminSession || 
+                        req.headers['x-admin-session'] ||
                         (req.headers.authorization?.startsWith('Bearer ') ? 
                          req.headers.authorization.split(' ')[1] : null);
     
