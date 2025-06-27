@@ -1487,10 +1487,18 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'Document not found or access denied' });
       }
 
-      if (!document.pdf_supabase_url) {
+      console.log('Document pdf_supabase_url:', document.pdf_supabase_url);
+      console.log('URL type:', typeof document.pdf_supabase_url);
+      console.log('URL length:', document.pdf_supabase_url?.length);
+      
+      if (!document.pdf_supabase_url || document.pdf_supabase_url.trim() === '') {
         return res.status(404).json({ 
           message: 'Document file not yet generated',
-          details: 'The document is being processed and will be available soon'
+          details: 'The document is being processed and will be available soon',
+          debug: {
+            url: document.pdf_supabase_url,
+            urlType: typeof document.pdf_supabase_url
+          }
         });
       }
 
