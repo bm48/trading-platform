@@ -21,8 +21,22 @@ export default function AuthCallback() {
 
         if (data.session) {
           console.log('Authentication successful:', data.session.user.email);
-          // Redirect to dashboard on successful authentication
-          navigate('/dashboard');
+          
+          // Check if there's a pending application workflow
+          const redirectAfterAuth = sessionStorage.getItem('redirectAfterAuth');
+          const pendingApplicationId = sessionStorage.getItem('pendingApplicationId');
+          
+          if (redirectAfterAuth === 'checkout-subscription' && pendingApplicationId) {
+            // Clear the session storage
+            sessionStorage.removeItem('redirectAfterAuth');
+            sessionStorage.removeItem('pendingApplicationId');
+            
+            // Redirect to monthly subscription checkout
+            navigate('/checkout?subscription=monthly');
+          } else {
+            // Default redirect to dashboard
+            navigate('/dashboard');
+          }
         } else {
           // No session found, redirect to home
           navigate('/');

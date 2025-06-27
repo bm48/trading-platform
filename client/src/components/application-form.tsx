@@ -103,14 +103,18 @@ export default function ApplicationForm() {
     onSuccess: (data) => {
       toast({
         title: "Application Submitted Successfully!",
-        description: "Check your email for confirmation and next steps.",
+        description: "Please sign up or log in to continue with your subscription.",
       });
       setFormData(initialFormData);
       
-      // Redirect to application status page
+      // Store application data in sessionStorage for post-login redirect
       if (data?.data?.id) {
-        window.location.href = `/application-status/${data.data.id}`;
+        sessionStorage.setItem('pendingApplicationId', data.data.id.toString());
+        sessionStorage.setItem('redirectAfterAuth', 'checkout-subscription');
       }
+      
+      // Redirect to signup/login instead of application status
+      window.location.href = `/?showLogin=true&signup=true`;
     },
     onError: (error: any) => {
       toast({

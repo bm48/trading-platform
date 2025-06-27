@@ -560,9 +560,11 @@ export default function Dashboard() {
                             {contract.status}
                           </Badge>
                         </div>
-                        <Button variant="ghost" size="sm">
-                          <ChevronRight className="h-4 w-4" />
-                        </Button>
+                        <Link href={`/contract/${contract.id}`}>
+                          <Button variant="ghost" size="sm">
+                            <ChevronRight className="h-4 w-4" />
+                          </Button>
+                        </Link>
                       </div>
 
                       <div className="grid md:grid-cols-3 gap-4">
