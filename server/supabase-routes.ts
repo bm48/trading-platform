@@ -1170,15 +1170,14 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
 
       const documentId = parseInt(req.params.id);
       
-      // Get document details and user info for email
+      // Get document details first
       const { data: document, error: docError } = await supabaseAdmin
         .from('ai_generated_documents')
         .select(`
           *,
           cases!inner (
             id,
-            title,
-            user_id
+            title
           )
         `)
         .eq('id', documentId)
@@ -1188,11 +1187,11 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'Document not found' });
       }
 
-      // Get user details for email
+      // Get user details using user_id from ai_generated_documents table
       const { data: user, error: userError } = await supabaseAdmin
         .from('users')
         .select('email, first_name, last_name')
-        .eq('id', document.cases.user_id)
+        .eq('id', document.user_id)
         .single();
 
       if (userError || !user) {
