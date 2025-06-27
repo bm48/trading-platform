@@ -143,6 +143,7 @@ export class AdminService {
   // Get pending documents for admin review
   async getPendingDocuments(): Promise<PendingDocument[]> {
     try {
+      console.log('Fetching pending documents from database...');
       const { data: generations, error } = await supabaseAdmin
         .from('ai_generated_documents')
         .select(`
@@ -158,7 +159,8 @@ export class AdminService {
 
       if (error) throw error;
 
-      return (generations || []).map(gen => {
+      console.log('Raw generations data:', generations);
+      const result = (generations || []).map(gen => {
         // Extract client name from AI content
         const clientName = gen.ai_content?.clientName || 'Unknown Client';
         
@@ -178,6 +180,9 @@ export class AdminService {
           reviewedAt: gen.reviewed_at
         };
       });
+      
+      console.log('Mapped pending documents result:', result);
+      return result;
     } catch (error) {
       console.error('Error fetching pending documents:', error);
       return [];
