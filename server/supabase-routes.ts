@@ -1187,16 +1187,18 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'Document not found' });
       }
 
-      // Get user details using user_id from ai_generated_documents table
-      const { data: user, error: userError } = await supabaseAdmin
-        .from('users')
-        .select('email, first_name, last_name')
-        .eq('id', document.user_id)
-        .single();
+      // Get user details from Supabase auth using user_id from ai_generated_documents table
+      console.log('Looking up user with ID:', document.user_id);
+      const { data: authUser, error: userError } = await supabaseAdmin.auth.admin.getUserById(document.user_id);
 
-      if (userError || !user) {
-        return res.status(404).json({ message: 'User not found' });
+      if (userError || !authUser) {
+        console.error('Error fetching auth user:', userError);
+        console.error('Document user_id:', document.user_id);
+        return res.status(404).json({ message: 'User not found', userId: document.user_id, error: userError?.message });
       }
+
+      console.log('Auth user found:', authUser.user?.email);
+      const user = authUser.user;
 
       // Update document status to sent
       const success = await adminService.updateDocument(documentId, {
@@ -1207,6 +1209,10 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
       if (success) {
         // Send email notification to client using Supabase Auth
         try {
+          if (!user.email) {
+            throw new Error('User email not found');
+          }
+          
           const { error: emailError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
             user.email,
             {
@@ -1215,7 +1221,7 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
                 documentId: documentId,
                 caseTitle: document.cases.title,
                 documentType: document.type,
-                firstName: user.first_name
+                firstName: user.user_metadata?.first_name || 'Client'
               }
             }
           );
@@ -1231,7 +1237,7 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
 
         res.json({ 
           message: 'Document sent successfully',
-          recipient: user.email,
+          recipient: user.email || 'unknown',
           documentType: document.type,
           caseTitle: document.cases.title
         });
