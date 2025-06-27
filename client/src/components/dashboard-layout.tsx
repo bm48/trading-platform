@@ -22,7 +22,7 @@ interface DashboardLayoutProps {
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
   const [location] = useLocation();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
@@ -54,7 +54,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     setIsLoggingOut(true);
     console.log('Starting logout process...');
     try {
-      await logout();
+      await signOut();
     } catch (error) {
       console.error('Logout error:', error);
     } finally {

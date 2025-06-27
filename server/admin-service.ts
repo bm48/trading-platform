@@ -94,7 +94,7 @@ export class AdminService {
       supabaseAdmin
         .from('ai_generated_documents')
         .select('*', { count: 'exact', head: true })
-        .in('status', ['draft', 'reviewed']),
+        .in('status', ['draft', 'reviewed', 'pending_review']),
       
       // Subscription statistics - Use direct user table queries since auth API doesn't have subscription info
       Promise.all([
@@ -150,10 +150,11 @@ export class AdminService {
           cases!inner (
             id,
             title,
-            user_id
+            user_id,
+            client_name
           )
         `)
-        .in('status', ['draft', 'reviewed'])
+        .in('status', ['draft', 'reviewed', 'pending_review'])
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -161,8 +162,8 @@ export class AdminService {
       return (generations || []).map(gen => ({
         id: gen.id,
         caseId: gen.case_id,
-        caseTitle: gen.cases.title,
-        clientName: `${gen.cases.users.first_name || ''} ${gen.cases.users.last_name || ''}`.trim(),
+        caseTitle: gen.cases?.title || 'Unknown Case',
+        clientName: gen.cases?.client_name || 'Unknown Client',
         type: gen.type,
         status: gen.status,
         wordDocId: gen.word_doc_id,

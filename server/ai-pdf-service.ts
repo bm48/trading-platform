@@ -463,6 +463,7 @@ Return your response as JSON with this exact structure based on the RESOLVE temp
       const documentRecord = {
         case_id: caseId,
         user_id: userId,
+        title: `RESOLVE Strategy Pack - ${documentData.clientName}`,
         document_type: 'strategy_pack',
         ai_content: documentData,
         pdf_file_path: storagePath,
