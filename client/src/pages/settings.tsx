@@ -137,9 +137,24 @@ export default function Settings() {
       });
     },
     onError: (error: any) => {
+      let errorMessage = "This calendar integration is not currently available.";
+      
+      // Handle specific Google OAuth verification error
+      if (error.message && (
+        error.message.includes('verification process') ||
+        error.message.includes('access_denied') ||
+        error.message.includes('has not completed')
+      )) {
+        errorMessage = "Google Calendar integration requires domain verification. This feature is temporarily unavailable during development. Please contact support for assistance.";
+      } else if (error.message && error.message.includes('Microsoft Calendar')) {
+        errorMessage = "Microsoft Calendar integration is not configured. Please contact support for setup.";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
-        title: "Integration Not Available",
-        description: error.message || "This calendar integration is not currently available.",
+        title: "Calendar Integration Not Available",
+        description: errorMessage,
         variant: "destructive",
       });
     },

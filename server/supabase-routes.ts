@@ -1276,7 +1276,21 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
       res.json({ authUrl: data.url });
     } catch (error) {
       console.error('Error getting Google auth URL:', error);
-      res.status(500).json({ message: 'Failed to get Google auth URL' });
+      
+      // Handle OAuth verification errors
+      let errorMessage = 'Failed to get Google auth URL';
+      
+      if (error instanceof Error) {
+        if (error.message.includes('verification process') || 
+            error.message.includes('access_denied') ||
+            error.message.includes('has not completed')) {
+          errorMessage = 'Google Calendar integration requires domain verification. This feature is temporarily unavailable during development.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      res.status(500).json({ message: errorMessage });
     }
   });
 
@@ -1382,7 +1396,21 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       console.error('Error connecting Google Calendar:', error);
-      res.status(500).json({ message: 'Failed to connect Google Calendar' });
+      
+      // Handle specific OAuth verification errors
+      let errorMessage = 'Failed to connect Google Calendar';
+      
+      if (error instanceof Error) {
+        if (error.message.includes('verification process') || 
+            error.message.includes('access_denied') ||
+            error.message.includes('has not completed')) {
+          errorMessage = 'Google Calendar integration requires domain verification. This feature is temporarily unavailable during development. Please contact support for assistance.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      res.status(500).json({ message: errorMessage });
     }
   });
 
