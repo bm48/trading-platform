@@ -62,12 +62,12 @@ export class AdminAuthService {
         return null;
       }
 
-      // Return admin session info
+      // Return admin session info (use Supabase token expiry if available)
       const session: AdminSession = {
         isAdmin: true,
         email: userData.user.email,
         sessionId: sessionToken,
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours from now
+        expiresAt: new Date(Date.now() + 60 * 60 * 1000), // 1 hour from now to match Supabase token life
         userId: userData.user.id
       };
 

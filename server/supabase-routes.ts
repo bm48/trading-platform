@@ -49,7 +49,7 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
   app.get('/api/user/profile', authenticateUser, async (req: Request, res: Response) => {
     try {
       const { data: profile, error } = await supabaseAdmin
-        .from('profiles')
+        .from('users')
         .select('*')
         .eq('id', req.user!.id)
         .single();
@@ -67,12 +67,11 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
       const { first_name, last_name, full_name } = req.body;
       
       const { data: profile, error } = await supabaseAdmin
-        .from('profiles')
+        .from('users')
         .update({
-          first_name,
-          last_name,
-          full_name,
-          updated_at: new Date().toISOString()
+          firstName: first_name,
+          lastName: last_name,
+          updatedAt: new Date().toISOString()
         })
         .eq('id', req.user!.id)
         .select()
@@ -1133,27 +1132,26 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ message: 'Failed to fetch users' });
       }
 
-      // Get subscription details from profiles table
-      const { data: profiles, error: profilesError } = await supabaseAdmin
-        .from('profiles')
-        .select('user_id, subscription_status, subscription_start_date, subscription_end_date, first_name, last_name')
-        .order('created_at', { ascending: false });
+      // Get subscription details from users table instead of profiles
+      const { data: userProfiles, error: profilesError } = await supabaseAdmin
+        .from('users')
+        .select('id, first_name, last_name, subscription_status, subscription_expires_at, created_at');
 
       if (profilesError) {
-        console.error('Error fetching profiles:', profilesError);
+        console.error('Error fetching user profiles:', profilesError);
       }
 
       // Combine auth users with profile data
       const usersWithSubscriptions = authUsers.users.map(user => {
-        const profile = profiles?.find(p => p.user_id === user.id);
+        const profile = userProfiles?.find(p => p.id === user.id);
         return {
           id: user.id,
           email: user.email,
           firstName: profile?.first_name || user.user_metadata?.first_name || 'Unknown',
           lastName: profile?.last_name || user.user_metadata?.last_name || '',
           subscriptionStatus: profile?.subscription_status || 'inactive',
-          subscriptionStartDate: profile?.subscription_start_date,
-          subscriptionEndDate: profile?.subscription_end_date,
+          subscriptionStartDate: profile?.created_at,
+          subscriptionEndDate: profile?.subscription_expires_at,
           createdAt: user.created_at,
           lastSignInAt: user.last_sign_in_at
         };
