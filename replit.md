@@ -119,6 +119,7 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+- June 27, 2025: DEMO SUBSCRIPTION FLOW FIXED - Demo mode now properly updates user subscription status and automatically redirects to dashboard after success
 - June 27, 2025: STRIPE PAYMENT BUG FIXED - Resolved invalid client secret error by implementing demo mode for development and proper Stripe integration for production environments
 - June 27, 2025: BUG FIXES COMPLETE - Fixed checkout redirect bug, Google Calendar error handling (now shows proper message), and identified Supabase email template setup needed
 - June 27, 2025: EMAIL CONFIRMATION FLOW - Implemented complete email confirmation workflow: after signup users receive confirmation email, clicking link redirects to login page, then after login redirects to monthly subscription

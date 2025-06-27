@@ -130,6 +130,13 @@ export default function Checkout() {
     }
   }, [user, loading, setLocation]);
 
+  // Auto-handle demo mode success
+  useEffect(() => {
+    if (paymentIntent?.demo_mode && paymentIntent?.status === 'succeeded') {
+      handlePaymentSuccess();
+    }
+  }, [paymentIntent]);
+
   const handlePaymentSuccess = () => {
     setPaymentCompleted(true);
     toast({

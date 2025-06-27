@@ -1683,7 +1683,23 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
         // For development/demo - return success without actual payment
         console.log('Demo mode: Simulating successful payment for user:', userId);
         
-        // In demo mode, we simulate a successful payment
+        // In demo mode, we simulate a successful payment and update subscription
+        await supabase
+          .from('auth.users')
+          .update({
+            raw_user_meta_data: {
+              planType: 'monthly_unlimited',
+              status: 'active',
+              stripeSubscriptionId: 'demo_sub_' + Date.now(),
+              stripeCustomerId: 'demo_cus_' + Date.now(),
+              currentPeriodStart: new Date().toISOString(),
+              currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+              strategyPacksRemaining: null,
+              hasInitialStrategyPack: true
+            }
+          })
+          .eq('id', userId);
+
         res.json({
           client_secret: null, // No client secret needed for demo
           amount: amount || 4900,
