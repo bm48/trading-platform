@@ -12,7 +12,8 @@ import {
   Users, 
   FileText, 
   AlertCircle, 
-  TrendingUp, 
+  TrendingUp,
+  Bell, 
   Clock, 
   CheckCircle2,
   Send,
@@ -436,8 +437,8 @@ export default function AdminDashboard() {
                                 onClick={() => sendDocumentMutation.mutate(doc.id)}
                                 disabled={sendDocumentMutation.isPending}
                               >
-                                <Send className="w-4 h-4 mr-1" />
-                                Send to Client
+                                <Bell className="w-4 h-4 mr-1" />
+                                Send Notification
                               </Button>
                             )}
                           </div>

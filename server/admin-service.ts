@@ -221,12 +221,19 @@ export class AdminService {
         }
       }
 
+      console.log('Updating document with data:', updateData);
       const { error } = await supabaseAdmin
         .from('ai_generated_documents')
         .update(updateData)
         .eq('id', documentId);
 
-      return !error;
+      if (error) {
+        console.error('Database update error:', error);
+        return false;
+      }
+
+      console.log('Document updated successfully');
+      return true;
     } catch (error) {
       console.error('Error updating document:', error);
       return false;

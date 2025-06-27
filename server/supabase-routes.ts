@@ -86,6 +86,67 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get user notifications
+  app.get('/api/user/notifications', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const { data: notifications, error } = await supabaseAdmin
+        .from('notifications')
+        .select('*')
+        .eq('user_id', req.user!.id)
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (error) throw error;
+
+      res.json(notifications || []);
+    } catch (error) {
+      console.error("Error fetching user notifications:", error);
+      res.status(500).json({ message: "Failed to fetch notifications" });
+    }
+  });
+
+  // Mark notification as read
+  app.put('/api/user/notifications/:id/read', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      
+      const { error } = await supabaseAdmin
+        .from('notifications')
+        .update({ is_read: true, read_at: new Date().toISOString() })
+        .eq('id', id)
+        .eq('user_id', req.user!.id);
+
+      if (error) throw error;
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+      res.status(500).json({ message: "Failed to mark notification as read" });
+    }
+  });
+
+  // Get user documents that have been sent
+  app.get('/api/user/documents', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const { data: documents, error } = await supabaseAdmin
+        .from('ai_generated_documents')
+        .select(`
+          *,
+          cases!inner(*)
+        `)
+        .eq('user_id', req.user!.id)
+        .eq('status', 'sent')
+        .order('sent_at', { ascending: false });
+
+      if (error) throw error;
+
+      res.json(documents || []);
+    } catch (error) {
+      console.error("Error fetching user documents:", error);
+      res.status(500).json({ message: "Failed to fetch documents" });
+    }
+  });
+
   // Admin user management routes will be defined later with subscription details
 
   app.put('/api/admin/users/:id/role', authenticateUser, async (req: Request, res: Response) => {
