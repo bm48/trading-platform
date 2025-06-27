@@ -11,6 +11,7 @@ import { generateStrategyPackPDF, generateAIStrategyPackPDF } from "./pdf";
 import { calendarService } from "./calendar-service";
 import { adminService } from "./admin-service";
 import { adminAuthService, authenticateAdmin } from './admin-auth';
+import { legalInsightsService } from './legal-insights-service';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -1473,6 +1474,39 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching roles:", error);
       res.status(500).json({ message: "Failed to fetch roles" });
+    }
+  });
+
+  // Legal Insights routes
+  app.get('/api/legal-insights', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+
+      const insights = await legalInsightsService.generatePersonalizedInsights(userId);
+      res.json(insights);
+    } catch (error) {
+      console.error('Error generating legal insights:', error);
+      res.status(500).json({ message: 'Failed to generate legal insights' });
+    }
+  });
+
+  app.get('/api/legal-insights/case/:caseId', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      const { caseId } = req.params;
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+
+      const insights = await legalInsightsService.getCaseSpecificInsights(parseInt(caseId), userId);
+      res.json(insights);
+    } catch (error) {
+      console.error('Error generating case-specific insights:', error);
+      res.status(500).json({ message: 'Failed to generate case-specific insights' });
     }
   });
 
