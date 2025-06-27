@@ -56,10 +56,13 @@ export function useAuth() {
   }, []);
 
   const signInWithGoogle = async () => {
+    console.log('signInWithGoogle called, initiating OAuth flow...');
+    console.log('Current origin:', window.location.origin);
+    
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${window.location.origin}/dashboard`,
         queryParams: {
           access_type: 'offline',
           prompt: 'consent',
@@ -67,11 +70,14 @@ export function useAuth() {
       },
     });
 
+    console.log('OAuth response:', { data, error });
+
     if (error) {
       console.error('Error signing in with Google:', error);
       throw error;
     }
 
+    console.log('OAuth flow initiated successfully, user should be redirected to Google');
     return data;
   };
 

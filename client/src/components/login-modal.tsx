@@ -123,16 +123,25 @@ export default function LoginModal({ isOpen, onClose, initialMode = 'login' }: L
   };
 
   const handleGoogleSignIn = async () => {
+    console.log('Login modal: Google sign in button clicked');
     setIsLoading(true);
     try {
+      console.log('Login modal: Calling Supabase OAuth...');
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: `${window.location.origin}/dashboard`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
         }
       });
 
+      console.log('Login modal: OAuth response:', { data, error });
+
       if (error) {
+        console.error('Login modal: OAuth error:', error);
         // Check if it's a provider not enabled error
         if (error.message?.includes('provider is not enabled') || error.message?.includes('Unsupported provider')) {
           toast({
@@ -140,24 +149,25 @@ export default function LoginModal({ isOpen, onClose, initialMode = 'login' }: L
             description: "Google authentication needs to be configured in Supabase. Please use email signup for now.",
             variant: "destructive",
           });
+          setIsLoading(false);
           return;
         }
         throw error;
       }
 
-      toast({
-        title: "Redirecting",
-        description: "Please complete authentication with Google",
-      });
+      // The OAuth flow will redirect to Google, so we don't need to show success message here
+      // The user will be redirected back after authentication
+      console.log('Login modal: OAuth initiated successfully, user should be redirected to Google');
     } catch (error: any) {
+      console.error('Login modal: OAuth failed:', error);
       toast({
         title: "Google Sign In Failed",
         description: error.message || "An error occurred",
         variant: "destructive",
       });
-    } finally {
       setIsLoading(false);
     }
+    // Note: Don't set loading to false here if redirect is successful
   };
 
   if (!isOpen) return null;
