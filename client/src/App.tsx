@@ -22,12 +22,13 @@ import Settings from "@/pages/settings";
 import Profile from "@/pages/profile";
 import IntakeForm from "@/pages/intake-form";
 import TermsOfService from "@/pages/terms-of-service";
+import AuthCallback from "@/pages/auth-callback";
 import NotFound from "@/pages/not-found";
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
   
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
@@ -90,6 +91,7 @@ function Router() {
         <ProtectedRoute component={IntakeForm} />
       </Route>
       <Route path="/terms-of-service" component={TermsOfService} />
+      <Route path="/auth/callback" component={AuthCallback} />
       <Route path="/application/:id/complete">
         <ProtectedRoute component={Checkout} />
       </Route>
