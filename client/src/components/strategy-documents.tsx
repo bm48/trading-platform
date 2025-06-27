@@ -40,32 +40,42 @@ export default function StrategyDocuments({ caseId }: StrategyDocumentsProps) {
 
   const handleDownload = async (doc: StrategyDocument) => {
     try {
-      // First try to get the download URL
-      const response = await apiRequest('GET', `/api/documents/download/${doc.id}`);
+      // Use authenticated proxy download
+      const response = await apiRequest('GET', `/api/documents/download/${doc.id}?proxy=true`);
       
       if (!response.ok) {
-        throw new Error('Failed to get download URL');
+        throw new Error('Failed to download file');
       }
 
-      const data = await response.json();
+      // Get the file blob and filename from headers
+      const blob = await response.blob();
+      const contentDisposition = response.headers.get('content-disposition');
+      let filename = doc.original_name || 'document.pdf';
       
-      if (data.downloadUrl) {
-        // Use our server as a proxy to handle authentication and CORS properly
-        const a = document.createElement('a');
-        a.style.display = 'none';
-        a.href = `/api/documents/download/${doc.id}?proxy=true`;
-        a.download = data.filename || doc.original_name || 'document.pdf';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-
-        toast({
-          title: "Download Started",
-          description: `${data.filename || doc.original_name} is downloading`,
-        });
-      } else {
-        throw new Error('No download URL provided');
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        if (filenameMatch) {
+          filename = filenameMatch[1].replace(/['"]/g, '');
+        }
       }
+
+      // Create download link and trigger download
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      
+      // Cleanup
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast({
+        title: "Download Started",
+        description: `${filename} is downloading`,
+      });
     } catch (error) {
       console.error('Download error:', error);
       toast({
