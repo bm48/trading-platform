@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { useAuth } from "@/hooks/useAuth";
+import { apiRequest } from "@/lib/queryClient"
+import {useAdminAuth} from "@/hooks/useAdminAuth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -70,40 +70,35 @@ interface UserActivity {
 }
 
 export default function AdminDashboard() {
-  const { user, isLoading: authLoading } = useAuth();
+  const {isAuthenticated, isLoading, adminSession}=useAdminAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedDocument, setSelectedDocument] = useState<PendingDocument | null>(null);
 
-  // Redirect non-admin users
-  useEffect(() => {
-    if (!authLoading && (!user || user.role !== 'admin')) {
-      window.location.href = '/';
-    }
-  }, [user, authLoading]);
+  // Authentication is handled by AdminProtectedRoute wrapper
 
   // Fetch admin statistics
   const { data: stats, isLoading: statsLoading } = useQuery<AdminStats>({
     queryKey: ['/api/admin/stats'],
-    enabled: user?.role === 'admin',
+    enabled: isAuthenticated,
   });
 
   // Fetch admin notifications
   const { data: notifications = [], isLoading: notificationsLoading } = useQuery<AdminNotification[]>({
     queryKey: ['/api/admin/notifications'],
-    enabled: user?.role === 'admin',
+    enabled: isAuthenticated,
   });
 
   // Fetch pending documents
   const { data: pendingDocuments = [], isLoading: documentsLoading } = useQuery<PendingDocument[]>({
     queryKey: ['/api/admin/pending-documents'],
-    enabled: user?.role === 'admin',
+    enabled: isAuthenticated,
   });
 
   // Fetch user activity
   const { data: userActivity = [], isLoading: activityLoading } = useQuery<UserActivity[]>({
     queryKey: ['/api/admin/activity'],
-    enabled: user?.role === 'admin',
+    enabled: isAuthenticated,
   });
 
   // Document update mutation
@@ -152,7 +147,7 @@ export default function AdminDashboard() {
     },
   });
 
-  if (authLoading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
@@ -160,7 +155,7 @@ export default function AdminDashboard() {
     );
   }
 
-  if (!user || user.role !== 'admin') {
+  if (!isAuthenticated) {
     return null;
   }
 
