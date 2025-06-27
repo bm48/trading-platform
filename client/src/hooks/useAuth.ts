@@ -20,18 +20,58 @@ export function useAuth() {
   useEffect(() => {
     // Get initial session
     const getInitialSession = async () => {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      
-      if (error) {
-        console.error('Error getting session:', error);
+      try {
+        // Check for OAuth callback in URL hash
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const accessToken = hashParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token');
+        
+        if (accessToken) {
+          console.log('OAuth tokens found in URL, setting session...');
+          // Set the session manually from OAuth tokens
+          const { data, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken || '',
+          });
+          
+          if (error) {
+            console.error('Error setting OAuth session:', error);
+          } else {
+            console.log('OAuth session set successfully:', data.user?.email);
+            setAuthState({
+              user: data.user || null,
+              session: data.session,
+              loading: false,
+              isAuthenticated: !!data.user,
+            });
+            return;
+          }
+        }
+        
+        // Regular session check
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Error getting session:', error);
+        }
+        
+        console.log('Initial session check:', { hasSession: !!session, userEmail: session?.user?.email });
+        
+        setAuthState({
+          user: session?.user || null,
+          session,
+          loading: false,
+          isAuthenticated: !!session?.user,
+        });
+      } catch (err) {
+        console.error('Error in getInitialSession:', err);
+        setAuthState({
+          user: null,
+          session: null,
+          loading: false,
+          isAuthenticated: false,
+        });
       }
-      
-      setAuthState({
-        user: session?.user || null,
-        session,
-        loading: false,
-        isAuthenticated: !!session?.user,
-      });
     };
 
     getInitialSession();
