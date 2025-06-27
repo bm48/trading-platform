@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import {
@@ -53,7 +53,7 @@ export default function DocumentReviewModal({ document, isOpen, onClose }: Docum
   const [isEditing, setIsEditing] = useState(false);
 
   // Initialize edited content when document changes
-  useState(() => {
+  useEffect(() => {
     if (document?.aiContent) {
       setEditedContent(JSON.stringify(document.aiContent, null, 2));
     }

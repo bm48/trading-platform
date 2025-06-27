@@ -13,6 +13,7 @@ import { supabase } from '@/lib/supabase';
 import DashboardLayout from '@/components/dashboard-layout';
 import EnhancedFileUpload from '@/components/enhanced-file-upload';
 import DocumentPreview from '@/components/document-preview';
+import StrategyDocuments from '@/components/strategy-documents';
 
 import { 
   formatCurrency, 
@@ -510,6 +511,19 @@ export default function CaseDetail() {
 
           {/* Strategy Tab */}
           <TabsContent value="strategy" className="space-y-6">
+            {/* AI-Generated Strategy Documents */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <FileText className="h-5 w-5 mr-2" />
+                  AI-Generated Strategy Documents
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <StrategyDocuments caseId={parseInt(id!)} />
+              </CardContent>
+            </Card>
+
             {strategy ? (
               <div className="space-y-6">
                 <Card>
