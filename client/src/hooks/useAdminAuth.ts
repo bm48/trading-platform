@@ -36,6 +36,7 @@ export function useAdminAuth() {
 
   const loginAdmin = async (email: string, password: string): Promise<boolean> => {
     try {
+      setIsLoading(true);
       const response = await fetch('/api/admin/login', {
         method: 'POST',
         headers: {
@@ -47,17 +48,22 @@ export function useAdminAuth() {
 
       if (response.ok) {
         const data = await response.json();
-        setAdminSession(data.admin || { 
+        const adminSession = data.admin || { 
           isAdmin: true, 
           email, 
           sessionId: data.sessionId,
           expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
           userId: data.admin?.userId || 'admin'
-        });
+        };
+        setAdminSession(adminSession);
+        setIsLoading(false);
+        console.log('Admin session set:', adminSession);
         return true;
       }
+      setIsLoading(false);
       return false;
     } catch (error) {
+      setIsLoading(false);
       return false;
     }
   };

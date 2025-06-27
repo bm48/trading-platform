@@ -16,7 +16,7 @@ export default function AdminLogin() {
 
   useEffect(() => {
     if (isAuthenticated && !isLoading) {
-      console.log('Admin authenticated, navigating to /admin');
+      console.log('Admin already authenticated, navigating to /admin');
       setLocation('/admin');
     }
   }, [isAuthenticated, isLoading, setLocation]);
@@ -31,10 +31,8 @@ export default function AdminLogin() {
         title: "Login Successful",
         description: "Welcome to the admin panel",
       });
-      // Force navigation with a small delay to ensure state is updated
-      setTimeout(() => {
-        setLocation('/admin');
-      }, 100);
+      // Navigation will happen through useEffect when authentication state updates
+      console.log('Login successful, authentication state will trigger navigation');
     } else {
       toast({
         title: "Login Failed",

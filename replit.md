@@ -117,6 +117,11 @@ Project Resolve AI is a comprehensive legal support platform specifically design
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes
+
+- June 27, 2025: Fixed admin login redirect loop issue - improved authentication state management to prevent navigation conflicts between login success and route protection
+- June 27, 2025: Implemented comprehensive Legal Insights Service with AI-powered analysis and dashboard widget integration
+
 ## Changelog
 
 Changelog:
