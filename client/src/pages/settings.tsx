@@ -113,8 +113,8 @@ export default function Settings() {
   const connectCalendarMutation = useMutation({
     mutationFn: async (provider: string) => {
       if (provider === 'google') {
-        // For Google Calendar, show that it's not configured
-        throw new Error('Google Calendar integration is not configured. Please contact support for setup.');
+        // Use the new Supabase Google OAuth integration
+        return await apiRequest('POST', '/api/calendar/connect/google', {});
       }
       if (provider === 'microsoft') {
         // For Microsoft Calendar, show that it's not configured

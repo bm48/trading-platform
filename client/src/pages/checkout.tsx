@@ -10,7 +10,7 @@ import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 
 // Check if Stripe is configured
-const STRIPE_ENABLED = !!import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+const STRIPE_ENABLED = !!import.meta.env.VITE_STRIPE_PUBLIC_KEY;
 import { formatCurrency } from '@/lib/utils';
 import { 
   Shield, 
@@ -19,7 +19,7 @@ import {
   ArrowLeft
 } from 'lucide-react';
 
-const stripePromise = STRIPE_ENABLED ? loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY) : null;
+const stripePromise = STRIPE_ENABLED ? loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY) : null;
 
 interface CheckoutFormProps {
   clientSecret: string;
@@ -71,14 +71,27 @@ function CheckoutForm({ clientSecret, onSuccess }: CheckoutFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <PaymentElement />
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 text-sm text-gray-600">
+          <CreditCard className="h-4 w-4" />
+          <span>Payment Details</span>
+        </div>
+        <PaymentElement 
+          options={{
+            layout: {
+              type: 'tabs',
+              defaultCollapsed: false,
+            }
+          }}
+        />
+      </div>
       <Button 
         type="submit" 
         disabled={!stripe || isProcessing} 
         className="w-full"
         size="lg"
       >
-        {isProcessing ? "Processing..." : "Subscribe Now"}
+        {isProcessing ? "Processing..." : "Subscribe for $49/month"}
       </Button>
     </form>
   );
