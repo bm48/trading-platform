@@ -1475,31 +1475,23 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
       const documentId = parseInt(req.params.id);
       
       // Get document details and verify user access
-      const { data: document, error } = await supabaseAdmin
+      const { data: documents, error } = await supabaseAdmin
         .from('ai_generated_documents')
-        .select('*')
+        .select('id, case_id, user_id, type, status, pdf_supabase_url')
         .eq('id', documentId)
         .eq('user_id', req.user!.id)
-        .eq('status', 'sent')
-        .single();
+        .eq('status', 'sent');
 
-      if (error || !document) {
+      if (error || !documents || documents.length === 0) {
         return res.status(404).json({ message: 'Document not found or access denied' });
       }
 
-      console.log('Full document object:', JSON.stringify(document, null, 2));
-      console.log('Document pdf_supabase_url:', document.pdf_supabase_url);
-      console.log('URL type:', typeof document.pdf_supabase_url);
-      console.log('URL length:', document.pdf_supabase_url?.length);
+      const document = documents[0];
       
       if (!document.pdf_supabase_url || document.pdf_supabase_url.trim() === '') {
         return res.status(404).json({ 
           message: 'Document file not yet generated',
-          details: 'The document is being processed and will be available soon',
-          debug: {
-            url: document.pdf_supabase_url,
-            urlType: typeof document.pdf_supabase_url
-          }
+          details: 'The document is being processed and will be available soon'
         });
       }
 
