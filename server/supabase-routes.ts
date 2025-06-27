@@ -1201,10 +1201,13 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
       const user = authUser.user;
 
       // Update document status to sent
+      console.log('Updating document status...');
       const success = await adminService.updateDocument(documentId, {
         status: 'sent',
         reviewedBy: req.adminSession.email
       });
+
+      console.log('Document update success:', success);
 
       if (success) {
         // Send email notification to client using Supabase Auth
@@ -1213,6 +1216,7 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
             throw new Error('User email not found');
           }
           
+          console.log('Attempting to send email to:', user.email);
           const { error: emailError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
             user.email,
             {
@@ -1227,12 +1231,14 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
           );
 
           if (emailError) {
-            console.error('Email sending failed:', emailError);
-            // Don't fail the whole operation if email fails
+            console.error('Supabase email error:', emailError);
+            throw new Error(`Email sending failed: ${emailError.message}`);
           }
+          
+          console.log('Email sent successfully');
         } catch (emailError) {
           console.error('Email function error:', emailError);
-          // Don't fail the whole operation if email fails
+          throw emailError; // Re-throw to see the actual error
         }
 
         res.json({ 
