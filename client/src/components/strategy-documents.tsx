@@ -43,24 +43,29 @@ export default function StrategyDocuments({ caseId }: StrategyDocumentsProps) {
       const response = await apiRequest('GET', `/api/documents/download/${doc.id}`);
       
       if (!response.ok) {
-        throw new Error('Failed to download document');
+        throw new Error('Failed to get download URL');
       }
 
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.style.display = 'none';
-      a.href = url;
-      a.download = doc.original_name;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      const data = await response.json();
+      
+      if (data.downloadUrl) {
+        // Use the Supabase URL for direct download
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = data.downloadUrl;
+        a.download = data.filename || doc.original_name;
+        a.target = '_blank'; // Open in new tab as fallback
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
 
-      toast({
-        title: "Download Started",
-        description: `${doc.original_name} is downloading`,
-      });
+        toast({
+          title: "Download Started",
+          description: `${data.filename || doc.original_name} is downloading`,
+        });
+      } else {
+        throw new Error('No download URL provided');
+      }
     } catch (error) {
       toast({
         title: "Download Failed",

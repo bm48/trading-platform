@@ -1410,38 +1410,8 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
           console.error('Notification function error:', notificationError);
         }
 
-        // 3. Add document to strategy tab by creating document_storage entry
-        try {
-          console.log('Adding document to strategy tab');
-          const { error: storageError } = await supabaseAdmin
-            .from('document_storage')
-            .insert({
-              case_id: document.case_id,
-              user_id: document.user_id,
-              filename: `${document.type}_${document.cases.title}.pdf`,
-              original_name: `${document.type.replace('_', ' ')} - ${document.cases.title}.pdf`,
-              file_type: 'pdf',
-              storage_path: document.pdf_file_path || '',
-              category: 'strategy_pack',
-              description: `AI-generated ${document.type.replace('_', ' ')} for case: ${document.cases.title}`,
-              access_level: 'user',
-              metadata: {
-                ai_document_id: documentId,
-                generated_by: 'ai',
-                admin_approved: true,
-                approved_by: req.adminSession.email,
-                approved_at: new Date().toISOString()
-              }
-            });
-
-          if (storageError) {
-            console.error('Document storage creation error:', storageError);
-          } else {
-            console.log('Document added to strategy tab successfully');
-          }
-        } catch (storageError) {
-          console.error('Document storage function error:', storageError);
-        }
+        // 3. Mark document as sent (no need to create separate storage entry)
+        console.log('Document will be accessible in Strategy tab with status "sent"');
 
         res.json({ 
           message: 'Document sent successfully',
@@ -1463,21 +1433,36 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     try {
       const caseId = parseInt(req.params.caseId);
       
-      // Get strategy documents for this case and user
+      // Get AI-generated documents that have been sent to this user for this case
       const { data: documents, error } = await supabaseAdmin
-        .from('document_storage')
+        .from('ai_generated_documents')
         .select('*')
         .eq('case_id', caseId)
         .eq('user_id', req.user!.id)
-        .eq('category', 'strategy_pack')
-        .order('uploaded_at', { ascending: false });
+        .eq('status', 'sent')
+        .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Error fetching strategy documents:', error);
         return res.status(500).json({ message: 'Failed to fetch strategy documents' });
       }
 
-      res.json(documents || []);
+      // Transform the data to match the expected format
+      const strategyDocuments = documents?.map(doc => ({
+        id: doc.id,
+        case_id: doc.case_id,
+        user_id: doc.user_id,
+        filename: `${doc.type}_${doc.case_id}.pdf`,
+        original_name: `${doc.type.replace('_', ' ')} - Case ${doc.case_id}.pdf`,
+        file_type: 'pdf',
+        storage_path: doc.pdf_supabase_url,
+        category: 'strategy_pack',
+        description: `AI-generated ${doc.type.replace('_', ' ')}`,
+        created_at: doc.created_at,
+        supabase_url: doc.pdf_supabase_url
+      })) || [];
+
+      res.json(strategyDocuments);
     } catch (error) {
       console.error('Error in strategy documents route:', error);
       res.status(500).json({ message: 'Failed to fetch strategy documents' });
@@ -1491,22 +1476,25 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
       
       // Get document details and verify user access
       const { data: document, error } = await supabaseAdmin
-        .from('document_storage')
+        .from('ai_generated_documents')
         .select('*')
         .eq('id', documentId)
         .eq('user_id', req.user!.id)
+        .eq('status', 'sent')
         .single();
 
       if (error || !document) {
         return res.status(404).json({ message: 'Document not found or access denied' });
       }
 
-      // For now, return a mock PDF response since we need to implement Supabase Storage download
-      // TODO: Implement actual file download from Supabase Storage
-      res.status(501).json({ 
-        message: 'Document download not yet implemented',
-        documentPath: document.storage_path,
-        documentName: document.original_name
+      if (!document.pdf_supabase_url) {
+        return res.status(404).json({ message: 'Document file not available' });
+      }
+
+      // Return the Supabase URL for direct download
+      res.json({ 
+        downloadUrl: document.pdf_supabase_url,
+        filename: `${document.type.replace('_', ' ')} - Case ${document.case_id}.pdf`
       });
     } catch (error) {
       console.error('Error downloading document:', error);
