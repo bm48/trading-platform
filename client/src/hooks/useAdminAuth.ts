@@ -51,7 +51,8 @@ export function useAdminAuth() {
           isAdmin: true, 
           email, 
           sessionId: data.sessionId,
-          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+          userId: data.admin?.userId || 'admin'
         });
         return true;
       }

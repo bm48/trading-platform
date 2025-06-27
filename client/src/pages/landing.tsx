@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Shield, Check, Clock, Users, DollarSign, FileText, Calendar, Download, ChevronRight, X, Brain, Lock, Mail, Search, Star, Plus, LogOut } from 'lucide-react';
-import ApplicationForm from '@/components/application-form';
+
 import LoginModal from '@/components/login-modal';
 import { scrollToElement } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
@@ -526,9 +526,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Application Form */}
-      <ApplicationForm />
-
       {/* How It Works */}
       <section id="how-it-works" className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -536,37 +533,29 @@ export default function Landing() {
             <h2 className="text-3xl font-bold text-neutral-dark mb-4">Simple. Fast. Legally backed.</h2>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+          <div className="grid md:grid-cols-3 gap-8 mb-12">
             <div className="text-center">
               <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-white text-xl font-bold">1</span>
               </div>
-              <h3 className="text-lg font-semibold text-neutral-dark mb-2">Apply for help</h3>
-              <p className="text-neutral-medium text-sm">Briefly describe your issue. We'll assess if we can help.</p>
+              <h3 className="text-lg font-semibold text-neutral-dark mb-2">Sign up & subscribe</h3>
+              <p className="text-neutral-medium text-sm">Start your $49/month subscription and access your complete legal dashboard</p>
             </div>
 
             <div className="text-center">
               <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-white text-xl font-bold">2</span>
               </div>
-              <h3 className="text-lg font-semibold text-neutral-dark mb-2">Get your custom plan</h3>
-              <p className="text-neutral-medium text-sm">Pay $299 to receive your full case PDF, documents, next steps, and portal login.</p>
+              <h3 className="text-lg font-semibold text-neutral-dark mb-2">Create your case</h3>
+              <p className="text-neutral-medium text-sm">Describe your issue and get AI-powered legal analysis with custom strategy documents</p>
             </div>
 
             <div className="text-center">
               <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-white text-xl font-bold">3</span>
               </div>
-              <h3 className="text-lg font-semibold text-neutral-dark mb-2">Start resolving your issue</h3>
-              <p className="text-neutral-medium text-sm">Use the step-by-step timeline, contract templates, and guidance to take action and move on.</p>
-            </div>
-
-            <div className="text-center">
-              <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-white text-xl font-bold">4</span>
-              </div>
-              <h3 className="text-lg font-semibold text-neutral-dark mb-2">Stay protected with ongoing support</h3>
-              <p className="text-neutral-medium text-sm">Subscribe for just $49/month to access unlimited case creation, contract generation, document storage, deadline tracking, and expert support — so you're always ready, no matter what comes up.</p>
+              <h3 className="text-lg font-semibold text-neutral-dark mb-2">Take action & track progress</h3>
+              <p className="text-neutral-medium text-sm">Use timelines, store documents, sync calendars, and get ongoing AI support</p>
             </div>
           </div>
           
@@ -584,117 +573,70 @@ export default function Landing() {
 
       {/* Pricing */}
       <section id="pricing" className="py-20 bg-gray-50">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-neutral-dark mb-4">Straightforward pricing. No surprises.</h2>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8">
-            {/* One-time Strategy Pack */}
-            <Card className="bg-white border-2 border-transparent">
-              <CardContent className="p-8">
-                <div className="text-center mb-6">
-                  <Lock className="h-8 w-8 text-primary mx-auto mb-2" />
-                  <h3 className="text-xl font-bold text-neutral-dark mb-2">$299 one-time</h3>
-                  <p className="text-neutral-medium">Case Plan, PDF, Letters + Portal Access</p>
-                </div>
-
-                <ul className="space-y-3 mb-8">
-                  <li className="flex items-center">
-                    <Check className="h-5 w-5 text-green-600 mr-3" />
-                    <span className="text-neutral-dark">AI-powered case analysis</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="h-5 w-5 text-green-600 mr-3" />
-                    <span className="text-neutral-dark">Custom strategy plan with documents</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="h-5 w-5 text-green-600 mr-3" />
-                    <span className="text-neutral-dark">Step-by-step action timeline</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="h-5 w-5 text-green-600 mr-3" />
-                    <span className="text-neutral-dark">Portal access for 12 months</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="h-5 w-5 text-green-600 mr-3" />
-                    <span className="text-neutral-dark">Document storage & management</span>
-                  </li>
-                </ul>
-
-                <Button 
-                  className="w-full btn-primary"
-                  onClick={() => {
-                    if (!isAuthenticated) {
-                      setShowLoginModal(true);
-                      setIsSignUpMode(false);
-                    } else {
-                      scrollToElement('application');
-                    }
-                  }}
-                >
-                  Start Here - Apply Now
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Ongoing Support */}
-            <Card className="gradient-accent text-white border-2 border-accent relative">
-              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                <span className="bg-white text-accent px-4 py-1 rounded-full text-sm font-medium">After Initial Payment</span>
+          {/* Monthly Subscription Plan */}
+          <Card className="bg-white border-2 border-blue-200 shadow-xl">
+            <CardContent className="p-10">
+              <div className="text-center mb-8">
+                <Shield className="h-16 w-16 text-blue-600 mx-auto mb-4" />
+                <h3 className="text-4xl font-bold text-blue-900 mb-3">$49/month</h3>
+                <p className="text-blue-700 text-xl">Complete legal support for Australian tradespeople</p>
               </div>
 
-              <CardContent className="p-8">
-                <div className="text-center mb-6">
-                  <div className="flex items-center justify-center mb-2">
-                    <DollarSign className="h-8 w-8 mr-1" />
-                  </div>
-                  <h3 className="text-xl font-bold mb-2">$49/month</h3>
-                  <p className="text-orange-100">Unlimited case files, contracts, storage & support</p>
-                  <div className="bg-orange-200 text-orange-800 px-3 py-2 rounded text-sm mt-2">
-                    Requires $299 initial sign-up fee first
-                  </div>
-                </div>
+              <ul className="space-y-4 mb-10">
+                <li className="flex items-start">
+                  <Check className="h-5 w-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" />
+                  <span className="text-neutral-dark font-medium">Unlimited case creation & management</span>
+                </li>
+                <li className="flex items-start">
+                  <Check className="h-5 w-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" />
+                  <span className="text-neutral-dark font-medium">AI-powered legal analysis & strategy development</span>
+                </li>
+                <li className="flex items-start">
+                  <Check className="h-5 w-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" />
+                  <span className="text-neutral-dark font-medium">Custom PDF document generation based on RESOLVE template</span>
+                </li>
+                <li className="flex items-start">
+                  <Check className="h-5 w-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" />
+                  <span className="text-neutral-dark font-medium">Timeline tracking & deadline management</span>
+                </li>
+                <li className="flex items-start">
+                  <Check className="h-5 w-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" />
+                  <span className="text-neutral-dark font-medium">Secure document & photo storage</span>
+                </li>
+                <li className="flex items-start">
+                  <Check className="h-5 w-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" />
+                  <span className="text-neutral-dark font-medium">Calendar integration (Gmail/Outlook)</span>
+                </li>
+                <li className="flex items-start">
+                  <Check className="h-5 w-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" />
+                  <span className="text-neutral-dark font-medium">Email logging & communication tracking</span>
+                </li>
+                <li className="flex items-start">
+                  <Check className="h-5 w-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" />
+                  <span className="text-neutral-dark font-medium">AI message assistant for ongoing support</span>
+                </li>
+              </ul>
 
-                <ul className="space-y-3 mb-8">
-                  <li className="flex items-center">
-                    <Check className="h-5 w-5 mr-3" />
-                    <span>Everything in Strategy Pack, plus:</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="h-5 w-5 mr-3" />
-                    <span>Monthly strategy reviews</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="h-5 w-5 mr-3" />
-                    <span>New document generation</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="h-5 w-5 mr-3" />
-                    <span>Email support (48hr response)</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="h-5 w-5 mr-3" />
-                    <span>Additional case support</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="h-5 w-5 mr-3" />
-                    <span>Contract generation tools</span>
-                  </li>
-                </ul>
-
-                <Button 
-                  className="w-full bg-white text-accent hover:bg-gray-100"
-                  onClick={() => {
-                    alert("First complete the $299 Strategy Pack application above, then you can upgrade to monthly billing.");
-                    scrollToElement('application');
-                  }}
-                >
-                  Upgrade After Initial Payment
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
+              <Button 
+                className="w-full btn-primary text-xl py-4"
+                onClick={() => {
+                  if (!isAuthenticated) {
+                    setShowLoginModal(true);
+                    setIsSignUpMode(true);
+                  } else {
+                    window.location.href = '/checkout';
+                  }
+                }}
+              >
+                Start Your Subscription
+              </Button>
+            </CardContent>
+          </Card>
           
           <div className="text-center mt-8">
             <div className="bg-white p-4 rounded-lg shadow-sm inline-block">
@@ -732,13 +674,13 @@ export default function Landing() {
             onClick={() => {
               if (!isAuthenticated) {
                 setShowLoginModal(true);
-                setIsSignUpMode(false);
+                setIsSignUpMode(true);
               } else {
-                scrollToElement('application');
+                window.location.href = '/checkout';
               }
             }}
           >
-            Apply for Help Now
+            Start Your Subscription
             <ChevronRight className="h-5 w-5 ml-2" />
           </Button>
         </div>
