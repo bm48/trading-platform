@@ -15,10 +15,11 @@ export default function AdminLogin() {
   const { loginAdmin, isAuthenticated, isLoading } = useAdminAuth();
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && !isLoading) {
+      console.log('Admin authenticated, navigating to /admin');
       setLocation('/admin');
     }
-  }, [isAuthenticated, setLocation]);
+  }, [isAuthenticated, isLoading, setLocation]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,7 +31,10 @@ export default function AdminLogin() {
         title: "Login Successful",
         description: "Welcome to the admin panel",
       });
-      setLocation('/admin');
+      // Force navigation with a small delay to ensure state is updated
+      setTimeout(() => {
+        setLocation('/admin');
+      }, 100);
     } else {
       toast({
         title: "Login Failed",
