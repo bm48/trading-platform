@@ -77,9 +77,9 @@ Case Details:
 - Issue Type: ${caseData.issueType}
 - Amount Owed: $${caseData.amount || 'Amount to be determined'}
 - Case Description: ${caseData.description}
-- Case Number: ${caseData.caseNumber}
-- Current Status: ${caseData.status}
-- Priority Level: ${caseData.priority}
+- Case Number: ${(caseData as any).case_number || caseData.caseNumber || 'N/A'}
+- Current Status: ${caseData.status || 'Active'}
+- Priority Level: ${caseData.priority || 'Medium'}
 
 Instructions:
 1. Follow the exact template structure from the RESOLVE document (sections 01-07)
@@ -92,9 +92,9 @@ Instructions:
 Return your response as JSON with this exact structure based on the RESOLVE template:
 {
   "clientName": "${clientName}",
-  "caseTitle": "${caseData.title}",
+  "caseTitle": "${caseData.title || 'Untitled Case'}",
   "amount": "$${caseData.amount || 'TBD'}",
-  "issueType": "${caseData.issueType}",
+  "issueType": "${caseData.issueType || 'general_dispute'}",
   "description": "Personalized analysis of this case based on the provided details",
   "welcomeMessage": "Thanks for reaching out. I'm sorry you're being mucked around — you've done the work, kept your side of the deal, and now you're owed [amount] with no payment in sight. The good news is this: you're legally protected, even without a formal written contract.",
   "legalAnalysis": "You can take action under the Security of Payment Act 2002 (VIC) — a law designed specifically for trades and subcontractors like you to get paid quickly without going to court or hiring a lawyer. [Include specific analysis for this case]",
@@ -191,13 +191,14 @@ Return your response as JSON with this exact structure based on the RESOLVE temp
   }
 
   private getFallbackContent(caseData: Case): ResolveDocumentData {
+    const issueType = caseData.issueType || 'general_dispute';
     return {
       clientName: 'Client Name', // Will be populated from application data
-      caseTitle: caseData.title,
+      caseTitle: caseData.title || 'Untitled Case',
       amount: caseData.amount ? `$${caseData.amount}` : 'Amount to be determined',
-      issueType: caseData.issueType,
+      issueType: issueType,
       description: caseData.description || 'Case details to be reviewed',
-      welcomeMessage: `Thanks for reaching out. I understand you're dealing with ${caseData.issueType.toLowerCase()} issues, and I'm here to help you navigate this situation effectively.`,
+      welcomeMessage: `Thanks for reaching out. I understand you're dealing with ${issueType.toLowerCase()} issues, and I'm here to help you navigate this situation effectively.`,
       legalAnalysis: `Based on your ${caseData.issueType.toLowerCase()} matter, you have legal protections under Australian construction law. Even without a formal written contract, you may have rights to payment for work completed and can take action to recover what you're owed.`,
       securityOfPaymentAct: {
         applicable: true,
@@ -254,7 +255,8 @@ Return your response as JSON with this exact structure based on the RESOLVE temp
   async generateResolvePDF(caseData: Case, documentData: ResolveDocumentData): Promise<string> {
     return new Promise((resolve, reject) => {
       try {
-        const filename = `resolve_${caseData.caseNumber.replace(/[^a-zA-Z0-9]/g, '_')}_${Date.now()}.pdf`;
+        const caseNumber = (caseData as any).case_number || caseData.caseNumber || 'UNKNOWN';
+        const filename = `resolve_${caseNumber.replace(/[^a-zA-Z0-9]/g, '_')}_${Date.now()}.pdf`;
         const filePath = path.join(this.templatesDir, filename);
 
         const doc = new PDFKit({
