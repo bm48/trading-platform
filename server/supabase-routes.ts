@@ -86,25 +86,7 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Admin user management routes
-  app.get('/api/admin/users', authenticateUser, async (req: Request, res: Response) => {
-    // Check admin role
-    if (req.user?.role !== 'admin') {
-      return res.status(403).json({ message: "Admin access required" });
-    }
-    try {
-      const { data: users, error } = await supabaseAdmin
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      res.json(users);
-    } catch (error) {
-      console.error("Error fetching users:", error);
-      res.status(500).json({ message: "Failed to fetch users" });
-    }
-  });
+  // Admin user management routes will be defined later with subscription details
 
   app.put('/api/admin/users/:id/role', authenticateUser, async (req: Request, res: Response) => {
     // Check admin role
@@ -1075,6 +1057,54 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get users with subscription details
+  app.get('/api/admin/users', authenticateAdmin, async (req: Request, res: Response) => {
+    try {
+      if (!req.adminSession) {
+        return res.status(401).json({ message: 'Admin session required' });
+      }
+
+      // Get all users from Supabase Auth
+      const { data: authUsers, error: authError } = await supabaseAdmin.auth.admin.listUsers();
+      
+      if (authError) {
+        console.error('Error fetching auth users:', authError);
+        return res.status(500).json({ message: 'Failed to fetch users' });
+      }
+
+      // Get subscription details from profiles table
+      const { data: profiles, error: profilesError } = await supabaseAdmin
+        .from('profiles')
+        .select('user_id, subscription_status, subscription_start_date, subscription_end_date, first_name, last_name')
+        .order('created_at', { ascending: false });
+
+      if (profilesError) {
+        console.error('Error fetching profiles:', profilesError);
+      }
+
+      // Combine auth users with profile data
+      const usersWithSubscriptions = authUsers.users.map(user => {
+        const profile = profiles?.find(p => p.user_id === user.id);
+        return {
+          id: user.id,
+          email: user.email,
+          firstName: profile?.first_name || user.user_metadata?.first_name || 'Unknown',
+          lastName: profile?.last_name || user.user_metadata?.last_name || '',
+          subscriptionStatus: profile?.subscription_status || 'inactive',
+          subscriptionStartDate: profile?.subscription_start_date,
+          subscriptionEndDate: profile?.subscription_end_date,
+          createdAt: user.created_at,
+          lastSignInAt: user.last_sign_in_at
+        };
+      });
+
+      res.json(usersWithSubscriptions);
+    } catch (error) {
+      console.error('Error fetching admin users:', error);
+      res.status(500).json({ message: 'Failed to fetch users' });
+    }
+  });
+
   app.get('/api/admin/applications', authenticateAdmin, async (req: Request, res: Response) => {
     try {
 
@@ -1162,7 +1192,7 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Update document content
+  // Update document content and regenerate PDF in Storage
   app.put('/api/admin/documents/:id', authenticateAdmin, async (req: Request, res: Response) => {
     try {
       if (!req.adminSession) {
@@ -1172,12 +1202,52 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
       const documentId = parseInt(req.params.id);
       const { content } = req.body;
 
+      // First get the document details
+      const { data: document, error: docError } = await supabaseAdmin
+        .from('ai_generated_documents')
+        .select('*')
+        .eq('id', documentId)
+        .single();
+
+      if (docError || !document) {
+        return res.status(404).json({ message: 'Document not found' });
+      }
+
+      // Update document content in database
       const success = await adminService.updateDocument(documentId, {
         content: content,
         reviewedBy: req.adminSession.email
       });
 
       if (success) {
+        // Regenerate PDF with updated content and save to Supabase Storage
+        try {
+          const aiPDFService = require('./ai-pdf-service').aiPDFService;
+          const newPdfPath = await aiPDFService.generateResolvePDF({
+            id: document.case_id,
+            title: document.ai_content.caseTitle || 'Updated Case',
+            user_id: document.user_id
+          }, JSON.parse(content));
+
+          // Update the PDF path in the document record
+          const { error: updateError } = await supabaseAdmin
+            .from('ai_generated_documents')
+            .update({
+              pdf_file_path: newPdfPath,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', documentId);
+
+          if (updateError) {
+            console.error('Error updating PDF path:', updateError);
+          }
+
+          console.log('Document and PDF updated successfully');
+        } catch (pdfError) {
+          console.error('Error regenerating PDF:', pdfError);
+          // Don't fail the request if PDF regeneration fails
+        }
+
         res.json({ message: 'Document updated successfully' });
       } else {
         res.status(404).json({ message: 'Document not found or failed to update' });
@@ -1236,35 +1306,35 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
       console.log('Document update success:', success);
 
       if (success) {
-        // Send email notification to client using Supabase Auth
+        // Create Supabase notification instead of email
         try {
-          if (!user.email) {
-            throw new Error('User email not found');
-          }
-          
-          console.log('Attempting to send email to:', user.email);
-          const { error: emailError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
-            user.email,
-            {
-              data: {
-                type: 'document_ready',
-                documentId: documentId,
-                caseTitle: document.cases.title,
-                documentType: document.type,
-                firstName: user.user_metadata?.first_name || 'Client'
+          console.log('Creating notification for user:', document.user_id);
+          const { error: notificationError } = await supabaseAdmin
+            .from('notifications')
+            .insert({
+              user_id: document.user_id,
+              type: 'document_ready',
+              title: 'Your Legal Document is Ready',
+              message: `Your ${document.type.replace('_', ' ')} for "${document.cases.title}" has been reviewed and is now available for download.`,
+              priority: 'high',
+              category: 'documents',
+              metadata: {
+                document_id: documentId,
+                case_id: document.case_id,
+                document_type: document.type,
+                case_title: document.cases.title
               }
-            }
-          );
+            });
 
-          if (emailError) {
-            console.error('Supabase email error:', emailError);
-            throw new Error(`Email sending failed: ${emailError.message}`);
+          if (notificationError) {
+            console.error('Notification creation error:', notificationError);
+            // Don't fail the request if notification fails, just log it
+          } else {
+            console.log('Notification created successfully');
           }
-          
-          console.log('Email sent successfully');
-        } catch (emailError) {
-          console.error('Email function error:', emailError);
-          throw emailError; // Re-throw to see the actual error
+        } catch (notificationError) {
+          console.error('Notification function error:', notificationError);
+          // Don't fail the request for notification errors
         }
 
         res.json({ 

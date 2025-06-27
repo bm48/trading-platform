@@ -108,6 +108,12 @@ export default function AdminDashboard() {
     enabled: isAuthenticated,
   });
 
+  // Fetch users with subscription details
+  const { data: users = [], isLoading: usersLoading } = useQuery<any[]>({
+    queryKey: ['/api/admin/users'],
+    enabled: isAuthenticated,
+  });
+
   // Document update mutation
   const updateDocumentMutation = useMutation({
     mutationFn: async ({ id, content, status }: { id: number; content?: any; status?: string }) => {
@@ -451,17 +457,70 @@ export default function AdminDashboard() {
             <CardHeader>
               <CardTitle>User Management</CardTitle>
               <CardDescription>
-                Manage user subscriptions and access permissions
+                Manage user subscriptions and access permissions ({users.length} users)
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              {usersLoading ? (
+                <div className="space-y-4">
+                  {[...Array(5)].map((_, i) => (
+                    <div key={i} className="p-4 border rounded-lg animate-pulse">
+                      <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                      <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+                    </div>
+                  ))}
+                </div>
+              ) : users.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
                   <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p>User management interface coming soon</p>
-                  <p className="text-sm mt-2">This will include subscription management, user roles, and access control</p>
+                  <p>No users found</p>
                 </div>
-              </div>
+              ) : (
+                <ScrollArea className="h-96">
+                  <div className="space-y-4">
+                    {users.map((user) => (
+                      <div key={user.id} className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h4 className="font-semibold">
+                                {user.firstName} {user.lastName}
+                              </h4>
+                              <Badge 
+                                variant={user.subscriptionStatus === 'active' ? 'default' : 'secondary'}
+                                className={user.subscriptionStatus === 'active' ? 'bg-green-100 text-green-800' : ''}
+                              >
+                                {user.subscriptionStatus || 'inactive'}
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-gray-600 mb-1">{user.email}</p>
+                            <div className="text-xs text-gray-500 space-y-1">
+                              <p>Joined: {new Date(user.createdAt).toLocaleDateString()}</p>
+                              {user.lastSignInAt && (
+                                <p>Last login: {new Date(user.lastSignInAt).toLocaleDateString()}</p>
+                              )}
+                              {user.subscriptionStartDate && (
+                                <p>Subscribed: {new Date(user.subscriptionStartDate).toLocaleDateString()}</p>
+                              )}
+                              {user.subscriptionEndDate && (
+                                <p>Expires: {new Date(user.subscriptionEndDate).toLocaleDateString()}</p>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="outline">
+                              View Details
+                            </Button>
+                            <Button size="sm" variant="outline">
+                              Manage Sub
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
