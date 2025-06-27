@@ -27,39 +27,85 @@ export default function Landing() {
   const [adminPassword, setAdminPassword] = useState('helloresolveaiproject');
   const [adminLoading, setAdminLoading] = useState(false);
 
-  // Handle authentication state changes - close modals and redirect if authenticated
+  // Handle authentication state changes and OAuth callback
   useEffect(() => {
-    if (isAuthenticated && user) {
-      console.log('User is authenticated on landing page, redirecting to dashboard');
-      
-      // Close any open modals
-      setShowLoginModal(false);
-      setShowAdminLogin(false);
-      
-      // Check if this is a return from OAuth callback with URL fragments
+    console.log('Landing page auth state:', { isAuthenticated, user: !!user });
+    
+    // Check for OAuth callback with tokens in URL hash
+    const handleOAuthCallback = () => {
       const hashParams = new URLSearchParams(window.location.hash.substring(1));
       const accessToken = hashParams.get('access_token');
+      const refreshToken = hashParams.get('refresh_token');
       
       if (accessToken) {
         console.log('OAuth callback detected on landing page with access token');
         // Clear the hash to clean up URL
         window.history.replaceState(null, '', window.location.pathname);
+        
+        // Wait for authentication to be processed, then redirect
+        const waitForAuth = () => {
+          console.log('Waiting for authentication to be processed...');
+          const checkAuth = setInterval(() => {
+            if (isAuthenticated && user) {
+              console.log('Authentication confirmed, redirecting to dashboard');
+              clearInterval(checkAuth);
+              
+              // Check for pending workflow
+              const redirectAfterAuth = sessionStorage.getItem('redirectAfterAuth');
+              const pendingApplicationId = sessionStorage.getItem('pendingApplicationId');
+              
+              if (redirectAfterAuth === 'checkout-subscription' && pendingApplicationId) {
+                sessionStorage.removeItem('redirectAfterAuth');
+                sessionStorage.removeItem('pendingApplicationId');
+                setLocation('/checkout?subscription=monthly');
+              } else {
+                setLocation('/dashboard');
+              }
+            }
+          }, 500);
+          
+          // Timeout after 10 seconds
+          setTimeout(() => {
+            clearInterval(checkAuth);
+            console.log('Authentication timeout, redirecting to dashboard anyway');
+            setLocation('/dashboard');
+          }, 10000);
+        };
+        
+        waitForAuth();
+        return true; // OAuth callback handled
       }
+      return false; // No OAuth callback
+    };
+    
+    // Handle OAuth callback if present
+    if (handleOAuthCallback()) {
+      return;
+    }
+    
+    // Handle already authenticated users
+    if (isAuthenticated && user) {
+      console.log('User is already authenticated on landing page, redirecting');
       
-      // Always redirect authenticated users to dashboard from landing page
-      // Check for pending workflow first
+      // Close any open modals
+      setShowLoginModal(false);
+      setShowAdminLogin(false);
+      
+      // Check for pending workflow
       const redirectAfterAuth = sessionStorage.getItem('redirectAfterAuth');
       const pendingApplicationId = sessionStorage.getItem('pendingApplicationId');
       
-      if (redirectAfterAuth === 'checkout-subscription' && pendingApplicationId) {
-        console.log('Redirecting to checkout subscription flow');
-        sessionStorage.removeItem('redirectAfterAuth');
-        sessionStorage.removeItem('pendingApplicationId');
-        setLocation('/checkout?subscription=monthly');
-      } else {
-        console.log('Redirecting authenticated user to dashboard');
-        setLocation('/dashboard');
-      }
+      setTimeout(() => {
+        if (redirectAfterAuth === 'checkout-subscription' && pendingApplicationId) {
+          console.log('Redirecting to checkout subscription flow');
+          sessionStorage.removeItem('redirectAfterAuth');
+          sessionStorage.removeItem('pendingApplicationId');
+          setLocation('/checkout?subscription=monthly');
+        } else {
+          console.log('Redirecting authenticated user to dashboard');
+          setLocation('/dashboard');
+        }
+      }, 100);
     }
   }, [isAuthenticated, user, setLocation]);
 
