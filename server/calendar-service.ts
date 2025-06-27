@@ -8,7 +8,7 @@ import type { CalendarIntegration, CalendarEvent, InsertCalendarEvent } from '@s
 // Google Calendar Configuration
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || 'http://localhost:5000/api/calendar/auth/google/callback';
+const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || 'http://uoffyzwrillwytlgikwc.supabase.co/api/calendar/auth/google/callback';
 
 // Microsoft Graph Configuration
 const MICROSOFT_CLIENT_ID = process.env.MICROSOFT_CLIENT_ID;
@@ -31,11 +31,11 @@ export class CalendarService {
   constructor() {
     // Initialize Google OAuth client only if credentials are available
     if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
-      // Use our application's callback URL instead of Supabase
-      const redirectUri = process.env.GOOGLE_REDIRECT_URI || 
-        (process.env.NODE_ENV === 'production' 
-          ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co/api/calendar/auth/google/callback`
-          : `https://${process.env.REPL_ID || 'replit'}.replit.app/api/calendar/auth/google/callback`);
+      // For Google Calendar OAuth, we need our app's callback, not Supabase's
+      // The GOOGLE_REDIRECT_URI is for Supabase auth, but we need our own endpoint
+      const redirectUri = process.env.NODE_ENV === 'production' 
+        ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co/api/calendar/auth/google/callback`
+        : `https://${process.env.REPL_ID || 'replit'}.replit.app/api/calendar/auth/google/callback`;
         
       this.googleAuth = new google.auth.OAuth2(
         GOOGLE_CLIENT_ID,
