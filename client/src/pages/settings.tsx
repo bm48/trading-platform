@@ -112,6 +112,10 @@ export default function Settings() {
   // Calendar integration mutation
   const connectCalendarMutation = useMutation({
     mutationFn: async (provider: string) => {
+      if (provider === 'google') {
+        // For Google Calendar, show that it's not configured
+        throw new Error('Google Calendar integration is not configured. Please contact support for setup.');
+      }
       return await apiRequest('POST', '/api/integrations/calendar/connect', { provider });
     },
     onSuccess: (data) => {
@@ -130,8 +134,8 @@ export default function Settings() {
     },
     onError: (error: any) => {
       toast({
-        title: "Connection Failed",
-        description: error.message || "Failed to connect calendar.",
+        title: "Integration Not Available",
+        description: error.message || "This calendar integration is not currently available.",
         variant: "destructive",
       });
     },

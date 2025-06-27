@@ -47,6 +47,15 @@ export default function CalendarIntegration() {
       const response = await apiRequest('GET', '/api/calendar/auth/google');
       const data = await response.json();
       
+      // Check if Google Calendar is not configured
+      if (!response.ok) {
+        throw new Error(data.message || 'Google Calendar integration not available');
+      }
+      
+      if (!data.authUrl) {
+        throw new Error('Google Calendar integration is not configured. Please contact support.');
+      }
+      
       return new Promise((resolve, reject) => {
         const popup = window.open(data.authUrl, '_blank', 'width=500,height=600');
         
