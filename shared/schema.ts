@@ -249,6 +249,33 @@ export const assistant_conversations = pgTable("assistant_conversations", {
   created_at: timestamp("created_at").defaultNow(),
 });
 
+// Smart notification center with priority-based alerts
+export const notifications = pgTable("notifications", {
+  id: serial("id").primaryKey(),
+  user_id: varchar("user_id").notNull(),
+  title: varchar("title").notNull(),
+  message: text("message").notNull(),
+  type: varchar("type").notNull(), // deadline, case_update, payment, system, legal_tip, action_required
+  priority: varchar("priority").notNull(), // low, medium, high, critical
+  status: varchar("status").default("unread"), // unread, read, archived
+  category: varchar("category"), // payment_disputes, contract_issues, regulatory, general
+  related_id: integer("related_id"), // case_id, contract_id, application_id, etc.
+  related_type: varchar("related_type"), // case, contract, application, system
+  action_url: varchar("action_url"), // URL to take action on notification
+  action_label: varchar("action_label"), // Label for action button
+  expires_at: timestamp("expires_at"), // When notification expires
+  metadata: jsonb("metadata"), // Additional context data
+  created_at: timestamp("created_at").defaultNow(),
+  read_at: timestamp("read_at"),
+  archived_at: timestamp("archived_at"),
+}, (table) => ({
+  userIdIdx: index("notifications_user_id_idx").on(table.user_id),
+  statusIdx: index("notifications_status_idx").on(table.status),
+  priorityIdx: index("notifications_priority_idx").on(table.priority),
+  typeIdx: index("notifications_type_idx").on(table.type),
+  createdAtIdx: index("notifications_created_at_idx").on(table.created_at),
+}));
+
 // Schema validation (moved to end of file to avoid duplicates)
 
 export const insertCaseSchema = createInsertSchema(cases).omit({
@@ -336,3 +363,13 @@ export const insertApplicationSchema = createInsertSchema(applications).omit({
   start_date: z.string().optional().transform((val) => val ? new Date(val) : undefined),
 });
 export type InsertApplicationType = z.infer<typeof insertApplicationSchema>;
+
+// Notification schemas and types
+export const insertNotificationSchema = createInsertSchema(notifications).omit({
+  id: true,
+  created_at: true,
+  read_at: true,
+  archived_at: true,
+});
+export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+export type Notification = typeof notifications.$inferSelect;

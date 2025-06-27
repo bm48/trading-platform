@@ -15,6 +15,7 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 import { Link, useLocation } from 'wouter';
 import { cn } from '@/lib/utils';
+import { NotificationCenter } from './notification-center';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -86,6 +87,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             </div>
             
             <div className="flex items-center space-x-4">
+              <NotificationCenter />
               <Button
                 variant="ghost"
                 onClick={handleLogout}

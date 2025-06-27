@@ -12,6 +12,7 @@ import ApplicationForm from '@/components/application-form';
 import ValidatedCaseForm from '@/components/validated-case-form';
 import ValidatedContractForm from '@/components/validated-contract-form';
 import { LegalInsightsWidget } from '@/components/legal-insights-widget';
+import { NotificationWidget } from '@/components/notification-center';
 import { formatCurrency, formatDate, getStatusColor, calculateProgress } from '@/lib/utils';
 import { MoodIndicator } from '@/components/mood-visualization';
 import { MoodData } from '@/lib/mood-utils';
@@ -291,8 +292,14 @@ export default function Dashboard() {
           </Card>
         )}
 
-        {/* Legal Insights Widget */}
-        <LegalInsightsWidget className="animate-fade-in" />
+        {/* Widgets Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in">
+          {/* Legal Insights Widget */}
+          <LegalInsightsWidget />
+          
+          {/* Notification Widget */}
+          <NotificationWidget />
+        </div>
 
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 animate-fade-in">

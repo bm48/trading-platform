@@ -1,5 +1,6 @@
 import { supabase } from "./db";
-import type { User, Case, Contract, Document, TimelineEvent, Application, CalendarIntegration, CalendarEvent } from '@shared/schema';
+import type { User, Case, Contract, Document, TimelineEvent, Application, CalendarIntegration, CalendarEvent, Notification, InsertNotification } from '@shared/schema';
+import type { NotificationFilters } from './notification-service';
 
 // Supabase-based storage implementation
 export class SupabaseStorage {
@@ -894,6 +895,156 @@ export class SupabaseStorage {
     } catch (error) {
       console.error('Error updating calendar event:', error);
       throw new Error(`Failed to update calendar event: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  // Notification operations
+  async createNotification(notification: InsertNotification): Promise<Notification> {
+    try {
+      const { data, error } = await supabase
+        .from('notifications')
+        .insert(notification)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating notification:', error);
+        throw new Error(`Failed to create notification: ${error.message}`);
+      }
+
+      return data as Notification;
+    } catch (error) {
+      console.error('Error creating notification:', error);
+      throw new Error(`Failed to create notification: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  async getUserNotifications(userId: string, filters: NotificationFilters = {}): Promise<Notification[]> {
+    try {
+      let query = supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', userId);
+
+      if (filters.status) {
+        query = query.eq('status', filters.status);
+      }
+
+      if (filters.priority) {
+        query = query.eq('priority', filters.priority);
+      }
+
+      if (filters.type) {
+        query = query.eq('type', filters.type);
+      }
+
+      if (filters.category) {
+        query = query.eq('category', filters.category);
+      }
+
+      query = query.order('created_at', { ascending: false });
+
+      if (filters.limit) {
+        query = query.limit(filters.limit);
+      }
+
+      if (filters.offset) {
+        query = query.range(filters.offset, filters.offset + (filters.limit || 10) - 1);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('Error fetching notifications:', error);
+        throw new Error(`Failed to fetch notifications: ${error.message}`);
+      }
+
+      return data as Notification[];
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+      throw new Error(`Failed to fetch notifications: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  async updateNotification(id: number, updates: Partial<Notification>, userId?: string): Promise<Notification> {
+    try {
+      let query = supabase
+        .from('notifications')
+        .update(updates)
+        .eq('id', id);
+
+      if (userId) {
+        query = query.eq('user_id', userId);
+      }
+
+      const { data, error } = await query.select().single();
+
+      if (error) {
+        console.error('Error updating notification:', error);
+        throw new Error(`Failed to update notification: ${error.message}`);
+      }
+
+      return data as Notification;
+    } catch (error) {
+      console.error('Error updating notification:', error);
+      throw new Error(`Failed to update notification: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  async markAllNotificationsAsRead(userId: string): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ 
+          status: 'read', 
+          read_at: new Date().toISOString() 
+        })
+        .eq('user_id', userId)
+        .eq('status', 'unread');
+
+      if (error) {
+        console.error('Error marking all notifications as read:', error);
+        throw new Error(`Failed to mark all notifications as read: ${error.message}`);
+      }
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error);
+      throw new Error(`Failed to mark all notifications as read: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  async deleteNotification(id: number, userId: string): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', userId);
+
+      if (error) {
+        console.error('Error deleting notification:', error);
+        throw new Error(`Failed to delete notification: ${error.message}`);
+      }
+    } catch (error) {
+      console.error('Error deleting notification:', error);
+      throw new Error(`Failed to delete notification: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  async deleteExpiredNotifications(): Promise<void> {
+    try {
+      const now = new Date().toISOString();
+      const { error } = await supabase
+        .from('notifications')
+        .delete()
+        .lt('expires_at', now);
+
+      if (error) {
+        console.error('Error deleting expired notifications:', error);
+        throw new Error(`Failed to delete expired notifications: ${error.message}`);
+      }
+    } catch (error) {
+      console.error('Error deleting expired notifications:', error);
+      throw new Error(`Failed to delete expired notifications: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 }

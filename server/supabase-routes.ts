@@ -12,6 +12,7 @@ import { calendarService } from "./calendar-service";
 import { adminService } from "./admin-service";
 import { adminAuthService, authenticateAdmin } from './admin-auth';
 import { legalInsightsService } from './legal-insights-service';
+import { notificationService } from './notification-service';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -1488,6 +1489,128 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching roles:", error);
       res.status(500).json({ message: "Failed to fetch roles" });
+    }
+  });
+
+  // Notification routes
+  app.get('/api/notifications', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+
+      const { status, priority, type, limit, offset } = req.query;
+      
+      const filters: any = {};
+      if (status) filters.status = status as string;
+      if (priority) filters.priority = priority as string;
+      if (type) filters.type = type as string;
+      if (limit) filters.limit = parseInt(limit as string);
+      if (offset) filters.offset = parseInt(offset as string);
+
+      const notifications = await notificationService.getUserNotifications(userId, filters);
+      res.json(notifications);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+      res.status(500).json({ message: 'Failed to fetch notifications' });
+    }
+  });
+
+  app.get('/api/notifications/summary', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+
+      const summary = await notificationService.getNotificationSummary(userId);
+      res.json(summary);
+    } catch (error) {
+      console.error('Error fetching notification summary:', error);
+      res.status(500).json({ message: 'Failed to fetch notification summary' });
+    }
+  });
+
+  app.put('/api/notifications/:id/read', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      const { id } = req.params;
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+
+      await notificationService.markAsRead(parseInt(id), userId);
+      res.json({ message: 'Notification marked as read' });
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+      res.status(500).json({ message: 'Failed to mark notification as read' });
+    }
+  });
+
+  app.put('/api/notifications/mark-all-read', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+
+      await notificationService.markAllAsRead(userId);
+      res.json({ message: 'All notifications marked as read' });
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error);
+      res.status(500).json({ message: 'Failed to mark all notifications as read' });
+    }
+  });
+
+  app.put('/api/notifications/:id/archive', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      const { id } = req.params;
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+
+      await notificationService.archiveNotification(parseInt(id), userId);
+      res.json({ message: 'Notification archived' });
+    } catch (error) {
+      console.error('Error archiving notification:', error);
+      res.status(500).json({ message: 'Failed to archive notification' });
+    }
+  });
+
+  app.delete('/api/notifications/:id', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      const { id } = req.params;
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+
+      await notificationService.deleteNotification(parseInt(id), userId);
+      res.json({ message: 'Notification deleted' });
+    } catch (error) {
+      console.error('Error deleting notification:', error);
+      res.status(500).json({ message: 'Failed to delete notification' });
+    }
+  });
+
+  app.post('/api/notifications/generate-smart', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+
+      await notificationService.createDeadlineNotifications(userId);
+      await notificationService.createSmartNotifications(userId);
+      res.json({ message: 'Smart notifications generated' });
+    } catch (error) {
+      console.error('Error generating smart notifications:', error);
+      res.status(500).json({ message: 'Failed to generate smart notifications' });
     }
   });
 
