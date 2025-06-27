@@ -74,6 +74,45 @@ export default function CaseDetail() {
     enabled: !!id,
   });
 
+  const generateAIDocument = useMutation({
+    mutationFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error('Authentication required');
+      }
+
+      const response = await fetch(`/api/cases/${id}/generate-document`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(error || 'Failed to generate document');
+      }
+      
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/documents/case', id] });
+      toast({
+        title: "AI Strategy Pack Generated",
+        description: "Your personalized RESOLVE strategy document has been generated and sent for admin approval.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Generation Failed",
+        description: error.message || "Failed to generate AI document. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const addNote = useMutation({
     mutationFn: async (note: string) => {
       // This would create a timeline event for the note
@@ -208,14 +247,33 @@ export default function CaseDetail() {
                   {caseData.status}
                 </Badge>
               </div>
-              {caseData.amount && (
-                <div className="text-right">
-                  <div className="text-2xl font-bold text-accent">
-                    {formatCurrency(caseData.amount)}
+              <div className="flex items-center gap-4">
+                <Button 
+                  onClick={() => generateAIDocument.mutate()}
+                  disabled={generateAIDocument.isPending}
+                  className="bg-primary hover:bg-primary/90"
+                >
+                  {generateAIDocument.isPending ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <FileText className="h-4 w-4 mr-2" />
+                      Generate AI Strategy Pack
+                    </>
+                  )}
+                </Button>
+                {caseData.amount && (
+                  <div className="text-right">
+                    <div className="text-2xl font-bold text-accent">
+                      {formatCurrency(caseData.amount)}
+                    </div>
+                    <div className="text-sm text-neutral-medium">Amount claimed</div>
                   </div>
-                  <div className="text-sm text-neutral-medium">Amount claimed</div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
 
             <div className="grid md:grid-cols-4 gap-4 mb-6">

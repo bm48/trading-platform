@@ -64,58 +64,99 @@ export class AIPDFService {
         return this.getFallbackContent(caseData);
       }
 
+      // Extract client name from case data or use a generic name
+      const clientName = caseData.title.split(' ')[0] || 'Valued Client';
+      
       const prompt = `
-You are a legal AI assistant specialized in Australian construction law and the Security of Payment Act. 
-Analyze the following case and generate a comprehensive "RESOLVE - FOR TRADIES" document.
+You are a specialized legal AI assistant for Australian construction law and the Security of Payment Act. 
+Create a personalized "RESOLVE - FOR TRADIES" document using the uploaded template structure and the following real case information:
 
-Case Information:
+Case Details:
+- Client: ${clientName}
 - Case Title: ${caseData.title}
-- Case Number: ${caseData.caseNumber}
 - Issue Type: ${caseData.issueType}
-- Amount: $${caseData.amount || 'Not specified'}
-- Description: ${caseData.description}
-- Status: ${caseData.status}
-- Priority: ${caseData.priority}
+- Amount Owed: $${caseData.amount || 'Amount to be determined'}
+- Case Description: ${caseData.description}
+- Case Number: ${caseData.caseNumber}
+- Current Status: ${caseData.status}
+- Priority Level: ${caseData.priority}
 
-Based on this case information, generate a detailed analysis following the RESOLVE template structure. 
-Focus on practical, actionable advice for Australian tradespeople, particularly around the Security of Payment Act.
+Instructions:
+1. Follow the exact template structure from the RESOLVE document (sections 01-07)
+2. Personalize all content based on the specific case details provided
+3. Provide practical, actionable legal guidance for Australian construction disputes
+4. Focus on Security of Payment Act 2002 applications where relevant to this case
+5. Include specific timelines and cost estimates relevant to this situation
+6. Use professional but accessible language suitable for tradespeople
 
-Return your response as JSON with the following structure:
+Return your response as JSON with this exact structure based on the RESOLVE template:
 {
-  "clientName": "Client full name",
-  "caseTitle": "Descriptive case title",
-  "amount": "Formatted amount (e.g., '$10,000')",
-  "issueType": "Type of legal issue",
-  "description": "Brief case summary",
-  "welcomeMessage": "Personalized welcome message acknowledging their situation",
-  "legalAnalysis": "Detailed analysis of their legal position and rights",
+  "clientName": "${clientName}",
+  "caseTitle": "${caseData.title}",
+  "amount": "$${caseData.amount || 'TBD'}",
+  "issueType": "${caseData.issueType}",
+  "description": "Personalized analysis of this case based on the provided details",
+  "welcomeMessage": "Thanks for reaching out. I'm sorry you're being mucked around — you've done the work, kept your side of the deal, and now you're owed [amount] with no payment in sight. The good news is this: you're legally protected, even without a formal written contract.",
+  "legalAnalysis": "You can take action under the Security of Payment Act 2002 (VIC) — a law designed specifically for trades and subcontractors like you to get paid quickly without going to court or hiring a lawyer. [Include specific analysis for this case]",
   "securityOfPaymentAct": {
-    "applicable": true/false,
-    "reasoning": "Why SOPA does or doesn't apply",
+    "applicable": true,
+    "reasoning": "The Act applies because: You did construction work or supplied related goods/services, You issued a valid invoice (payment claim), and You haven't been paid within the allowed timeframe.",
     "steps": [
       {
         "step": 1,
-        "title": "Step title",
-        "description": "Detailed description of what to do",
-        "timeframe": "How long this step takes"
+        "title": "Send Payment Claim under SOPA",
+        "description": "You send a new invoice marked as a Payment Claim under the Security of Payment Act 2002 (Vic). This gives the builder only 10 business days to respond.",
+        "timeframe": "10 business days for response"
+      },
+      {
+        "step": 2,
+        "title": "Monitor for Response",
+        "description": "If he doesn't respond, you win by default — and can apply for adjudication and recover the amount via court enforcement.",
+        "timeframe": "Automatic win if no response"
+      },
+      {
+        "step": 3,
+        "title": "Apply for Adjudication",
+        "description": "If he disputes it, it goes to adjudication — a fast, binding decision (usually within 2–4 weeks).",
+        "timeframe": "2-4 weeks for decision"
       }
     ]
   },
   "timeline": [
     {
       "day": "Day 0",
-      "action": "Action to take",
-      "deadline": "Important deadline if any"
+      "action": "Send Payment Claim including new invoice under SOPA (draft letter attached)",
+      "deadline": "Start 10-day response period"
+    },
+    {
+      "day": "Day 10",
+      "action": "Deadline for builder to issue a Payment Schedule",
+      "deadline": "Builder must respond by this date"
+    },
+    {
+      "day": "Day 11-15",
+      "action": "If no schedule received, apply for adjudication",
+      "deadline": "Application window"
+    },
+    {
+      "day": "Week 4-6",
+      "action": "Adjudicator decides in your favour (if paperwork is correct)",
+      "deadline": "Binding legal decision"
+    },
+    {
+      "day": "Week 6+",
+      "action": "Enforce as a court debt if still unpaid",
+      "deadline": "Final enforcement"
     }
   ],
   "costEstimate": {
-    "adjudicationFee": "Cost estimate",
-    "adjudicatorFee": "Fee range",
-    "recoveryLikelihood": "Likelihood assessment",
-    "totalEstimatedCost": "Total estimated cost"
+    "adjudicationFee": "Application Fee (to Adjudicator) - Free through some ANAs (e.g. Adjudicate Today)",
+    "adjudicatorFee": "Adjudicator's Fee - Usually $500–$1,500 depending on complexity and time involved",
+    "recoveryLikelihood": "High - You may recover this fee if the builder loses the case",
+    "totalEstimatedCost": "$500–$1,500 (potentially recoverable if you win)"
   },
-  "nextSteps": "Clear next steps and recommendations",
-  "attachments": ["List of recommended attachments/documents"]
+  "nextSteps": "If the builder doesn't respond within 10 business days of receiving your Payment Claim, you can proceed to adjudication — a fast, legally binding process under the Security of Payment Act.",
+  "attachments": ["Payment Claim Letter - Word Document"]
 }
 `;
 
@@ -224,35 +265,50 @@ Return your response as JSON with the following structure:
         const writeStream = fs.createWriteStream(filePath);
         doc.pipe(writeStream);
 
-        // Header with RESOLVE branding
-        doc.fontSize(32)
-           .fillColor('#2563eb')
-           .text('RESOLVE', 50, 50, { align: 'center' });
+        // Page 1: Cover Page - Match exact template layout
+        // Large RESOLVE header
+        doc.fontSize(48)
+           .fillColor('#000000')
+           .text('RESOLVE', 50, 100, { align: 'center' });
 
+        doc.moveDown(3);
+
+        // FOR TRADIES subtitle
+        doc.fontSize(18)
+           .fillColor('#000000')
+           .text('FOR TRADIES. POWERED BY AI', 50, 200, { align: 'center' });
+
+        doc.moveDown(3);
+
+        // Prepared for section
         doc.fontSize(14)
-           .fillColor('#666666')
-           .text('FOR TRADIES. POWERED BY AI', 50, 90, { align: 'center' });
+           .fillColor('#000000')
+           .text(`Prepared for ${documentData.clientName}`, 50, 280);
 
         doc.moveDown(2);
 
-        // Client information
-        doc.fontSize(18)
-           .fillColor('#000000')
-           .text(`Prepared for ${documentData.clientName}`, 50, 150);
-
+        // Case title
         doc.fontSize(16)
-           .text(`${documentData.caseTitle}`, 50, 180);
+           .fillColor('#000000')
+           .font('Helvetica-Bold')
+           .text(`${documentData.caseTitle}`, 50, 320);
 
+        doc.moveDown(1);
+
+        // Date
+        doc.fontSize(12)
+           .fillColor('#000000')
+           .font('Helvetica')
+           .text(`${new Date().toLocaleDateString()}`, 50, 360);
+
+        // Footer tagline at bottom
         doc.fontSize(12)
            .fillColor('#666666')
-           .text(`Date: ${new Date().toLocaleDateString()}`, 50, 210);
+           .text('Resolve — Empowering you to resolve legal issues without the legal fees.', 50, 750, { align: 'center' });
 
-        // Add separator line
-        doc.moveTo(50, 240)
-           .lineTo(545, 240)
-           .stroke('#cccccc');
-
-        let yPosition = 270;
+        // Start content on new page
+        doc.addPage();
+        let yPosition = 50;
 
         // Purpose section
         this.addSection(doc, '01', 'Purpose of this document', 
