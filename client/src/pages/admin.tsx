@@ -19,7 +19,9 @@ import {
   Edit,
   Eye,
   Calendar,
-  DollarSign
+  DollarSign,
+  Check,
+  X
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
@@ -380,14 +382,36 @@ export default function AdminDashboard() {
                               <Eye className="w-4 h-4 mr-1" />
                               Review
                             </Button>
-                            {doc.status === 'reviewed' && (
+                            {doc.status === 'pending_review' && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="default"
+                                  onClick={() => updateDocumentMutation.mutate({ id: doc.id, status: 'approved' })}
+                                  disabled={updateDocumentMutation.isPending}
+                                >
+                                  <Check className="w-4 h-4 mr-1" />
+                                  Approve
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => updateDocumentMutation.mutate({ id: doc.id, status: 'rejected' })}
+                                  disabled={updateDocumentMutation.isPending}
+                                >
+                                  <X className="w-4 h-4 mr-1" />
+                                  Reject
+                                </Button>
+                              </>
+                            )}
+                            {doc.status === 'approved' && (
                               <Button
                                 size="sm"
                                 onClick={() => sendDocumentMutation.mutate(doc.id)}
                                 disabled={sendDocumentMutation.isPending}
                               >
                                 <Send className="w-4 h-4 mr-1" />
-                                Send
+                                Send to Client
                               </Button>
                             )}
                           </div>

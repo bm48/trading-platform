@@ -1102,7 +1102,7 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
 
       const documentId = parseInt(req.params.id);
       const { data: document, error } = await supabaseAdmin
-        .from('ai_generations')
+        .from('ai_generated_documents')
         .select('*')
         .eq('id', documentId)
         .single();

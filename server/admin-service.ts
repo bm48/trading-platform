@@ -94,7 +94,7 @@ export class AdminService {
       supabaseAdmin
         .from('ai_generated_documents')
         .select('*', { count: 'exact', head: true })
-        .in('status', ['draft', 'reviewed', 'pending_review']),
+        .in('status', ['draft', 'reviewed', 'pending_review', 'approved', 'rejected']),
       
       // Subscription statistics - Use direct user table queries since auth API doesn't have subscription info
       Promise.all([
@@ -150,30 +150,34 @@ export class AdminService {
           cases!inner (
             id,
             title,
-            user_id,
-            client_name
+            user_id
           )
         `)
-        .in('status', ['draft', 'reviewed', 'pending_review'])
+        .in('status', ['draft', 'reviewed', 'pending_review', 'approved', 'rejected'])
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      return (generations || []).map(gen => ({
-        id: gen.id,
-        caseId: gen.case_id,
-        caseTitle: gen.cases?.title || 'Unknown Case',
-        clientName: gen.cases?.client_name || 'Unknown Client',
-        type: gen.type,
-        status: gen.status,
-        wordDocId: gen.word_doc_id,
-        pdfDocId: gen.pdf_doc_id,
-        aiContent: gen.ai_content,
-        intakeData: gen.intake_data,
-        createdAt: gen.created_at,
-        reviewedBy: gen.reviewed_by,
-        reviewedAt: gen.reviewed_at
-      }));
+      return (generations || []).map(gen => {
+        // Extract client name from AI content
+        const clientName = gen.ai_content?.clientName || 'Unknown Client';
+        
+        return {
+          id: gen.id,
+          caseId: gen.case_id,
+          caseTitle: gen.cases?.title || 'Unknown Case',
+          clientName: clientName,
+          type: gen.type,
+          status: gen.status,
+          wordDocId: gen.word_doc_id,
+          pdfDocId: gen.pdf_doc_id,
+          aiContent: gen.ai_content,
+          intakeData: gen.intake_data,
+          createdAt: gen.created_at,
+          reviewedBy: gen.reviewed_by,
+          reviewedAt: gen.reviewed_at
+        };
+      });
     } catch (error) {
       console.error('Error fetching pending documents:', error);
       return [];
@@ -183,7 +187,7 @@ export class AdminService {
   // Update document content and status
   async updateDocument(documentId: number, updates: {
     content?: any;
-    status?: 'draft' | 'reviewed' | 'sent';
+    status?: 'draft' | 'reviewed' | 'sent' | 'approved' | 'rejected' | 'pending_review';
     reviewedBy?: string;
   }): Promise<boolean> {
     try {
@@ -197,9 +201,14 @@ export class AdminService {
       
       if (updates.status) {
         updateData.status = updates.status;
-        if (updates.status === 'reviewed') {
+        if (updates.status === 'reviewed' || updates.status === 'approved') {
           updateData.reviewed_by = updates.reviewedBy;
           updateData.reviewed_at = new Date().toISOString();
+        }
+        if (updates.status === 'rejected') {
+          updateData.reviewed_by = updates.reviewedBy;
+          updateData.reviewed_at = new Date().toISOString();
+          updateData.rejection_reason = 'Document rejected by admin';
         }
         if (updates.status === 'sent') {
           updateData.sent_by = updates.reviewedBy;
@@ -208,7 +217,7 @@ export class AdminService {
       }
 
       const { error } = await supabaseAdmin
-        .from('ai_generations')
+        .from('ai_generated_documents')
         .update(updateData)
         .eq('id', documentId);
 
