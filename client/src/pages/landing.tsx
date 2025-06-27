@@ -27,21 +27,22 @@ export default function Landing() {
   const [adminPassword, setAdminPassword] = useState('helloresolveaiproject');
   const [adminLoading, setAdminLoading] = useState(false);
 
-  // Handle authentication state changes - redirect authenticated users
+  // Handle OAuth callback redirect only
   useEffect(() => {
     console.log('Landing page auth state:', { isAuthenticated, user: !!user });
     
-    if (isAuthenticated && user) {
-      console.log('User is authenticated on landing page, redirecting');
+    // Only redirect if this is an OAuth callback (has tokens in URL hash)
+    const hasOAuthTokens = window.location.hash.includes('access_token');
+    
+    if (isAuthenticated && user && hasOAuthTokens) {
+      console.log('OAuth callback detected, redirecting authenticated user');
       
       // Close any open modals
       setShowLoginModal(false);
       setShowAdminLogin(false);
       
-      // Clear OAuth hash if present
-      if (window.location.hash.includes('access_token')) {
-        window.history.replaceState(null, '', window.location.pathname);
-      }
+      // Clear OAuth hash
+      window.history.replaceState(null, '', window.location.pathname);
       
       // Check for pending workflow
       const redirectAfterAuth = sessionStorage.getItem('redirectAfterAuth');
@@ -55,10 +56,15 @@ export default function Landing() {
           sessionStorage.removeItem('pendingApplicationId');
           setLocation('/checkout?subscription=monthly');
         } else {
-          console.log('Redirecting authenticated user to dashboard');
+          console.log('Redirecting OAuth user to dashboard');
           setLocation('/dashboard');
         }
       }, 200);
+    } else if (isAuthenticated && user) {
+      console.log('User is authenticated but not from OAuth callback, staying on landing page');
+      // Close any open modals but don't redirect
+      setShowLoginModal(false);
+      setShowAdminLogin(false);
     }
   }, [isAuthenticated, user, setLocation]);
 

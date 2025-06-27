@@ -31,10 +31,16 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   
   const navigation = [
     {
+      name: 'Home',
+      href: '/',
+      icon: Home,
+      current: location === '/',
+    },
+    {
       name: 'Dashboard',
       href: '/dashboard',
-      icon: Home,
-      current: (location === '/dashboard' || location === '/') && !currentTab,
+      icon: FolderOpen,
+      current: (location === '/dashboard') && !currentTab,
     },
     {
       name: 'Calendar',
