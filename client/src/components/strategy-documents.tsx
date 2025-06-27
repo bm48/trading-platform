@@ -50,51 +50,19 @@ export default function StrategyDocuments({ caseId }: StrategyDocumentsProps) {
       const data = await response.json();
       
       if (data.downloadUrl) {
-        try {
-          // Try to fetch the file directly from Supabase and trigger proper download
-          const fileResponse = await fetch(data.downloadUrl);
-          
-          if (!fileResponse.ok) {
-            throw new Error('Failed to fetch file from storage');
-          }
+        // Use our server as a proxy to handle authentication and CORS properly
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = `/api/documents/download/${doc.id}?proxy=true`;
+        a.download = data.filename || doc.original_name || 'document.pdf';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
 
-          const blob = await fileResponse.blob();
-          const filename = data.filename || doc.original_name || 'document.pdf';
-          
-          // Create download link and trigger download
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.style.display = 'none';
-          a.href = url;
-          a.download = filename;
-          document.body.appendChild(a);
-          a.click();
-          
-          // Cleanup
-          window.URL.revokeObjectURL(url);
-          document.body.removeChild(a);
-
-          toast({
-            title: "Download Started",
-            description: `${filename} is downloading`,
-          });
-        } catch (fetchError) {
-          console.log('Direct fetch failed, trying proxy download...', fetchError);
-          
-          // Fallback: Use our server as a proxy
-          const a = document.createElement('a');
-          a.style.display = 'none';
-          a.href = `/api/documents/download/${doc.id}?proxy=true`;
-          a.download = data.filename || doc.original_name || 'document.pdf';
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-
-          toast({
-            title: "Download Started",
-            description: `${data.filename || doc.original_name} is downloading`,
-          });
-        }
+        toast({
+          title: "Download Started",
+          description: `${data.filename || doc.original_name} is downloading`,
+        });
       } else {
         throw new Error('No download URL provided');
       }

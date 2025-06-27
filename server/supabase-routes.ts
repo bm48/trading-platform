@@ -1501,17 +1501,31 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
       if (shouldProxy) {
         // Proxy the file download through our server
         try {
-          const fileResponse = await fetch(document.pdf_supabase_url);
+          console.log('Proxying download for URL:', document.pdf_supabase_url);
+          
+          const fileResponse = await fetch(document.pdf_supabase_url, {
+            headers: {
+              'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+              'Content-Type': 'application/json',
+            }
+          });
+          
+          console.log('File response status:', fileResponse.status);
+          
           if (!fileResponse.ok) {
-            throw new Error('Failed to fetch file from storage');
+            console.error('Failed to fetch file from storage:', fileResponse.statusText);
+            throw new Error(`Failed to fetch file from storage: ${fileResponse.statusText}`);
           }
 
           const buffer = await fileResponse.arrayBuffer();
           const filename = `${document.type.replace('_', ' ')} - Case ${document.case_id}.pdf`;
           
+          console.log('File fetched successfully, size:', buffer.byteLength);
+          
           res.setHeader('Content-Type', 'application/pdf');
           res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
           res.setHeader('Content-Length', buffer.byteLength.toString());
+          res.setHeader('Cache-Control', 'no-cache');
           res.send(Buffer.from(buffer));
         } catch (error) {
           console.error('Error proxying file download:', error);
