@@ -1488,7 +1488,10 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
       }
 
       if (!document.pdf_supabase_url) {
-        return res.status(404).json({ message: 'Document file not available' });
+        return res.status(404).json({ 
+          message: 'Document file not yet generated',
+          details: 'The document is being processed and will be available soon'
+        });
       }
 
       // Return the Supabase URL for direct download
