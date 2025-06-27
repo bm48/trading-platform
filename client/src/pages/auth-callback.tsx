@@ -10,36 +10,65 @@ export default function AuthCallback() {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        // Handle the auth callback
-        const { data, error } = await supabase.auth.getSession();
+        console.log('Auth callback started, current URL:', window.location.href);
+        console.log('URL hash:', window.location.hash);
+        console.log('URL search:', window.location.search);
         
-        if (error) {
-          console.error('Auth callback error:', error);
-          navigate('/?auth=error');
-          return;
-        }
-
-        if (data.session) {
-          console.log('Authentication successful:', data.session.user.email);
+        // First, handle the OAuth callback from the URL hash
+        const { data: authData, error: authError } = await supabase.auth.getSession();
+        console.log('Initial session check:', { authData, authError });
+        
+        // If no session yet, try to refresh in case the callback is still processing
+        if (!authData.session) {
+          console.log('No session found, waiting for auth state change...');
           
-          // Check if there's a pending application workflow
+          // Wait for auth state change
+          const { data: { subscription } } = supabase.auth.onAuthStateChange(
+            async (event, session) => {
+              console.log('Auth state changed during callback:', event, session?.user?.email);
+              
+              if (event === 'SIGNED_IN' && session) {
+                subscription.unsubscribe();
+                
+                // Check if there's a pending application workflow
+                const redirectAfterAuth = sessionStorage.getItem('redirectAfterAuth');
+                const pendingApplicationId = sessionStorage.getItem('pendingApplicationId');
+                
+                if (redirectAfterAuth === 'checkout-subscription' && pendingApplicationId) {
+                  sessionStorage.removeItem('redirectAfterAuth');
+                  sessionStorage.removeItem('pendingApplicationId');
+                  navigate('/checkout?subscription=monthly');
+                } else {
+                  navigate('/dashboard');
+                }
+              } else if (event === 'SIGNED_OUT' || (event === 'TOKEN_REFRESHED' && !session)) {
+                subscription.unsubscribe();
+                navigate('/?auth=error');
+              }
+            }
+          );
+          
+          // Timeout fallback in case auth state change doesn't fire
+          setTimeout(() => {
+            subscription.unsubscribe();
+            console.log('Auth callback timeout, redirecting to home');
+            navigate('/');
+          }, 5000);
+          
+        } else {
+          // Session already exists
+          console.log('Authentication successful:', authData.session.user.email);
+          
           const redirectAfterAuth = sessionStorage.getItem('redirectAfterAuth');
           const pendingApplicationId = sessionStorage.getItem('pendingApplicationId');
           
           if (redirectAfterAuth === 'checkout-subscription' && pendingApplicationId) {
-            // Clear the session storage
             sessionStorage.removeItem('redirectAfterAuth');
             sessionStorage.removeItem('pendingApplicationId');
-            
-            // Redirect to monthly subscription checkout
             navigate('/checkout?subscription=monthly');
           } else {
-            // Default redirect to dashboard
             navigate('/dashboard');
           }
-        } else {
-          // No session found, redirect to home
-          navigate('/');
         }
       } catch (err) {
         console.error('Auth callback error:', err);
@@ -47,10 +76,7 @@ export default function AuthCallback() {
       }
     };
 
-    // Add a small delay to ensure the URL hash is processed
-    const timer = setTimeout(handleAuthCallback, 100);
-    
-    return () => clearTimeout(timer);
+    handleAuthCallback();
   }, [navigate]);
 
   return (
