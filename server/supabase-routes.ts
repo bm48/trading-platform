@@ -1475,17 +1475,6 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
       const documentId = parseInt(req.params.id);
       
       // Get document details and verify user access
-      console.log('Looking for document ID:', documentId, 'for user:', req.user!.id);
-      
-      // First try to find the document without user restriction to debug
-      const { data: allDocs, error: allDocsError } = await supabaseAdmin
-        .from('ai_generated_documents')
-        .select('id, case_id, user_id, type, status, pdf_supabase_url')
-        .eq('id', documentId);
-
-      console.log('All documents with this ID:', allDocs);
-      console.log('All docs error:', allDocsError);
-
       const { data: documents, error } = await supabaseAdmin
         .from('ai_generated_documents')
         .select('id, case_id, user_id, type, status, pdf_supabase_url')
@@ -1493,15 +1482,11 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
         .eq('user_id', req.user!.id)
         .eq('status', 'sent');
 
-      console.log('Supabase query error:', error);
-      console.log('Supabase query result:', documents);
-
       if (error || !documents || documents.length === 0) {
         return res.status(404).json({ message: 'Document not found or access denied' });
       }
 
       const document = documents[0];
-      console.log('Document found:', document);
       
       if (!document.pdf_supabase_url || document.pdf_supabase_url.trim() === '') {
         return res.status(404).json({ 
