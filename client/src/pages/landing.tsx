@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,6 +26,39 @@ export default function Landing() {
   const [adminEmail, setAdminEmail] = useState('hello@projectresolveai.com');
   const [adminPassword, setAdminPassword] = useState('helloresolveaiproject');
   const [adminLoading, setAdminLoading] = useState(false);
+
+  // Handle authentication state changes - close modals and redirect if authenticated
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      console.log('User is authenticated on landing page, closing modals');
+      
+      // Close any open modals
+      setShowLoginModal(false);
+      setShowAdminLogin(false);
+      
+      // Check if this is a return from OAuth callback with URL fragments
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const accessToken = hashParams.get('access_token');
+      
+      if (accessToken) {
+        console.log('OAuth callback detected on landing page, redirecting to dashboard');
+        // Clear the hash to clean up URL
+        window.history.replaceState(null, '', window.location.pathname);
+        
+        // Check for pending workflow
+        const redirectAfterAuth = sessionStorage.getItem('redirectAfterAuth');
+        const pendingApplicationId = sessionStorage.getItem('pendingApplicationId');
+        
+        if (redirectAfterAuth === 'checkout-subscription' && pendingApplicationId) {
+          sessionStorage.removeItem('redirectAfterAuth');
+          sessionStorage.removeItem('pendingApplicationId');
+          setLocation('/checkout?subscription=monthly');
+        } else {
+          setLocation('/dashboard');
+        }
+      }
+    }
+  }, [isAuthenticated, user, setLocation]);
 
   const handleGoogleSignIn = async () => {
     try {
