@@ -143,12 +143,7 @@ export default function Checkout() {
     }
   }, [user, loading, setLocation]);
 
-  // Auto-handle demo mode success
-  useEffect(() => {
-    if (paymentIntent?.demo_mode && paymentIntent?.status === 'succeeded') {
-      handlePaymentSuccess();
-    }
-  }, [paymentIntent]);
+  // Don't auto-handle demo mode - require user action
 
   const handlePaymentSuccess = () => {
     setPaymentCompleted(true);
@@ -276,14 +271,56 @@ export default function Checkout() {
                   </div>
                 ) : paymentIntent?.demo_mode ? (
                   <div className="text-center py-8">
-                    <h3 className="text-lg font-semibold mb-4">Demo Mode</h3>
-                    <p className="text-gray-600 mb-6">Payment processing is in demo mode. Click below to simulate a successful subscription.</p>
+                    <h3 className="text-lg font-semibold mb-4">Demo Payment Form</h3>
+                    <p className="text-gray-600 mb-6">Fill out this demo payment form to complete your $49/month subscription.</p>
+                    <div className="bg-gray-100 p-6 rounded-lg mb-6 text-left">
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Card Number</label>
+                          <input 
+                            type="text" 
+                            placeholder="4242 4242 4242 4242" 
+                            className="w-full p-3 border border-gray-300 rounded-md"
+                            readOnly 
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Expiry</label>
+                            <input 
+                              type="text" 
+                              placeholder="12/25" 
+                              className="w-full p-3 border border-gray-300 rounded-md"
+                              readOnly 
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">CVC</label>
+                            <input 
+                              type="text" 
+                              placeholder="123" 
+                              className="w-full p-3 border border-gray-300 rounded-md"
+                              readOnly 
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Cardholder Name</label>
+                          <input 
+                            type="text" 
+                            placeholder="John Smith" 
+                            className="w-full p-3 border border-gray-300 rounded-md"
+                            readOnly 
+                          />
+                        </div>
+                      </div>
+                    </div>
                     <Button 
                       onClick={handlePaymentSuccess}
                       className="w-full"
                       size="lg"
                     >
-                      Complete Demo Subscription
+                      Subscribe for $49/month
                     </Button>
                   </div>
                 ) : paymentIntent?.client_secret ? (
