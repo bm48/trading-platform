@@ -1255,33 +1255,28 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
   // Calendar Integration Routes - Using Supabase Google OAuth
   app.get('/api/calendar/auth/google', authenticateUser, async (req: Request, res: Response) => {
     try {
-      // Demo mode: simulate successful Google Calendar connection
-      console.log('Google Calendar demo auth for user:', (req as any).user.id);
-      
-      // Create a demo calendar integration record
-      const demoIntegration = {
-        user_id: (req as any).user.id,
+      // Use Supabase's Google OAuth with calendar scopes
+      const { data, error } = await supabaseAdmin.auth.signInWithOAuth({
         provider: 'google',
-        provider_account_id: 'demo_google_' + Date.now(),
-        access_token: 'demo_token_' + Date.now(),
-        refresh_token: 'demo_refresh_' + Date.now(),
-        expires_at: new Date(Date.now() + 3600000).toISOString(), // 1 hour from now
-        scope: 'https://www.googleapis.com/auth/calendar',
-        token_type: 'Bearer',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-
-      // In demo mode, we'll simulate a successful connection
-      res.json({ 
-        success: true,
-        message: 'Google Calendar connected successfully (Demo Mode)',
-        integration: demoIntegration,
-        demo_mode: true
+        options: {
+          scopes: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events',
+          redirectTo: process.env.NODE_ENV === 'production' 
+            ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co/dashboard`
+            : `https://${process.env.REPL_ID}.replit.app/dashboard`
+        }
       });
+
+      if (error) {
+        return res.status(400).json({ 
+          message: 'Failed to initiate Google Calendar authorization',
+          error: error.message
+        });
+      }
+      
+      res.json({ authUrl: data.url });
     } catch (error) {
-      console.error('Error with Google Calendar demo auth:', error);
-      res.status(500).json({ message: 'Failed to connect Google Calendar' });
+      console.error('Error getting Google auth URL:', error);
+      res.status(500).json({ message: 'Failed to get Google auth URL' });
     }
   });
 
@@ -1758,71 +1753,6 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error creating payment intent:', error);
       res.status(500).json({ message: 'Failed to create payment intent' });
-    }
-  });
-
-  // Monthly subscription creation endpoint
-  app.post('/api/subscription/create-monthly', authenticateUser, async (req: Request, res: Response) => {
-    try {
-      const userId = (req as any).user.id;
-      const { userDetails } = req.body;
-      
-      console.log('Creating monthly subscription for user:', userId);
-      console.log('User details:', userDetails);
-
-      // In demo mode, simulate successful subscription creation
-      const subscriptionData = {
-        planType: 'monthly_unlimited',
-        status: 'active',
-        stripeSubscriptionId: 'demo_sub_' + Date.now(),
-        stripeCustomerId: 'demo_cus_' + Date.now(),
-        currentPeriodStart: new Date().toISOString(),
-        currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-        strategyPacksRemaining: null,
-        hasInitialStrategyPack: true,
-        ...userDetails // Include all user details from the form
-      };
-
-      // For demo mode, we'll skip the actual user metadata update and just return success
-      console.log('Demo subscription created with data:', subscriptionData);
-
-      res.json({
-        message: 'Monthly subscription created successfully',
-        subscription: subscriptionData,
-        demo_mode: true
-      });
-    } catch (error) {
-      console.error('Error creating monthly subscription:', error);
-      res.status(500).json({ message: 'Failed to create subscription' });
-    }
-  });
-
-  // Subscription status endpoint
-  app.get('/api/subscription/status', authenticateUser, async (req: Request, res: Response) => {
-    try {
-      const userId = (req as any).user.id;
-      
-      // Get user data from Supabase
-      const { data: { user }, error } = await supabaseAdmin.auth.getUser(userId);
-      
-      if (error || !user) {
-        return res.status(404).json({ message: 'User not found' });
-      }
-
-      const metadata = user.user_metadata || {};
-      
-      res.json({
-        planType: metadata.planType || 'none',
-        status: metadata.status || 'inactive',
-        hasInitialStrategyPack: metadata.hasInitialStrategyPack || false,
-        strategyPacksRemaining: metadata.strategyPacksRemaining || 0,
-        canCreateCases: metadata.status === 'active',
-        currentPeriodStart: metadata.currentPeriodStart,
-        currentPeriodEnd: metadata.currentPeriodEnd
-      });
-    } catch (error) {
-      console.error('Error fetching subscription status:', error);
-      res.status(500).json({ message: 'Failed to fetch subscription status' });
     }
   });
 

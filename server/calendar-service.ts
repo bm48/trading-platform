@@ -45,7 +45,8 @@ export class CalendarService {
 
   // Google Calendar Methods - Using Supabase OAuth
   async getGoogleAuthUrl(): Promise<string> {
-    // Return Supabase OAuth URL with calendar scopes
+    // Use Supabase's built-in Google OAuth with calendar scopes
+    // This leverages the existing GOOGLE_REDIRECT_URI configuration
     const supabaseUrl = process.env.SUPABASE_URL || 'https://uoffyzwrillwytlgikwc.supabase.co';
     const redirectTo = process.env.NODE_ENV === 'production' 
       ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co/dashboard`

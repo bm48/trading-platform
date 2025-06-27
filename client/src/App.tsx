@@ -24,7 +24,6 @@ import IntakeForm from "@/pages/intake-form";
 import TermsOfService from "@/pages/terms-of-service";
 import AuthCallback from "@/pages/auth-callback";
 import Auth from "@/pages/auth";
-import TestLogin from "@/pages/test-login";
 import NotFound from "@/pages/not-found";
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
@@ -80,7 +79,9 @@ function Router() {
       <Route path="/intake-form/:id">
         <IntakeForm />
       </Route>
-      <Route path="/checkout" component={Checkout} />
+      <Route path="/checkout">
+        <ProtectedRoute component={Checkout} />
+      </Route>
       <Route path="/settings">
         <ProtectedRoute component={Settings} />
       </Route>
@@ -92,7 +93,6 @@ function Router() {
       </Route>
       <Route path="/terms-of-service" component={TermsOfService} />
       <Route path="/auth" component={Auth} />
-      <Route path="/test-login" component={TestLogin} />
       <Route path="/auth/callback" component={AuthCallback} />
       <Route path="/auth/confirm" component={Auth} />
       <Route path="/application/:id/complete">
