@@ -34,8 +34,8 @@ export class CalendarService {
       // Use our application's callback URL instead of Supabase
       const redirectUri = process.env.GOOGLE_REDIRECT_URI || 
         (process.env.NODE_ENV === 'production' 
-          ? `${process.env.REPLIT_DEV_DOMAIN || 'https://your-app-domain.replit.app'}/api/calendar/auth/google/callback`
-          : 'http://localhost:5000/api/calendar/auth/google/callback');
+          ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co/api/calendar/auth/google/callback`
+          : `https://${process.env.REPL_ID || 'replit'}.replit.app/api/calendar/auth/google/callback`);
         
       this.googleAuth = new google.auth.OAuth2(
         GOOGLE_CLIENT_ID,
