@@ -80,9 +80,7 @@ function Router() {
       <Route path="/intake-form/:id">
         <IntakeForm />
       </Route>
-      <Route path="/checkout">
-        <ProtectedRoute component={Checkout} />
-      </Route>
+      <Route path="/checkout" component={Checkout} />
       <Route path="/settings">
         <ProtectedRoute component={Settings} />
       </Route>

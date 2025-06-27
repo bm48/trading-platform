@@ -101,12 +101,14 @@ export default function CheckoutPage() {
     },
   });
 
-  // Redirect to auth if not authenticated
+  // Debug logging and auth check
   useEffect(() => {
+    console.log('Checkout page - Auth status:', { isAuthenticated, user: user?.email });
     if (!isAuthenticated) {
+      console.log('Not authenticated, redirecting to auth');
       setLocation('/auth');
     }
-  }, [isAuthenticated, setLocation]);
+  }, [isAuthenticated, setLocation, user]);
 
   const subscriptionMutation = useMutation({
     mutationFn: async (formData: CheckoutFormData) => {
