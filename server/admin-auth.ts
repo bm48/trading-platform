@@ -1,4 +1,5 @@
 import { supabaseAdmin } from './db';
+import { supabase } from './supabase-auth';
 
 export interface AdminSession {
   isAdmin: boolean;
@@ -9,125 +10,112 @@ export interface AdminSession {
 }
 
 export class AdminAuthService {
-  private fallbackSessions = new Map<string, AdminSession>();
-  
-  // Authenticate admin with hardcoded credentials only
+  // Authenticate admin using Supabase Auth
   async authenticateAdmin(email: string, password: string): Promise<string | null> {
-    const ADMIN_EMAIL = 'hello@projectresolveai.com';
-    const ADMIN_PASSWORD = 'helloprojectresolveai';
-
-    // Check hardcoded credentials
-    if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-      const sessionId = `admin_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      const expiresAt = new Date();
-      expiresAt.setHours(expiresAt.getHours() + 24);
-
-      const adminSession: AdminSession = {
-        isAdmin: true,
-        email: ADMIN_EMAIL,
-        sessionId,
-        expiresAt,
-        userId: 'admin_user'
-      };
-
-      // Store in fallback sessions (memory)
-      this.fallbackSessions.set(sessionId, adminSession);
-
-      // Also try to store in database if available
-      try {
-        await supabaseAdmin
-          .from('admin_sessions')
-          .insert({
-            user_id: 'admin_user',
-            session_id: sessionId,
-            expires_at: expiresAt.toISOString()
-          });
-      } catch (sessionError) {
-        console.log('Database session creation failed, using memory fallback:', sessionError);
-      }
-
-      return sessionId;
-    }
-
-    return null;
-  }
-
-  // Validate admin session with fallback support
-  async validateAdminSession(sessionId: string): Promise<AdminSession | null> {
     try {
-      // Check fallback sessions first
-      const fallbackSession = this.fallbackSessions.get(sessionId);
-      if (fallbackSession) {
-        if (fallbackSession.expiresAt > new Date()) {
-          return fallbackSession;
-        } else {
-          this.fallbackSessions.delete(sessionId);
-        }
+      // Sign in with Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (authError || !authData.user) {
+        console.log('Admin authentication failed:', authError?.message);
+        return null;
       }
 
-      // Try to get from database
-      const { data: sessionData, error } = await supabaseAdmin
-        .from('admin_sessions')
-        .select('*')
-        .eq('session_id', sessionId)
+      // Check if user has admin role
+      const { data: userProfile, error: profileError } = await supabaseAdmin
+        .from('users')
+        .select('role, email, firstName, lastName')
+        .eq('id', authData.user.id)
         .single();
 
-      if (!error && sessionData) {
-        const session: AdminSession = {
-          isAdmin: true,
-          email: 'hello@projectresolveai.com',
-          sessionId: sessionData.session_id,
-          expiresAt: new Date(sessionData.expires_at),
-          userId: sessionData.user_id
-        };
-
-        if (session.expiresAt > new Date()) {
-          return session;
-        } else {
-          // Session expired, clean it up
-          await this.logoutAdmin(sessionId);
-        }
+      if (profileError || !userProfile) {
+        console.log('Failed to fetch user profile:', profileError?.message);
+        return null;
       }
 
+      if (userProfile.role !== 'admin') {
+        console.log('User does not have admin role:', userProfile.role);
+        return null;
+      }
+
+      // Return the session token from Supabase
+      const sessionToken = authData.session?.access_token;
+      if (!sessionToken) {
+        console.log('No session token received');
+        return null;
+      }
+
+      console.log('Admin authenticated successfully:', userProfile.email);
+      return sessionToken;
+
+    } catch (error) {
+      console.error('Admin authentication error:', error);
       return null;
+    }
+  }
+
+  // Validate admin session using Supabase Auth
+  async validateAdminSession(sessionToken: string): Promise<AdminSession | null> {
+    try {
+      // Validate the JWT token with Supabase
+      const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(sessionToken);
+
+      if (userError || !userData.user) {
+        console.log('Invalid session token:', userError?.message);
+        return null;
+      }
+
+      // Check if user has admin role
+      const { data: userProfile, error: profileError } = await supabaseAdmin
+        .from('users')
+        .select('role, email, firstName, lastName')
+        .eq('id', userData.user.id)
+        .single();
+
+      if (profileError || !userProfile) {
+        console.log('Failed to fetch user profile for validation:', profileError?.message);
+        return null;
+      }
+
+      if (userProfile.role !== 'admin') {
+        console.log('User does not have admin role:', userProfile.role);
+        return null;
+      }
+
+      // Return admin session info
+      const session: AdminSession = {
+        isAdmin: true,
+        email: userProfile.email,
+        sessionId: sessionToken,
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours from now
+        userId: userData.user.id
+      };
+
+      return session;
     } catch (error) {
       console.error('Session validation error:', error);
       return null;
     }
   }
 
-  // Logout admin with fallback support
-  async logoutAdmin(sessionId: string): Promise<boolean> {
+  // Logout admin using Supabase Auth
+  async logoutAdmin(sessionToken: string): Promise<boolean> {
     try {
-      // Remove from fallback sessions
-      this.fallbackSessions.delete(sessionId);
-
-      // Try to remove from database
-      const { error } = await supabaseAdmin
-        .from('admin_sessions')
-        .delete()
-        .eq('session_id', sessionId);
-
+      // Sign out from Supabase Auth
+      const { error } = await supabase.auth.signOut();
+      
       if (error) {
-        console.error('Error deleting admin session from database:', error);
-        // Still return true since we removed from fallback
+        console.error('Error signing out admin:', error);
+        return false;
       }
+      
       return true;
     } catch (error) {
       console.error('Logout error:', error);
       return false;
-    }
-  }
-
-  // Clean expired sessions
-  async cleanExpiredSessions(): Promise<void> {
-    try {
-      await supabaseAdmin
-        .from('admin_sessions')
-        .delete()
-        .lt('expires_at', new Date().toISOString());
-    } catch (error) {
-      console.error('Error cleaning expired sessions:', error);
     }
   }
 }
@@ -137,15 +125,14 @@ export const adminAuthService = new AdminAuthService();
 // Middleware for admin authentication
 export const authenticateAdmin = async (req: any, res: any, next: any) => {
   try {
-    // Clean expired sessions periodically
-    await adminAuthService.cleanExpiredSessions();
-
-    const sessionId = req.cookies?.admin_session_id;
-    if (!sessionId) {
-      return res.status(401).json({ message: 'No admin session' });
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ message: 'No admin session token' });
     }
 
-    const session = await adminAuthService.validateAdminSession(sessionId);
+    const sessionToken = authHeader.split(' ')[1];
+    const session = await adminAuthService.validateAdminSession(sessionToken);
+    
     if (!session) {
       return res.status(401).json({ message: 'Invalid admin session' });
     }
