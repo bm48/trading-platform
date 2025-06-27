@@ -460,14 +460,16 @@ Return your response as JSON with this exact structure based on the RESOLVE temp
       }
 
       // Create record in ai_generated_documents table
-      const aiDocument = await supabaseStorage.createAiDocument({
+      const documentRecord = {
         case_id: caseId,
         user_id: userId,
-        type: 'strategy_pack', // Database column is 'type', not 'document_type'
+        document_type: 'strategy_pack',
         ai_content: documentData,
         pdf_file_path: storagePath,
-        status: 'pending_review'
-      });
+        status: 'pending_review' as any
+      };
+      
+      const aiDocument = await supabaseStorage.createAiDocument(documentRecord);
 
       // Clean up local file
       fs.unlinkSync(filePath);
@@ -489,7 +491,14 @@ Return your response as JSON with this exact structure based on the RESOLVE temp
       const filename = await this.generateResolvePDF(caseData, documentData);
       
       // Save to Supabase and create database record
-      const documentId = await this.saveToSupabase(filename, caseData.id, caseData.userId, documentData);
+      const caseUserId = (caseData as any).user_id || caseData.userId;
+      console.log('Debug: caseData user info:', { user_id: (caseData as any).user_id, userId: caseData.userId, final: caseUserId });
+      
+      if (!caseUserId) {
+        throw new Error('Cannot determine user ID for case document generation');
+      }
+      
+      const documentId = await this.saveToSupabase(filename, caseData.id, caseUserId, documentData);
 
       console.log(`Generated AI document ${documentId} for case ${caseData.id}`);
       return documentId;

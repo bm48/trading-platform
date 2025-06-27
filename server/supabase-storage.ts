@@ -1051,9 +1051,21 @@ export class SupabaseStorage {
   // AI-Generated Documents operations
   async createAiDocument(documentData: InsertAiDocument): Promise<AiDocument> {
     try {
+      // Map TypeScript properties to database column names
+      const dbRecord = {
+        case_id: documentData.case_id,
+        user_id: documentData.user_id,
+        type: documentData.document_type, // Map document_type to 'type' column
+        ai_content: documentData.ai_content,
+        pdf_file_path: documentData.pdf_file_path,
+        status: documentData.status || 'pending_review'
+      };
+
+      console.log('Creating AI document with data:', dbRecord);
+
       const { data, error } = await supabase
         .from('ai_generated_documents')
-        .insert(documentData)
+        .insert(dbRecord)
         .select()
         .single();
 
