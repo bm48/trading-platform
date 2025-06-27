@@ -1495,11 +1495,35 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Return the Supabase URL for direct download
-      res.json({ 
-        downloadUrl: document.pdf_supabase_url,
-        filename: `${document.type.replace('_', ' ')} - Case ${document.case_id}.pdf`
-      });
+      // Check if we should proxy the download or return the URL
+      const shouldProxy = req.query.proxy === 'true';
+      
+      if (shouldProxy) {
+        // Proxy the file download through our server
+        try {
+          const fileResponse = await fetch(document.pdf_supabase_url);
+          if (!fileResponse.ok) {
+            throw new Error('Failed to fetch file from storage');
+          }
+
+          const buffer = await fileResponse.arrayBuffer();
+          const filename = `${document.type.replace('_', ' ')} - Case ${document.case_id}.pdf`;
+          
+          res.setHeader('Content-Type', 'application/pdf');
+          res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+          res.setHeader('Content-Length', buffer.byteLength.toString());
+          res.send(Buffer.from(buffer));
+        } catch (error) {
+          console.error('Error proxying file download:', error);
+          res.status(500).json({ message: 'Failed to download file' });
+        }
+      } else {
+        // Return the Supabase URL for direct download
+        res.json({ 
+          downloadUrl: document.pdf_supabase_url,
+          filename: `${document.type.replace('_', ' ')} - Case ${document.case_id}.pdf`
+        });
+      }
     } catch (error) {
       console.error('Error downloading document:', error);
       res.status(500).json({ message: 'Failed to download document' });

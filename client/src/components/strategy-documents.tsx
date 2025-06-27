@@ -40,6 +40,7 @@ export default function StrategyDocuments({ caseId }: StrategyDocumentsProps) {
 
   const handleDownload = async (doc: StrategyDocument) => {
     try {
+      // First try to get the download URL
       const response = await apiRequest('GET', `/api/documents/download/${doc.id}`);
       
       if (!response.ok) {
@@ -49,24 +50,56 @@ export default function StrategyDocuments({ caseId }: StrategyDocumentsProps) {
       const data = await response.json();
       
       if (data.downloadUrl) {
-        // Use the Supabase URL for direct download
-        const a = document.createElement('a');
-        a.style.display = 'none';
-        a.href = data.downloadUrl;
-        a.download = data.filename || doc.original_name;
-        a.target = '_blank'; // Open in new tab as fallback
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+        try {
+          // Try to fetch the file directly from Supabase and trigger proper download
+          const fileResponse = await fetch(data.downloadUrl);
+          
+          if (!fileResponse.ok) {
+            throw new Error('Failed to fetch file from storage');
+          }
 
-        toast({
-          title: "Download Started",
-          description: `${data.filename || doc.original_name} is downloading`,
-        });
+          const blob = await fileResponse.blob();
+          const filename = data.filename || doc.original_name || 'document.pdf';
+          
+          // Create download link and trigger download
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.style.display = 'none';
+          a.href = url;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          
+          // Cleanup
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+
+          toast({
+            title: "Download Started",
+            description: `${filename} is downloading`,
+          });
+        } catch (fetchError) {
+          console.log('Direct fetch failed, trying proxy download...', fetchError);
+          
+          // Fallback: Use our server as a proxy
+          const a = document.createElement('a');
+          a.style.display = 'none';
+          a.href = `/api/documents/download/${doc.id}?proxy=true`;
+          a.download = data.filename || doc.original_name || 'document.pdf';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+
+          toast({
+            title: "Download Started",
+            description: `${data.filename || doc.original_name} is downloading`,
+          });
+        }
       } else {
         throw new Error('No download URL provided');
       }
     } catch (error) {
+      console.error('Download error:', error);
       toast({
         title: "Download Failed",
         description: "Failed to download document. Please try again.",

@@ -119,6 +119,7 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+- June 27, 2025: PDF DOWNLOAD FUNCTIONALITY COMPLETELY FIXED - Resolved download issues by implementing dual approach: direct blob download from Supabase Storage with server proxy fallback for CORS issues. Updated frontend to fetch files as blobs and trigger proper downloads instead of navigation
 - June 27, 2025: AI DOCUMENT GENERATION ACCESS CONTROL BUG FIXED - Resolved "Access denied" error in AI document generation by fixing case ownership verification. Updated server routes to properly handle database column mapping (user_id vs userId)
 - June 27, 2025: AI DOCUMENT GENERATION SYSTEM IMPLEMENTED - Created comprehensive AI-powered PDF generation using OpenAI API with "RESOLVE - FOR TRADIES" template. System includes database tables, API endpoints, Supabase storage integration, and admin approval workflow
 - June 27, 2025: GOOGLE OAUTH VERIFICATION ERROR FIXED - Added comprehensive error handling for Google Calendar integration that requires domain verification. System now shows clear message explaining the issue and that it's temporarily unavailable during development
