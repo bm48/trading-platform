@@ -180,6 +180,75 @@ export const contracts = pgTable("contracts", {
   updated_at: timestamp("updated_at").defaultNow(),
 });
 
+// Timeline entries for case tracking
+export const timeline_entries = pgTable("timeline_entries", {
+  id: serial("id").primaryKey(),
+  case_id: integer("case_id"),
+  contract_id: integer("contract_id"),
+  user_id: varchar("user_id").notNull(),
+  type: varchar("type").notNull(), // milestone, deadline, action, note, document, email
+  title: varchar("title").notNull(),
+  description: text("description"),
+  date: timestamp("date").notNull(),
+  status: varchar("status").default("pending"), // pending, completed, overdue
+  priority: varchar("priority").default("medium"), // low, medium, high, critical
+  metadata: jsonb("metadata"), // Additional data based on type
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
+// Email tracking and logging
+export const email_logs = pgTable("email_logs", {
+  id: serial("id").primaryKey(),
+  case_id: integer("case_id"),
+  contract_id: integer("contract_id"),
+  user_id: varchar("user_id").notNull(),
+  direction: varchar("direction").notNull(), // sent, received
+  to_email: varchar("to_email"),
+  from_email: varchar("from_email"),
+  subject: varchar("subject"),
+  body: text("body"),
+  email_type: varchar("email_type"), // demand_letter, follow_up, notice, correspondence
+  status: varchar("status").default("sent"), // sent, delivered, opened, failed
+  external_id: varchar("external_id"), // For tracking with email providers
+  metadata: jsonb("metadata"),
+  sent_at: timestamp("sent_at"),
+  created_at: timestamp("created_at").defaultNow(),
+});
+
+// Document storage metadata (enhanced)
+export const document_storage = pgTable("document_storage", {
+  id: serial("id").primaryKey(),
+  case_id: integer("case_id"),
+  contract_id: integer("contract_id"),
+  user_id: varchar("user_id").notNull(),
+  filename: varchar("filename").notNull(),
+  original_name: varchar("original_name").notNull(),
+  file_type: varchar("file_type").notNull(), // pdf, image, word, etc
+  file_size: integer("file_size"),
+  storage_path: varchar("storage_path").notNull(),
+  category: varchar("category"), // evidence, contract, correspondence, photo, invoice
+  tags: text("tags").array(), // Searchable tags
+  description: text("description"),
+  is_sensitive: boolean("is_sensitive").default(false),
+  access_level: varchar("access_level").default("user"), // user, admin, public
+  metadata: jsonb("metadata"),
+  uploaded_at: timestamp("uploaded_at").defaultNow(),
+});
+
+// Message assistant conversations
+export const assistant_conversations = pgTable("assistant_conversations", {
+  id: serial("id").primaryKey(),
+  user_id: varchar("user_id").notNull(),
+  case_id: integer("case_id"),
+  session_id: varchar("session_id").notNull(),
+  message_type: varchar("message_type").notNull(), // user, assistant, system
+  content: text("content").notNull(),
+  context: jsonb("context"), // Related case/contract data
+  metadata: jsonb("metadata"),
+  created_at: timestamp("created_at").defaultNow(),
+});
+
 // Schema validation (moved to end of file to avoid duplicates)
 
 export const insertCaseSchema = createInsertSchema(cases).omit({

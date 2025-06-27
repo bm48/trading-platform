@@ -994,7 +994,7 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
       });
 
       // Get the admin session data
-      const adminSession = adminAuthService.validateAdminSession(sessionId);
+      const adminSession = await adminAuthService.validateAdminSession(sessionId);
 
       res.json({ 
         success: true, 
