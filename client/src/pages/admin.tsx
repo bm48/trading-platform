@@ -79,6 +79,7 @@ export default function AdminDashboard() {
   const queryClient = useQueryClient();
   const [selectedDocument, setSelectedDocument] = useState<PendingDocument | null>(null);
   const [editingDocument, setEditingDocument] = useState<PendingDocument | null>(null);
+  const [editedContent, setEditedContent] = useState<string>("");
   const [activeTab, setActiveTab] = useState("documents");
 
   // Authentication is handled by AdminProtectedRoute wrapper
@@ -311,10 +312,14 @@ export default function AdminDashboard() {
 
       {/* Main Content Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="documents">
             <FileText className="w-4 h-4 mr-2" />
             Documents ({pendingDocuments.length})
+          </TabsTrigger>
+          <TabsTrigger value="users">
+            <Users className="w-4 h-4 mr-2" />
+            Users
           </TabsTrigger>
           <TabsTrigger value="notifications">
             <AlertCircle className="w-4 h-4 mr-2" />
@@ -389,7 +394,10 @@ export default function AdminDashboard() {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => setEditingDocument(doc)}
+                              onClick={() => {
+                                setEditingDocument(doc);
+                                setEditedContent(doc.aiContent ? JSON.stringify(doc.aiContent, null, 2) : '');
+                              }}
                             >
                               <Edit className="w-4 h-4 mr-1" />
                               Edit
@@ -433,6 +441,27 @@ export default function AdminDashboard() {
                   </div>
                 </ScrollArea>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Users Tab */}
+        <TabsContent value="users" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>User Management</CardTitle>
+              <CardDescription>
+                Manage user subscriptions and access permissions
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="text-center py-8 text-gray-500">
+                  <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                  <p>User management interface coming soon</p>
+                  <p className="text-sm mt-2">This will include subscription management, user roles, and access control</p>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -696,7 +725,8 @@ export default function AdminDashboard() {
                   <label className="block text-sm font-medium mb-2">Document Content:</label>
                   <textarea
                     className="w-full h-64 p-3 border rounded-lg font-mono text-sm"
-                    defaultValue={editingDocument.aiContent ? JSON.stringify(editingDocument.aiContent, null, 2) : ''}
+                    value={editedContent}
+                    onChange={(e) => setEditedContent(e.target.value)}
                     placeholder="Edit document content..."
                   />
                 </div>
@@ -708,12 +738,27 @@ export default function AdminDashboard() {
                     Cancel
                   </Button>
                   <Button
-                    onClick={() => {
-                      toast({
-                        title: "Document Updated",
-                        description: "Changes saved successfully",
-                      });
-                      setEditingDocument(null);
+                    onClick={async () => {
+                      try {
+                        const parsedContent = JSON.parse(editedContent);
+                        await apiRequest("PUT", `/api/admin/documents/${editingDocument.id}`, {
+                          content: parsedContent
+                        });
+                        
+                        toast({
+                          title: "Document Updated",
+                          description: "Changes saved successfully",
+                        });
+                        
+                        queryClient.invalidateQueries({ queryKey: ['/api/admin/pending-documents'] });
+                        setEditingDocument(null);
+                      } catch (error) {
+                        toast({
+                          title: "Error",
+                          description: "Failed to save changes. Please check JSON format.",
+                          variant: "destructive",
+                        });
+                      }
                     }}
                   >
                     Save Changes

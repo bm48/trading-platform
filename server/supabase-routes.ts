@@ -1162,6 +1162,32 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update document content
+  app.put('/api/admin/documents/:id', authenticateAdmin, async (req: Request, res: Response) => {
+    try {
+      if (!req.adminSession) {
+        return res.status(401).json({ message: 'Admin session required' });
+      }
+
+      const documentId = parseInt(req.params.id);
+      const { content } = req.body;
+
+      const success = await adminService.updateDocument(documentId, {
+        content: content,
+        reviewedBy: req.adminSession.email
+      });
+
+      if (success) {
+        res.json({ message: 'Document updated successfully' });
+      } else {
+        res.status(404).json({ message: 'Document not found or failed to update' });
+      }
+    } catch (error) {
+      console.error('Error updating document:', error);
+      res.status(500).json({ message: 'Failed to update document' });
+    }
+  });
+
   app.post('/api/admin/documents/:id/send', authenticateAdmin, async (req: Request, res: Response) => {
     try {
       if (!req.adminSession) {
