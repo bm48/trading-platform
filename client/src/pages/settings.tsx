@@ -116,6 +116,10 @@ export default function Settings() {
         // For Google Calendar, show that it's not configured
         throw new Error('Google Calendar integration is not configured. Please contact support for setup.');
       }
+      if (provider === 'microsoft') {
+        // For Microsoft Calendar, show that it's not configured
+        throw new Error('Microsoft Calendar integration is not configured. Please contact support for setup.');
+      }
       return await apiRequest('POST', '/api/integrations/calendar/connect', { provider });
     },
     onSuccess: (data) => {
@@ -592,7 +596,7 @@ export default function Settings() {
                   <Button 
                     variant="outline" 
                     className="h-auto p-4 flex flex-col items-center space-y-2"
-                    onClick={() => connectCalendarMutation.mutate('outlook')}
+                    onClick={() => connectCalendarMutation.mutate('microsoft')}
                     disabled={connectCalendarMutation.isPending}
                   >
                     <Calendar className="h-6 w-6 text-orange-500" />

@@ -185,6 +185,10 @@ export class CalendarService {
 
   // Microsoft Outlook Methods
   async getMicrosoftAuthUrl(): Promise<string> {
+    if (!this.msalClient) {
+      return '';
+    }
+
     const authCodeUrlParameters = {
       scopes: ['https://graph.microsoft.com/calendars.readwrite'],
       redirectUri: process.env.MICROSOFT_REDIRECT_URI || 'http://localhost:5000/api/auth/microsoft/callback',

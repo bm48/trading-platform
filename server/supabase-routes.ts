@@ -1346,6 +1346,13 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
   app.get('/api/calendar/auth/microsoft', authenticateUser, async (req: Request, res: Response) => {
     try {
       const authUrl = await calendarService.getMicrosoftAuthUrl();
+      
+      if (!authUrl) {
+        return res.status(400).json({ 
+          message: 'Microsoft Calendar integration is not configured. Please contact support.' 
+        });
+      }
+      
       res.json({ authUrl });
     } catch (error) {
       console.error('Error getting Microsoft auth URL:', error);

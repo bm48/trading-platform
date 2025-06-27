@@ -85,7 +85,7 @@ function CheckoutForm({ clientSecret, onSuccess }: CheckoutFormProps) {
 }
 
 export default function Checkout() {
-  const { user, session } = useAuth();
+  const { user, session, loading } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
@@ -124,10 +124,11 @@ export default function Checkout() {
   });
 
   useEffect(() => {
-    if (!user) {
+    // Only redirect if we're not loading and user is definitely not authenticated
+    if (!loading && !user) {
       setLocation('/');
     }
-  }, [user, setLocation]);
+  }, [user, loading, setLocation]);
 
   const handlePaymentSuccess = () => {
     setPaymentCompleted(true);
@@ -140,6 +141,19 @@ export default function Checkout() {
     }, 2000);
   };
 
+  // Show loading state while authentication is being checked
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Only return null if user is definitely not authenticated after loading
   if (!user) {
     return null;
   }
