@@ -1487,6 +1487,7 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'Document not found or access denied' });
       }
 
+      console.log('Full document object:', JSON.stringify(document, null, 2));
       console.log('Document pdf_supabase_url:', document.pdf_supabase_url);
       console.log('URL type:', typeof document.pdf_supabase_url);
       console.log('URL length:', document.pdf_supabase_url?.length);
