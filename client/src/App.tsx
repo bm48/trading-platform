@@ -94,6 +94,7 @@ function Router() {
       <Route path="/terms-of-service" component={TermsOfService} />
       <Route path="/auth" component={Auth} />
       <Route path="/auth/callback" component={AuthCallback} />
+      <Route path="/auth/confirm" component={Auth} />
       <Route path="/application/:id/complete">
         <ProtectedRoute component={Checkout} />
       </Route>

@@ -24,6 +24,8 @@ export default function Auth() {
   const urlParams = new URLSearchParams(window.location.search);
   const mode = urlParams.get('mode') || 'signup';
   const redirect = urlParams.get('redirect') || 'dashboard';
+  const confirmed = urlParams.get('confirmed') === 'true';
+  const isConfirmationPage = window.location.pathname === '/auth/confirm';
 
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -55,7 +57,7 @@ export default function Auth() {
     setLoading(true);
 
     try {
-      if (mode === 'signup') {
+      if (mode === 'signup' && !isConfirmationPage) {
         if (!fullName || !email || !password) {
           toast({
             title: "Missing information",
@@ -65,7 +67,23 @@ export default function Auth() {
           return;
         }
 
-        await signUp(email, password, fullName);
+        const result = await signUp(email, password, fullName);
+        
+        // Check if email confirmation is required
+        if (result.user && !result.user.email_confirmed_at) {
+          toast({
+            title: "Check your email!",
+            description: "We've sent you a confirmation link. Please check your email and click the link to continue.",
+          });
+          
+          // Clear form but don't redirect - wait for email confirmation
+          setEmail('');
+          setPassword('');
+          setFullName('');
+          setLoading(false);
+          return;
+        }
+        
         toast({
           title: "Account created!",
           description: "Welcome to Resolve AI. Redirecting to subscription...",
@@ -121,10 +139,17 @@ export default function Auth() {
               <Shield className="h-8 w-8 text-white" />
             </div>
             <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              {mode === 'signup' ? 'Create Your Account' : 'Welcome Back'}
+              {isConfirmationPage 
+                ? 'Email Confirmed!' 
+                : mode === 'signup' 
+                ? 'Create Your Account' 
+                : 'Welcome Back'
+              }
             </h1>
             <p className="text-gray-600">
-              {mode === 'signup' 
+              {isConfirmationPage 
+                ? 'Your email has been confirmed. Please sign in to continue to your subscription.'
+                : mode === 'signup' 
                 ? 'Get started with your monthly subscription to Resolve AI' 
                 : 'Sign in to access your legal dashboard'
               }
@@ -134,7 +159,7 @@ export default function Auth() {
           <div className="space-y-6">
             {/* Email/Password Form */}
             <form onSubmit={handleEmailAuth} className="space-y-4">
-              {mode === 'signup' && (
+              {mode === 'signup' && !isConfirmationPage && (
                 <div className="space-y-2">
                   <Label htmlFor="fullName">Full Name</Label>
                   <Input
@@ -195,10 +220,10 @@ export default function Auth() {
               >
                 {loading ? (
                   'Processing...'
-                ) : mode === 'signup' ? (
-                  'Create Account'
-                ) : (
+                ) : isConfirmationPage || mode === 'login' ? (
                   'Sign In'
+                ) : (
+                  'Create Account'
                 )}
               </Button>
             </form>
@@ -230,7 +255,17 @@ export default function Auth() {
             </Button>
 
             <div className="text-center text-sm text-gray-500">
-              {mode === 'signup' ? (
+              {isConfirmationPage ? (
+                <>
+                  Need to sign up instead? 
+                  <button 
+                    onClick={() => window.location.href = '/auth?mode=signup'}
+                    className="text-blue-600 hover:underline ml-1"
+                  >
+                    Create account
+                  </button>
+                </>
+              ) : mode === 'signup' ? (
                 <>
                   By signing up, you agree to our Terms of Service and Privacy Policy.
                   <br />

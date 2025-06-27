@@ -119,6 +119,7 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+- June 27, 2025: EMAIL CONFIRMATION FLOW - Implemented complete email confirmation workflow: after signup users receive confirmation email, clicking link redirects to login page, then after login redirects to monthly subscription
 - June 27, 2025: AUTHENTICATION SYSTEM ENHANCEMENT - Added email/password signup/login functionality to auth page alongside existing Google OAuth
 - June 27, 2025: CRITICAL BUG FIXES - Fixed admin dashboard user count (now shows 5 users), application form redirect functionality confirmed working, and Google Calendar integration error handling implemented
 - June 27, 2025: MAJOR WORKFLOW UPDATE - Implemented new user flow: Application Form → Signup/Login → Monthly Subscription → Dashboard → Admin Approval for Documents

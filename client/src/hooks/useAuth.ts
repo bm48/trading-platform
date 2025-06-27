@@ -80,6 +80,7 @@ export function useAuth() {
       email,
       password,
       options: {
+        emailRedirectTo: `${window.location.origin}/auth/confirm?redirect=checkout`,
         data: {
           full_name: fullName,
           first_name: fullName.split(' ')[0],
