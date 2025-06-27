@@ -216,7 +216,6 @@ export class AdminService {
           updateData.rejection_reason = 'Document rejected by admin';
         }
         if (updates.status === 'sent') {
-          updateData.sent_by = updates.reviewedBy;
           updateData.sent_at = new Date().toISOString();
         }
       }
