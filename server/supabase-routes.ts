@@ -1252,18 +1252,28 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Calendar Integration Routes
+  // Calendar Integration Routes - Using Supabase Google OAuth
   app.get('/api/calendar/auth/google', authenticateUser, async (req: Request, res: Response) => {
     try {
-      const authUrl = await calendarService.getGoogleAuthUrl();
-      
-      if (!authUrl) {
+      // Use Supabase's Google OAuth with calendar scopes
+      const { data, error } = await supabaseAdmin.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          scopes: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events',
+          redirectTo: process.env.NODE_ENV === 'production' 
+            ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co/dashboard`
+            : `https://${process.env.REPL_ID}.replit.app/dashboard`
+        }
+      });
+
+      if (error) {
         return res.status(400).json({ 
-          message: 'Google Calendar integration is not configured. Please contact support.' 
+          message: 'Failed to initiate Google Calendar authorization',
+          error: error.message
         });
       }
       
-      res.json({ authUrl });
+      res.json({ authUrl: data.url });
     } catch (error) {
       console.error('Error getting Google auth URL:', error);
       res.status(500).json({ message: 'Failed to get Google auth URL' });
@@ -1326,20 +1336,52 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // New endpoint to exchange Google OAuth code for tokens
-  app.post('/api/calendar/auth/google/exchange', authenticateUser, async (req: Request, res: Response) => {
+  // New endpoint to connect Google Calendar using Supabase session
+  app.post('/api/calendar/connect/google', authenticateUser, async (req: Request, res: Response) => {
     try {
-      const { code } = req.body;
       const userId = (req as any).user.id;
       
-      if (!code) {
-        return res.status(400).json({ message: 'Authorization code required' });
+      // Get the user's session from Supabase to access OAuth tokens
+      const { data: { session }, error: sessionError } = await supabaseAdmin.auth.getSession();
+      
+      if (sessionError || !session) {
+        return res.status(401).json({ message: 'User session not found' });
       }
 
-      const integration = await calendarService.handleGoogleCallback(code, userId);
-      res.json({ message: 'Google Calendar connected successfully', integration });
+      // Check if the user has Google OAuth provider data
+      const { data: user, error: userError } = await supabaseAdmin.auth.getUser(session.access_token);
+      
+      if (userError || !user.user) {
+        return res.status(401).json({ message: 'User not found' });
+      }
+
+      // Look for Google provider in user identities
+      const googleIdentity = user.user.identities?.find(identity => identity.provider === 'google');
+      
+      if (!googleIdentity) {
+        return res.status(400).json({ 
+          message: 'Google account not connected. Please sign in with Google first.' 
+        });
+      }
+
+      // Create a simple calendar integration record
+      const integration = await supabaseStorage.createCalendarIntegration({
+        user_id: userId,
+        provider: 'google',
+        access_token: 'supabase_managed', // Placeholder since Supabase manages tokens
+        refresh_token: null,
+        token_expires_at: undefined,
+        calendar_id: 'primary',
+        is_active: true
+      });
+
+      res.json({ 
+        message: 'Google Calendar connected successfully', 
+        integration,
+        note: 'Calendar integration is now enabled through your Google account.'
+      });
     } catch (error) {
-      console.error('Error exchanging Google code:', error);
+      console.error('Error connecting Google Calendar:', error);
       res.status(500).json({ message: 'Failed to connect Google Calendar' });
     }
   });

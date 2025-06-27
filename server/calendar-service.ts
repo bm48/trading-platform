@@ -29,20 +29,8 @@ export class CalendarService {
   private msalClient?: PublicClientApplication;
 
   constructor() {
-    // Initialize Google OAuth client only if credentials are available
-    if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
-      // For Google Calendar OAuth, we need our app's callback, not Supabase's
-      // The GOOGLE_REDIRECT_URI is for Supabase auth, but we need our own endpoint
-      const redirectUri = process.env.NODE_ENV === 'production' 
-        ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co/api/calendar/auth/google/callback`
-        : `https://${process.env.REPL_ID || 'replit'}.replit.app/api/calendar/auth/google/callback`;
-        
-      this.googleAuth = new google.auth.OAuth2(
-        GOOGLE_CLIENT_ID,
-        GOOGLE_CLIENT_SECRET,
-        redirectUri
-      );
-    }
+    // Use Supabase's Google OAuth integration for calendar access
+    // No need for separate Google OAuth client since we'll use Supabase auth tokens
 
     // Initialize Microsoft MSAL client only if credentials are available
     if (MICROSOFT_CLIENT_ID) {
@@ -55,46 +43,38 @@ export class CalendarService {
     }
   }
 
-  // Google Calendar Methods
+  // Google Calendar Methods - Using Supabase OAuth
   async getGoogleAuthUrl(): Promise<string> {
-    if (!this.googleAuth) {
-      // Return a user-friendly message instead of throwing an error
-      return '';
-    }
+    // Use Supabase's built-in Google OAuth with calendar scopes
+    // This leverages the existing GOOGLE_REDIRECT_URI configuration
+    const supabaseUrl = process.env.SUPABASE_URL || 'https://uoffyzwrillwytlgikwc.supabase.co';
+    const redirectTo = process.env.NODE_ENV === 'production' 
+      ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co/dashboard`
+      : `https://${process.env.REPL_ID}.replit.app/dashboard`;
 
-    const scopes = [
-      'https://www.googleapis.com/auth/calendar',
-      'https://www.googleapis.com/auth/calendar.events'
-    ];
+    const authUrl = `${supabaseUrl}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectTo)}&scopes=${encodeURIComponent('https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events')}`;
 
-    const redirectUri = process.env.NODE_ENV === 'production' 
-      ? `${process.env.REPLIT_DEV_DOMAIN || 'https://your-app-domain.replit.app'}/api/calendar/auth/google/callback`
-      : 'http://localhost:5000/api/calendar/auth/google/callback';
-      
-    return this.googleAuth.generateAuthUrl({
-      access_type: 'offline',
-      scope: scopes,
-      prompt: 'consent',
-      redirect_uri: redirectUri
-    });
+    return authUrl;
   }
 
-  async handleGoogleCallback(code: string, userId: string): Promise<CalendarIntegration> {
+  async handleGoogleCallback(userId: string, accessToken: string): Promise<CalendarIntegration> {
+    // This method now handles Supabase OAuth tokens instead of Google OAuth codes
     try {
-      const { tokens } = await this.googleAuth.getToken(code);
-      this.googleAuth.setCredentials(tokens);
+      // Create OAuth2 client with the access token from Supabase
+      const oauth2Client = new google.auth.OAuth2();
+      oauth2Client.setCredentials({ access_token: accessToken });
 
       // Get user's primary calendar
-      const calendar = google.calendar({ version: 'v3', auth: this.googleAuth });
+      const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
       const calendarList = await calendar.calendarList.list();
       const primaryCalendar = calendarList.data.items?.find(cal => cal.primary);
 
       const integration = await supabaseStorage.createCalendarIntegration({
         user_id: userId,
         provider: 'google',
-        access_token: tokens.access_token!,
-        refresh_token: tokens.refresh_token,
-        token_expires_at: tokens.expiry_date ? new Date(tokens.expiry_date) : undefined,
+        access_token: accessToken,
+        refresh_token: null, // Supabase handles token refresh
+        token_expires_at: undefined, // Supabase manages token expiry
         calendar_id: primaryCalendar?.id,
         is_active: true
       });
