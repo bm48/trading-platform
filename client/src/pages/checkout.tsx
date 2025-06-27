@@ -254,6 +254,18 @@ export default function Checkout() {
                     <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4" />
                     <p className="text-gray-600">Setting up payment...</p>
                   </div>
+                ) : paymentIntent?.demo_mode ? (
+                  <div className="text-center py-8">
+                    <h3 className="text-lg font-semibold mb-4">Demo Mode</h3>
+                    <p className="text-gray-600 mb-6">Payment processing is in demo mode. Click below to simulate a successful subscription.</p>
+                    <Button 
+                      onClick={handlePaymentSuccess}
+                      className="w-full"
+                      size="lg"
+                    >
+                      Complete Demo Subscription
+                    </Button>
+                  </div>
                 ) : paymentIntent?.client_secret ? (
                   <Elements stripe={stripePromise} options={{ clientSecret: paymentIntent.client_secret }}>
                     <CheckoutForm 
