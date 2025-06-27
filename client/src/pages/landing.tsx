@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Shield, Check, Clock, Users, DollarSign, FileText, Calendar, Download, ChevronRight, X, Brain, Lock, Mail, Search, Star, Plus, LogOut } from 'lucide-react';
 
 import LoginModal from '@/components/login-modal';
+import ApplicationForm from '@/components/application-form';
 import { scrollToElement } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
@@ -641,6 +642,21 @@ export default function Landing() {
               </p>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Application Form Section */}
+      <section id="application" className="py-20 bg-gradient-to-br from-blue-50 to-purple-50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-neutral-dark mb-6">Get Your Personalized Legal Strategy</h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Tell us about your situation and we'll create a customized action plan to get you paid. 
+              Takes just 2 minutes to complete.
+            </p>
+          </div>
+          
+          <ApplicationForm />
         </div>
       </section>
 
