@@ -1656,7 +1656,10 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
       // Check if we have Stripe secret key to create real payment intents
       if (process.env.STRIPE_SECRET_KEY) {
         // Real Stripe integration would go here
-        const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+        const { default: Stripe } = await import('stripe');
+        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+          apiVersion: '2023-10-16',
+        });
         
         const paymentIntent = await stripe.paymentIntents.create({
           amount: amount || 4900, // amount in cents
