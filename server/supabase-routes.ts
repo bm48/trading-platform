@@ -859,6 +859,104 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Contract document upload route
+  app.post('/api/contracts/upload-document', (req, res, next) => {
+    console.log('Contract upload - Raw headers:', {
+      authorization: req.headers.authorization ? 'Present' : 'Missing',
+      contentType: req.headers['content-type']
+    });
+    next();
+  }, authenticateUser, upload.single('file'), async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      const contractId = parseInt(req.body.contractId);
+      const file = req.file;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      if (!file) {
+        return res.status(400).json({ message: "No file provided" });
+      }
+
+      if (!contractId || isNaN(contractId)) {
+        return res.status(400).json({ message: "Invalid contract ID" });
+      }
+
+      // Verify contract belongs to user
+      const { data: contract, error: contractError } = await supabaseAdmin
+        .from('contracts')
+        .select('id, user_id')
+        .eq('id', contractId)
+        .eq('user_id', userId)
+        .single();
+
+      if (contractError || !contract) {
+        return res.status(404).json({ message: "Contract not found or access denied" });
+      }
+
+      const category = 'contract';
+      const description = req.body.description || `Contract document for Contract #${contractId}`;
+      
+      // Upload to Supabase Storage
+      const document = await supabaseStorageService.uploadFile(file, userId, {
+        category,
+        description,
+        contractId
+      });
+
+      // Update contract to mark it has documents
+      await supabaseAdmin
+        .from('contracts')
+        .update({ 
+          updated_at: new Date().toISOString(),
+          has_documents: true
+        })
+        .eq('id', contractId);
+
+      res.status(201).json({
+        message: "Contract document uploaded successfully",
+        document
+      });
+    } catch (error) {
+      console.error("Error uploading contract document:", error);
+      res.status(500).json({ message: "Failed to upload contract document" });
+    }
+  });
+
+  // Get documents for a specific contract
+  app.get('/api/contracts/:contractId/documents', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const contractId = parseInt(req.params.contractId);
+      const userId = req.user?.id;
+
+      if (!contractId || isNaN(contractId)) {
+        return res.status(400).json({ message: "Invalid contract ID" });
+      }
+
+      // Verify contract belongs to user
+      const { data: contract, error: contractError } = await supabaseAdmin
+        .from('contracts')
+        .select('id, user_id')
+        .eq('id', contractId)
+        .eq('user_id', userId)
+        .single();
+
+      if (contractError || !contract) {
+        return res.status(404).json({ message: "Contract not found or access denied" });
+      }
+
+      // Get documents for this contract using Supabase Storage
+      const documents = await supabaseStorageService.listUserDocuments(userId!, { contractId });
+      
+      res.json(documents);
+    } catch (error) {
+      console.error("Error fetching contract documents:", error);
+      res.status(500).json({ message: "Failed to fetch contract documents" });
+    }
+  });
+
   // Get documents for a specific case
   app.get('/api/documents/case/:caseId', authenticateUser, async (req: Request, res: Response) => {
     try {

@@ -26,8 +26,9 @@ import {
   XCircle,
   Paperclip
 } from "lucide-react";
-import { format } from "date-fns";
+import { formatDate } from "@/lib/date-utils";
 import DashboardLayout from "@/components/dashboard-layout";
+import { supabase } from "@/lib/supabase";
 
 export default function ContractDetail() {
   const { id } = useParams();
@@ -44,15 +45,105 @@ export default function ContractDetail() {
   // Fetch contract documents
   const { data: documents = [] } = useQuery({
     queryKey: ['/api/contracts', id, 'documents'],
+    queryFn: () => apiRequest('GET', `/api/contracts/${id}/documents`).then(res => res.json()),
     enabled: !!id,
   });
 
-  const formatDate = (dateString: string) => {
-    if (!dateString) return 'Not set';
+  // File upload mutation
+  const uploadDocumentMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('contractId', id || '');
+      
+      // Get the Supabase session token
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error('No authentication token available');
+      }
+
+      const response = await fetch('/api/contracts/upload-document', {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to upload document');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Document uploaded successfully",
+        description: "The document has been added to the contract",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/contracts', id, 'documents'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Upload failed",
+        description: error.message || "Failed to upload document",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      uploadDocumentMutation.mutate(file);
+    }
+  };
+
+  const handleDownload = async (document: any) => {
     try {
-      return format(new Date(dateString), 'MMM dd, yyyy');
-    } catch {
-      return 'Invalid date';
+      if (document.supabase_url) {
+        // Try direct download from Supabase Storage
+        const response = await fetch(document.supabase_url);
+        if (response.ok) {
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.style.display = 'none';
+          a.href = url;
+          a.download = document.filename || `document-${document.id}`;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+        } else {
+          throw new Error('Direct download failed');
+        }
+      } else {
+        // Fallback to server proxy
+        const response = await apiRequest('GET', `/api/documents/${document.id}/download`);
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = document.filename || `document-${document.id}`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }
+      
+      toast({
+        title: "Download started",
+        description: "The document is being downloaded",
+      });
+    } catch (error) {
+      console.error('Download error:', error);
+      toast({
+        title: "Download failed",
+        description: "Failed to download the document",
+        variant: "destructive",
+      });
     }
   };
 
@@ -399,11 +490,23 @@ export default function ContractDetail() {
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Button variant="outline" size="sm">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleDownload(doc)}
+                          >
                             <Download className="h-4 w-4 mr-2" />
                             Download
                           </Button>
-                          <Button variant="ghost" size="sm">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => {
+                              if (doc.supabase_url) {
+                                window.open(doc.supabase_url, '_blank');
+                              }
+                            }}
+                          >
                             <ExternalLink className="h-4 w-4" />
                           </Button>
                         </div>
@@ -413,10 +516,23 @@ export default function ContractDetail() {
                 )}
                 
                 <div className="mt-6 pt-6 border-t">
-                  <Button className="w-full">
-                    <Upload className="h-4 w-4 mr-2" />
-                    Upload Document
-                  </Button>
+                  <div className="relative">
+                    <input
+                      type="file"
+                      id="document-upload"
+                      className="hidden"
+                      onChange={handleFileUpload}
+                      accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
+                    />
+                    <Button 
+                      className="w-full"
+                      onClick={() => document.getElementById('document-upload')?.click()}
+                      disabled={uploadDocumentMutation.isPending}
+                    >
+                      <Upload className="h-4 w-4 mr-2" />
+                      {uploadDocumentMutation.isPending ? 'Uploading...' : 'Upload Document'}
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
