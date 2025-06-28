@@ -486,9 +486,9 @@ export default function ContractDetail() {
                         <div className="flex items-center gap-3">
                           <FileText className="h-8 w-8 text-blue-600" />
                           <div>
-                            <p className="font-medium">{doc.original_name || doc.filename || 'Unknown file'}</p>
+                            <p className="font-medium">{doc.originalName || doc.fileName || 'Unknown file'}</p>
                             <p className="text-sm text-gray-600">
-                              Uploaded {formatDate(doc.createdAt || doc.created_at)}
+                              Uploaded {formatDate(doc.createdAt)}
                             </p>
 
                           </div>
