@@ -39,6 +39,7 @@ export default function ContractDetail() {
   // Fetch contract details
   const { data: contract, isLoading } = useQuery({
     queryKey: ['/api/contracts', id],
+    queryFn: () => apiRequest('GET', `/api/contracts/${id}`).then(res => res.json()),
     enabled: !!id,
   });
 
@@ -110,7 +111,7 @@ export default function ContractDetail() {
           const a = document.createElement('a');
           a.style.display = 'none';
           a.href = url;
-          a.download = document.filename || `document-${document.id}`;
+          a.download = document.original_name || document.filename || `document-${document.id}`;
           document.body.appendChild(a);
           a.click();
           window.URL.revokeObjectURL(url);
@@ -126,7 +127,7 @@ export default function ContractDetail() {
         const a = document.createElement('a');
         a.style.display = 'none';
         a.href = url;
-        a.download = document.filename || `document-${document.id}`;
+        a.download = document.original_name || document.filename || `document-${document.id}`;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
@@ -239,14 +240,14 @@ export default function ContractDetail() {
               Back to Contracts
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">{contract.title}</h1>
-              <p className="text-gray-600">Contract #{contract.contract_number || contract.id}</p>
+              <h1 className="text-2xl font-bold text-gray-900">{contract?.title || 'Contract Details'}</h1>
+              <p className="text-gray-600">Contract #{contract?.contract_num || contract?.id}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Badge className={`${getStatusColor(contract.status)} flex items-center gap-1`}>
-              {getStatusIcon(contract.status)}
-              {contract.status}
+            <Badge className={`${getStatusColor(contract?.status || 'draft')} flex items-center gap-1`}>
+              {getStatusIcon(contract?.status || 'draft')}
+              {contract?.status || 'draft'}
             </Badge>
           </div>
         </div>
@@ -280,17 +281,17 @@ export default function ContractDetail() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <p className="text-sm text-gray-600">Contract Type</p>
-                    <p className="font-medium">{contract.contract_type || 'Standard Contract'}</p>
+                    <p className="text-sm text-gray-600">Contract Status</p>
+                    <p className="font-medium">{contract?.status || 'Draft'}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Work Description</p>
-                    <p className="font-medium">{contract.work_description || contract.description || 'No description provided'}</p>
+                    <p className="text-sm text-gray-600">Project Description</p>
+                    <p className="font-medium">{contract?.project_descr || 'No description provided'}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Project Value</p>
                     <p className="font-medium text-lg text-green-600">
-                      {contract.value ? formatCurrency(contract.value) : 'Not specified'}
+                      {contract?.value ? formatCurrency(contract.value) : 'Not specified'}
                     </p>
                   </div>
                 </CardContent>
@@ -305,19 +306,19 @@ export default function ContractDetail() {
                     <p className="text-sm text-gray-600">Start Date</p>
                     <p className="font-medium flex items-center gap-2">
                       <Calendar className="h-4 w-4" />
-                      {formatDate(contract.start_date)}
+                      {contract?.start_date ? formatDate(contract.start_date) : 'Not set'}
                     </p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">End Date</p>
                     <p className="font-medium flex items-center gap-2">
                       <Calendar className="h-4 w-4" />
-                      {formatDate(contract.end_date)}
+                      {contract?.end_date ? formatDate(contract.end_date) : 'Not set'}
                     </p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Created</p>
-                    <p className="font-medium">{formatDate(contract.created_at)}</p>
+                    <p className="font-medium">{contract?.created_at ? formatDate(contract.created_at) : 'Unknown'}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -483,9 +484,9 @@ export default function ContractDetail() {
                         <div className="flex items-center gap-3">
                           <FileText className="h-8 w-8 text-blue-600" />
                           <div>
-                            <p className="font-medium">{doc.filename}</p>
+                            <p className="font-medium">{doc.original_name || doc.filename || 'Unknown file'}</p>
                             <p className="text-sm text-gray-600">
-                              Uploaded {formatDate(doc.created_at)}
+                              Uploaded {formatDate(doc.createdAt || doc.created_at)}
                             </p>
                           </div>
                         </div>

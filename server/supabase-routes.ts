@@ -596,6 +596,40 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
   });
 
   // Contract management routes
+  // Get single contract by ID
+  app.get('/api/contracts/:id', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const contractId = parseInt(req.params.id);
+      const userId = req.user?.id;
+
+      if (!contractId || isNaN(contractId)) {
+        return res.status(400).json({ message: "Invalid contract ID" });
+      }
+
+      // Get contract from Supabase
+      const { data: contract, error } = await supabaseAdmin
+        .from('contracts')
+        .select('*')
+        .eq('id', contractId)
+        .eq('user_id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching contract:', error);
+        return res.status(500).json({ message: "Failed to fetch contract" });
+      }
+
+      if (!contract) {
+        return res.status(404).json({ message: "Contract not found or access denied" });
+      }
+
+      res.json(contract);
+    } catch (error) {
+      console.error("Error fetching contract:", error);
+      res.status(500).json({ message: "Failed to fetch contract" });
+    }
+  });
+
   // Debug endpoint to check actual table schema
   app.get('/api/debug/contracts-schema', authenticateUser, async (req: Request, res: Response) => {
     try {
