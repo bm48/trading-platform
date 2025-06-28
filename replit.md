@@ -119,8 +119,6 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-- June 28, 2025: STRIPE INTEGRATION COMPLETELY FIXED - Fixed critical Stripe integration issues: removed production-only limitation, corrected API version, added proper subscription status endpoint, implemented webhook handling for payment success, and fixed demo mode to update correct database table with proper subscription fields
-- June 28, 2025: DOCUMENT FILENAME DISPLAY FIXED - Resolved contract page showing "Unknown file" by fixing field name mismatch - updated frontend to use correct camelCase field names (originalName, fileName) instead of snake_case variants returned by storage service
 - June 28, 2025: COMPREHENSIVE DATE FORMAT & SUBSCRIPTION FIXES - Fixed ALL date formatting across entire project to display "Jun 17th, 2025" format with ordinal suffixes. Implemented subscription status checking to prevent double subscriptions - users with active monthly subscriptions see "You've already subscribed" message when accessing checkout page
 - June 28, 2025: DOCUMENT UPLOAD/DOWNLOAD SYSTEM COMPLETELY FIXED - Resolved variable naming conflicts in download function, fixed document name display issues, and ensured proper file handling. Contract document upload and download now working correctly with real filenames and proper authentication
 - June 27, 2025: PDF DOWNLOAD FUNCTIONALITY COMPLETELY FIXED - Resolved download issues by implementing dual approach: direct blob download from Supabase Storage with server proxy fallback for CORS issues. Updated frontend to fetch files as blobs and trigger proper downloads instead of navigation

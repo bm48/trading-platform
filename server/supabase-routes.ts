@@ -1,4 +1,4 @@
-import express, { type Express, Request, Response } from "express";
+import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { supabase } from "./db";
 import { supabaseAdmin, userManagement, database } from "./supabase";
@@ -2274,105 +2274,22 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Subscription Status Route
-  app.get('/api/subscription/status', authenticateUser, async (req: Request, res: Response) => {
-    try {
-      const userId = (req as any).user.id;
-      
-      const { data: user, error } = await supabaseAdmin
-        .from('users')
-        .select('subscription_status, subscription_expires_at, stripe_subscription_id')
-        .eq('id', userId)
-        .single();
-
-      if (error) {
-        console.error('Error fetching subscription status:', error);
-        return res.status(500).json({ message: 'Failed to fetch subscription status' });
-      }
-
-      const isActive = user?.subscription_status === 'active' && 
-                      user?.subscription_expires_at && 
-                      new Date(user.subscription_expires_at) > new Date();
-
-      res.json({
-        planType: isActive ? 'monthly_subscription' : 'none',
-        status: isActive ? 'active' : 'inactive',
-        subscriptionExpiresAt: user?.subscription_expires_at || null,
-        stripeSubscriptionId: user?.stripe_subscription_id || null
-      });
-    } catch (error) {
-      console.error('Error in subscription status route:', error);
-      res.status(500).json({ message: 'Failed to fetch subscription status' });
-    }
-  });
-
   // Stripe Payment Routes
-  // Stripe webhook to handle successful payments
-  app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), async (req: Request, res: Response) => {
-    const sig = req.headers['stripe-signature'];
-    let event;
-
-    try {
-      if (!process.env.STRIPE_WEBHOOK_SECRET) {
-        console.log('No webhook secret configured, skipping webhook verification');
-        event = req.body;
-      } else {
-        const { default: Stripe } = await import('stripe');
-        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-          apiVersion: '2025-05-28.basil' as any,
-        });
-        event = stripe.webhooks.constructEvent(req.body, sig as string, process.env.STRIPE_WEBHOOK_SECRET);
-      }
-
-      // Handle the event
-      switch (event.type) {
-        case 'payment_intent.succeeded':
-          const paymentIntent = event.data.object;
-          const userId = paymentIntent.metadata?.userId;
-          
-          if (userId) {
-            // Update user subscription status
-            await supabaseAdmin
-              .from('users')
-              .update({
-                subscription_status: 'active',
-                subscription_expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-                updated_at: new Date().toISOString()
-              })
-              .eq('id', userId);
-            
-            console.log('Subscription activated for user:', userId);
-          }
-          break;
-        
-        default:
-          console.log(`Unhandled event type ${event.type}`);
-      }
-
-      res.json({ received: true });
-    } catch (err: any) {
-      console.error('Webhook error:', err.message);
-      res.status(400).send(`Webhook Error: ${err.message}`);
-    }
-  });
-
   app.post('/api/stripe/create-payment-intent', authenticateUser, async (req: Request, res: Response) => {
     try {
       const userId = (req as any).user.id;
       const { plan, amount } = req.body;
 
       // Check if we have Stripe secret key to create real payment intents
-      if (process.env.STRIPE_SECRET_KEY) {
-        console.log('Creating real Stripe payment intent...');
-        
+      if (process.env.STRIPE_SECRET_KEY && process.env.NODE_ENV === 'production') {
+        // Real Stripe integration would go here
         const { default: Stripe } = await import('stripe');
         const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-          apiVersion: '2025-05-28.basil' as any,
+          apiVersion: '2025-05-28.basil',
         });
-
-        // Create a simple payment intent for now (we'll handle subscriptions later)
+        
         const paymentIntent = await stripe.paymentIntents.create({
-          amount: amount || 4900,
+          amount: amount || 4900, // amount in cents
           currency: 'aud',
           automatic_payment_methods: {
             enabled: true,
@@ -2393,18 +2310,20 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
         // For development/demo - return success without actual payment
         console.log('Demo mode: Simulating successful payment for user:', userId);
         
-        // In demo mode, we simulate a successful payment and update subscription in users table
-        const subscriptionStartDate = new Date();
-        const subscriptionEndDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-        
-        await supabaseAdmin
-          .from('users')
+        // In demo mode, we simulate a successful payment and update subscription
+        await supabase
+          .from('auth.users')
           .update({
-            subscription_status: 'active',
-            subscription_expires_at: subscriptionEndDate.toISOString(),
-            stripe_subscription_id: 'demo_sub_' + Date.now(),
-            stripe_customer_id: 'demo_cus_' + Date.now(),
-            updated_at: new Date().toISOString()
+            raw_user_meta_data: {
+              planType: 'monthly_unlimited',
+              status: 'active',
+              stripeSubscriptionId: 'demo_sub_' + Date.now(),
+              stripeCustomerId: 'demo_cus_' + Date.now(),
+              currentPeriodStart: new Date().toISOString(),
+              currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+              strategyPacksRemaining: null,
+              hasInitialStrategyPack: true
+            }
           })
           .eq('id', userId);
 
