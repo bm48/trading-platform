@@ -50,8 +50,7 @@ export default function ContractDetail() {
     enabled: !!id,
   });
 
-  // Debug log for documents
-  console.log('Documents data:', documents);
+
 
   // File upload mutation
   const uploadDocumentMutation = useMutation({
@@ -491,10 +490,7 @@ export default function ContractDetail() {
                             <p className="text-sm text-gray-600">
                               Uploaded {formatDate(doc.createdAt || doc.created_at)}
                             </p>
-                            {/* Debug info */}
-                            <p className="text-xs text-gray-400">
-                              Debug: {JSON.stringify({original_name: doc.original_name, filename: doc.filename, id: doc.id})}
-                            </p>
+
                           </div>
                         </div>
                         <div className="flex items-center gap-2">

@@ -119,6 +119,8 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+- June 28, 2025: COMPREHENSIVE DATE FORMAT & SUBSCRIPTION FIXES - Fixed ALL date formatting across entire project to display "Jun 17th, 2025" format with ordinal suffixes. Implemented subscription status checking to prevent double subscriptions - users with active monthly subscriptions see "You've already subscribed" message when accessing checkout page
+- June 28, 2025: DOCUMENT UPLOAD/DOWNLOAD SYSTEM COMPLETELY FIXED - Resolved variable naming conflicts in download function, fixed document name display issues, and ensured proper file handling. Contract document upload and download now working correctly with real filenames and proper authentication
 - June 27, 2025: PDF DOWNLOAD FUNCTIONALITY COMPLETELY FIXED - Resolved download issues by implementing dual approach: direct blob download from Supabase Storage with server proxy fallback for CORS issues. Updated frontend to fetch files as blobs and trigger proper downloads instead of navigation
 - June 27, 2025: AI DOCUMENT GENERATION ACCESS CONTROL BUG FIXED - Resolved "Access denied" error in AI document generation by fixing case ownership verification. Updated server routes to properly handle database column mapping (user_id vs userId)
 - June 27, 2025: AI DOCUMENT GENERATION SYSTEM IMPLEMENTED - Created comprehensive AI-powered PDF generation using OpenAI API with "RESOLVE - FOR TRADIES" template. System includes database tables, API endpoints, Supabase storage integration, and admin approval workflow

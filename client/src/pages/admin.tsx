@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
+import { formatDate } from "@/lib/date-utils";
 
 interface AdminStats {
   totalUsers: number;
@@ -496,15 +497,15 @@ export default function AdminDashboard() {
                             </div>
                             <p className="text-sm text-gray-600 mb-1">{user.email}</p>
                             <div className="text-xs text-gray-500 space-y-1">
-                              <p>Joined: {new Date(user.createdAt).toLocaleDateString()}</p>
+                              <p>Joined: {formatDate(user.createdAt)}</p>
                               {user.lastSignInAt && (
-                                <p>Last login: {new Date(user.lastSignInAt).toLocaleDateString()}</p>
+                                <p>Last login: {formatDate(user.lastSignInAt)}</p>
                               )}
                               {user.subscriptionStartDate && (
-                                <p>Subscribed: {new Date(user.subscriptionStartDate).toLocaleDateString()}</p>
+                                <p>Subscribed: {formatDate(user.subscriptionStartDate)}</p>
                               )}
                               {user.subscriptionEndDate && (
-                                <p>Expires: {new Date(user.subscriptionEndDate).toLocaleDateString()}</p>
+                                <p>Expires: {formatDate(user.subscriptionEndDate)}</p>
                               )}
                             </div>
                           </div>

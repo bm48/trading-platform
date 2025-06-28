@@ -12,6 +12,7 @@ import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-
 // Check if Stripe is configured
 const STRIPE_ENABLED = !!import.meta.env.VITE_STRIPE_PUBLIC_KEY;
 import { formatCurrency } from '@/lib/utils';
+import { formatDate } from '@/lib/date-utils';
 import { 
   Shield, 
   Check, 
@@ -212,6 +213,12 @@ export default function Checkout() {
   const queryClient = useQueryClient();
   const [paymentCompleted, setPaymentCompleted] = useState(false);
 
+  // Check if user already has an active subscription
+  const { data: subscriptionStatus, isLoading: subscriptionLoading } = useQuery({
+    queryKey: ['/api/subscription/status'],
+    enabled: !!user,
+  });
+
   // Create payment intent for monthly subscription
   const createPaymentMutation = useMutation({
     mutationFn: async () => {
@@ -265,13 +272,37 @@ export default function Checkout() {
   };
 
   // Show loading state while authentication is being checked
-  if (loading) {
+  if (loading || subscriptionLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading...</p>
         </div>
+      </div>
+    );
+  }
+
+  // Check if user already has an active monthly subscription
+  if (subscriptionStatus?.planType === 'monthly_subscription' && subscriptionStatus?.status === 'active') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md text-center">
+          <CardContent className="p-8">
+            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Check className="h-8 w-8 text-blue-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">You've already subscribed</h2>
+            <p className="text-gray-600 mb-6">
+              You have an active monthly subscription that {subscriptionStatus.subscriptionExpiresAt ? 
+                `expires on ${formatDate(subscriptionStatus.subscriptionExpiresAt)}` : 
+                'is currently active'}.
+            </p>
+            <Button onClick={() => setLocation('/dashboard')} className="w-full">
+              Go to Dashboard
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }

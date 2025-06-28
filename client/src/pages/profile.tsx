@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/useAuth';
+import { formatDate } from '@/lib/date-utils';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
@@ -175,10 +176,10 @@ export default function Profile() {
                 <span className="font-medium">Account ID:</span> {(user && typeof user === 'object' && 'id' in user && typeof user.id === 'string' ? user.id : 'N/A')}
               </div>
               <div>
-                <span className="font-medium">Member since:</span> {(user && typeof user === 'object' && 'createdAt' in user && user.createdAt) ? new Date(user.createdAt as string).toLocaleDateString() : 'N/A'}
+                <span className="font-medium">Member since:</span> {(user && typeof user === 'object' && 'createdAt' in user && user.createdAt) ? formatDate(user.createdAt as string) : 'N/A'}
               </div>
               <div>
-                <span className="font-medium">Last updated:</span> {(user && typeof user === 'object' && 'updatedAt' in user && user.updatedAt) ? new Date(user.updatedAt as string).toLocaleDateString() : 'N/A'}
+                <span className="font-medium">Last updated:</span> {(user && typeof user === 'object' && 'updatedAt' in user && user.updatedAt) ? formatDate(user.updatedAt as string) : 'N/A'}
               </div>
             </div>
           </CardContent>
