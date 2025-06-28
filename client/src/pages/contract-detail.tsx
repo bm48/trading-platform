@@ -50,6 +50,9 @@ export default function ContractDetail() {
     enabled: !!id,
   });
 
+  // Debug log for documents
+  console.log('Documents data:', documents);
+
   // File upload mutation
   const uploadDocumentMutation = useMutation({
     mutationFn: async (file: File) => {
@@ -100,38 +103,38 @@ export default function ContractDetail() {
     }
   };
 
-  const handleDownload = async (document: any) => {
+  const handleDownload = async (doc: any) => {
     try {
-      if (document.supabase_url) {
+      if (doc.supabase_url) {
         // Try direct download from Supabase Storage
-        const response = await fetch(document.supabase_url);
+        const response = await fetch(doc.supabase_url);
         if (response.ok) {
           const blob = await response.blob();
           const url = window.URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.style.display = 'none';
-          a.href = url;
-          a.download = document.original_name || document.filename || `document-${document.id}`;
-          document.body.appendChild(a);
-          a.click();
+          const link = document.createElement('a');
+          link.style.display = 'none';
+          link.href = url;
+          link.download = doc.original_name || doc.filename || `document-${doc.id}`;
+          document.body.appendChild(link);
+          link.click();
           window.URL.revokeObjectURL(url);
-          document.body.removeChild(a);
+          document.body.removeChild(link);
         } else {
           throw new Error('Direct download failed');
         }
       } else {
         // Fallback to server proxy
-        const response = await apiRequest('GET', `/api/documents/${document.id}/download`);
+        const response = await apiRequest('GET', `/api/documents/${doc.id}/download`);
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.style.display = 'none';
-        a.href = url;
-        a.download = document.original_name || document.filename || `document-${document.id}`;
-        document.body.appendChild(a);
-        a.click();
+        const link = document.createElement('a');
+        link.style.display = 'none';
+        link.href = url;
+        link.download = doc.original_name || doc.filename || `document-${doc.id}`;
+        document.body.appendChild(link);
+        link.click();
         window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
+        document.body.removeChild(link);
       }
       
       toast({
@@ -487,6 +490,10 @@ export default function ContractDetail() {
                             <p className="font-medium">{doc.original_name || doc.filename || 'Unknown file'}</p>
                             <p className="text-sm text-gray-600">
                               Uploaded {formatDate(doc.createdAt || doc.created_at)}
+                            </p>
+                            {/* Debug info */}
+                            <p className="text-xs text-gray-400">
+                              Debug: {JSON.stringify({original_name: doc.original_name, filename: doc.filename, id: doc.id})}
                             </p>
                           </div>
                         </div>
