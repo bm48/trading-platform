@@ -2311,21 +2311,18 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
         console.log('Demo mode: Simulating successful payment for user:', userId);
         
         // In demo mode, we simulate a successful payment and update subscription
-        await supabase
-          .from('auth.users')
-          .update({
-            raw_user_meta_data: {
-              planType: 'monthly_unlimited',
-              status: 'active',
-              stripeSubscriptionId: 'demo_sub_' + Date.now(),
-              stripeCustomerId: 'demo_cus_' + Date.now(),
-              currentPeriodStart: new Date().toISOString(),
-              currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-              strategyPacksRemaining: null,
-              hasInitialStrategyPack: true
-            }
-          })
-          .eq('id', userId);
+        await supabaseAdmin.auth.admin.updateUserById(userId, {
+          user_metadata: {
+            planType: 'monthly_subscription',
+            status: 'active',
+            stripeSubscriptionId: 'demo_sub_' + Date.now(),
+            stripeCustomerId: 'demo_cus_' + Date.now(),
+            currentPeriodStart: new Date().toISOString(),
+            currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+            strategyPacksRemaining: null,
+            hasInitialStrategyPack: true
+          }
+        });
 
         res.json({
           client_secret: null, // No client secret needed for demo
@@ -2338,6 +2335,51 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error creating payment intent:', error);
       res.status(500).json({ message: 'Failed to create payment intent' });
+    }
+  });
+
+  // Subscription status endpoint
+  app.get('/api/subscription/status', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+
+      // Get user data from Supabase auth
+      const { data: user, error } = await supabaseAdmin.auth.admin.getUserById(userId);
+      
+      if (error || !user) {
+        return res.json({
+          planType: 'none',
+          status: 'inactive',
+          canCreateCases: false,
+          message: 'No active subscription'
+        });
+      }
+
+      const metadata = (user as any).user_metadata || {};
+      const planType = metadata.planType || 'none';
+      const status = metadata.status || 'inactive';
+      const subscriptionExpiresAt = metadata.currentPeriodEnd;
+
+      // Check if subscription is active and not expired
+      const isActive = status === 'active' && 
+        (!subscriptionExpiresAt || new Date(subscriptionExpiresAt) > new Date());
+
+      res.json({
+        planType,
+        status: isActive ? 'active' : 'inactive',
+        canCreateCases: isActive,
+        subscriptionExpiresAt,
+        message: isActive 
+          ? 'Active monthly subscription - unlimited cases'
+          : 'No active subscription'
+      });
+    } catch (error) {
+      console.error('Error checking subscription status:', error);
+      res.status(500).json({ message: 'Failed to check subscription status' });
     }
   });
 

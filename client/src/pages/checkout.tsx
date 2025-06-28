@@ -13,6 +13,14 @@ import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-
 const STRIPE_ENABLED = !!import.meta.env.VITE_STRIPE_PUBLIC_KEY;
 import { formatCurrency } from '@/lib/utils';
 import { formatDate } from '@/lib/date-utils';
+
+interface SubscriptionStatus {
+  planType: string;
+  status: string;
+  canCreateCases: boolean;
+  subscriptionExpiresAt?: string;
+  message?: string;
+}
 import { 
   Shield, 
   Check, 
@@ -214,10 +222,13 @@ export default function Checkout() {
   const [paymentCompleted, setPaymentCompleted] = useState(false);
 
   // Check if user already has an active subscription
-  const { data: subscriptionStatus, isLoading: subscriptionLoading } = useQuery({
+  const { data: subscriptionStatus, isLoading: subscriptionLoading } = useQuery<SubscriptionStatus>({
     queryKey: ['/api/subscription/status'],
     enabled: !!user,
   });
+
+  const [paymentIntent, setPaymentIntent] = useState<any>(null);
+  const [isCreatingPayment, setIsCreatingPayment] = useState(false);
 
   // Create payment intent for monthly subscription
   const createPaymentMutation = useMutation({
@@ -240,16 +251,27 @@ export default function Checkout() {
       
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      setPaymentIntent(data);
       queryClient.invalidateQueries({ queryKey: ['/api/subscription/status'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Payment Setup Failed",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
-  const { data: paymentIntent, isLoading: isCreatingPayment } = useQuery({
-    queryKey: ['payment-intent', 'subscription'],
-    queryFn: () => createPaymentMutation.mutateAsync(),
-    enabled: !!user && !paymentCompleted,
-  });
+  const handleStartPayment = async () => {
+    setIsCreatingPayment(true);
+    try {
+      await createPaymentMutation.mutateAsync();
+    } finally {
+      setIsCreatingPayment(false);
+    }
+  };
 
   useEffect(() => {
     // Only redirect if we're not loading and user is definitely not authenticated
@@ -403,10 +425,23 @@ export default function Checkout() {
                     <p className="text-gray-600 mb-4">Payment processing is currently unavailable.</p>
                     <p className="text-sm text-gray-500">Stripe integration is not configured.</p>
                   </div>
-                ) : isCreatingPayment ? (
+                ) : !paymentIntent ? (
                   <div className="text-center py-8">
-                    <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4" />
-                    <p className="text-gray-600">Setting up payment...</p>
+                    <p className="text-gray-600 mb-4">Ready to start your subscription?</p>
+                    <Button 
+                      onClick={handleStartPayment} 
+                      disabled={isCreatingPayment}
+                      className="w-full"
+                    >
+                      {isCreatingPayment ? (
+                        <>
+                          <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
+                          Setting up payment...
+                        </>
+                      ) : (
+                        'Start Subscription'
+                      )}
+                    </Button>
                   </div>
                 ) : paymentIntent?.demo_mode ? (
                   <DemoPaymentForm onComplete={handlePaymentSuccess} />
@@ -420,7 +455,7 @@ export default function Checkout() {
                 ) : (
                   <div className="text-center py-8">
                     <p className="text-red-600 mb-4">Unable to initialize payment.</p>
-                    <Button onClick={() => window.location.reload()}>
+                    <Button onClick={handleStartPayment}>
                       Try Again
                     </Button>
                   </div>
