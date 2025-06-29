@@ -429,7 +429,8 @@ export default function Dashboard() {
             ) : (
               <div className="grid gap-6 animate-fade-in">
                 {cases.map((caseItem: any, index: number) => {
-                  const progress = calculateProgress(caseItem);
+                  // Use the actual progress from the database instead of calculating it
+                  const progress = caseItem.progress || 0;
                   return (
                     <Card 
                       key={caseItem.id} 

@@ -1563,14 +1563,34 @@ Project Resolve AI Team`;
           console.error('Notification function error:', notificationError);
         }
 
-        // 3. Mark document as sent (no need to create separate storage entry)
+        // 3. Update case progress to 70% when document is sent
+        try {
+          const { error: progressError } = await supabaseAdmin
+            .from('cases')
+            .update({ 
+              progress: 70,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', document.case_id);
+            
+          if (progressError) {
+            console.error('Error updating case progress to 70%:', progressError);
+          } else {
+            console.log(`Case ${document.case_id} progress updated to 70% after document sent`);
+          }
+        } catch (error) {
+          console.error('Failed to update case progress to 70%:', error);
+        }
+
+        // 4. Mark document as sent (no need to create separate storage entry)
         console.log('Document will be accessible in Strategy tab with status "sent"');
 
         res.json({ 
           message: 'Document sent successfully',
           recipient: user.email || 'unknown',
           documentType: document.type,
-          caseTitle: document.cases.title
+          caseTitle: document.cases.title,
+          progress: 70
         });
       } else {
         res.status(500).json({ message: 'Failed to send document' });
@@ -2230,10 +2250,30 @@ Project Resolve AI Team`;
       console.log(`Generating AI document for case ${caseId}`);
       const documentId = await aiPDFService.generateAndSaveResolveDocument(caseData);
       
+      // Update case progress to 30% when document generation starts
+      try {
+        const { error: progressError } = await supabaseAdmin
+          .from('cases')
+          .update({ 
+            progress: 30,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', caseId);
+          
+        if (progressError) {
+          console.error('Error updating case progress:', progressError);
+        } else {
+          console.log(`Case ${caseId} progress updated to 30%`);
+        }
+      } catch (error) {
+        console.error('Failed to update case progress:', error);
+      }
+      
       res.json({ 
         message: 'Document generated successfully', 
         documentId,
-        status: 'pending_review'
+        status: 'pending_review',
+        progress: 30
       });
     } catch (error) {
       console.error('Error generating AI document:', error);

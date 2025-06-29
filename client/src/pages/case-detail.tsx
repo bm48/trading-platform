@@ -100,9 +100,10 @@ export default function CaseDetail() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/documents/case', id] });
+      queryClient.invalidateQueries({ queryKey: ['/api/cases', id] }); // Refresh case data to show updated progress
       toast({
         title: "AI Strategy Pack Generated",
-        description: "Your personalized RESOLVE strategy document has been generated and sent for admin approval.",
+        description: "Your personalized RESOLVE strategy document has been generated and sent for admin approval. Case progress updated to 30%.",
       });
     },
     onError: (error: Error) => {
@@ -229,7 +230,8 @@ export default function CaseDetail() {
     );
   }
 
-  const progress = calculateProgress(caseData);
+  // Use the actual progress from the database instead of calculating it
+  const progress = caseData.progress || 0;
   const analysis = caseData.ai_analysis || caseData.aiAnalysis;
   const strategy = caseData.strategy_pack || caseData.strategyPack;
 
