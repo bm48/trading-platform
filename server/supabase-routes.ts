@@ -1508,20 +1508,18 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
           const dashboardUrl = `${process.env.BASE_URL || 'http://localhost:5000'}/dashboard`;
           
           // Send email using Supabase Auth's built-in email system
-          const { error: emailError } = await supabaseAdmin.auth.admin.generateLink({
-            type: 'magiclink',
-            email: user.email!,
-            options: {
-              redirectTo: dashboardUrl,
-              data: {
-                type: 'document_ready',
-                documentId: documentId,
-                caseTitle: document.cases.title,
-                documentType: document.type || 'Strategy Pack',
-                firstName: firstName,
-                message: `Your legal document for case "${document.cases.title}" has been reviewed and approved by our team.`,
-                loginUrl: dashboardUrl
-              }
+          // Use invite user functionality to send notification email
+          const { error: emailError } = await supabaseAdmin.auth.admin.inviteUserByEmail(user.email!, {
+            redirectTo: dashboardUrl,
+            data: {
+              type: 'document_ready',
+              documentId: documentId,
+              caseTitle: document.cases.title,
+              documentType: document.type || 'Strategy Pack',
+              firstName: firstName,
+              message: `Your legal document for case "${document.cases.title}" has been reviewed and approved by our team.`,
+              loginUrl: dashboardUrl,
+              isNotification: true
             }
           });
 
@@ -1567,18 +1565,20 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
 
         // 3. Update case progress to 70% when document is sent
         try {
-          const { error: progressError } = await supabaseAdmin
+          console.log(`Attempting to update case ${document.case_id} progress to 70%`);
+          const { data: updateResult, error: progressError } = await supabaseAdmin
             .from('cases')
             .update({ 
               progress: 70,
               updated_at: new Date().toISOString()
             })
-            .eq('id', document.case_id);
+            .eq('id', document.case_id)
+            .select();
             
           if (progressError) {
             console.error('Error updating case progress to 70%:', progressError);
           } else {
-            console.log(`Case ${document.case_id} progress updated to 70% after document sent`);
+            console.log(`Case ${document.case_id} progress updated to 70% after document sent. Updated rows:`, updateResult);
           }
         } catch (error) {
           console.error('Failed to update case progress to 70%:', error);
@@ -2254,18 +2254,20 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
       
       // Update case progress to 30% when document generation starts
       try {
-        const { error: progressError } = await supabaseAdmin
+        console.log(`Attempting to update case ${caseId} progress to 30%`);
+        const { data: updateResult, error: progressError } = await supabaseAdmin
           .from('cases')
           .update({ 
             progress: 30,
             updated_at: new Date().toISOString()
           })
-          .eq('id', caseId);
+          .eq('id', caseId)
+          .select();
           
         if (progressError) {
           console.error('Error updating case progress:', progressError);
         } else {
-          console.log(`Case ${caseId} progress updated to 30%`);
+          console.log(`Case ${caseId} progress updated to 30%. Updated rows:`, updateResult);
         }
       } catch (error) {
         console.error('Failed to update case progress:', error);

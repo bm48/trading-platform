@@ -25,7 +25,7 @@ When a document is sent, the client receives:
 In your Supabase dashboard:
 
 1. **Go to Authentication → Email Templates**
-2. **Select "Magic Link" template**
+2. **Select "Invite user" template** (this is used for notifications)
 3. **Update the template with this HTML:**
 
 ```html
