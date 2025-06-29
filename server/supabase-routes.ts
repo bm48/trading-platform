@@ -1280,19 +1280,30 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
         console.error('Error fetching user profiles:', profilesError);
       }
 
-      // Combine auth users with profile data
+      // Combine auth users with profile data and subscription metadata
       const usersWithSubscriptions = authUsers.users.map(user => {
         const profile = userProfiles?.find(p => p.id === user.id);
+        const metadata = user.user_metadata || {};
+        
+        // Extract subscription data from auth metadata
+        const subscriptionStatus = metadata.status || 'inactive';
+        const planType = metadata.planType || 'none';
+        const currentPeriodStart = metadata.currentPeriodStart;
+        const currentPeriodEnd = metadata.currentPeriodEnd;
+        
         return {
           id: user.id,
           email: user.email,
-          firstName: profile?.first_name || user.user_metadata?.first_name || 'Unknown',
-          lastName: profile?.last_name || user.user_metadata?.last_name || '',
-          subscriptionStatus: profile?.subscription_status || 'inactive',
-          subscriptionStartDate: profile?.created_at,
-          subscriptionEndDate: profile?.subscription_expires_at,
+          firstName: profile?.first_name || metadata?.first_name || user.user_metadata?.full_name?.split(' ')[0] || 'Unknown',
+          lastName: profile?.last_name || metadata?.last_name || user.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
+          subscriptionStatus: subscriptionStatus,
+          planType: planType,
+          subscriptionStartDate: currentPeriodStart || user.created_at,
+          subscriptionEndDate: currentPeriodEnd,
           createdAt: user.created_at,
-          lastSignInAt: user.last_sign_in_at
+          lastSignInAt: user.last_sign_in_at,
+          stripeCustomerId: metadata.stripeCustomerId,
+          stripeSubscriptionId: metadata.stripeSubscriptionId
         };
       });
 

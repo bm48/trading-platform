@@ -119,6 +119,9 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+- June 29, 2025: ADMIN DOCUMENT EDITING & USER SUBSCRIPTION STATUS FIXED - Resolved duplicate route conflict causing document edits to fail after first save by consolidating two PUT routes into single comprehensive endpoint with PDF regeneration. Enhanced admin users tab to display subscription status with plan type, dates, and Stripe customer IDs from Supabase Auth metadata
+- June 29, 2025: ADMIN SECURITY AUTHENTICATION IMPROVED - Fixed admin login to show proper warning "Access denied: Only authorized administrators can access this panel" when non-admin emails attempt login, preventing unauthorized access attempts with clear error messaging
+- June 29, 2025: SUBSCRIPTION DATA RETRIEVAL FIXED - Resolved issue where subscription status showed "No Active Plan" despite successful payment by fixing nested object access in Supabase user metadata from `user.user_metadata` to `user.user?.user_metadata`
 - June 28, 2025: SUBSCRIPTION WARNING MESSAGE ENHANCED - Updated checkout page to show prominent amber warning "You Already Subscribed for Monthly Plan" when users with active subscriptions try to access checkout again. Added AlertTriangle icon and enhanced styling to make warning more visible.
 - June 28, 2025: COMPREHENSIVE DATE FORMAT & SUBSCRIPTION FIXES - Fixed ALL date formatting across entire project to display "Jun 17th, 2025" format with ordinal suffixes. Implemented subscription status checking to prevent double subscriptions - users with active monthly subscriptions see "You've already subscribed" message when accessing checkout page
 - June 28, 2025: DOCUMENT UPLOAD/DOWNLOAD SYSTEM COMPLETELY FIXED - Resolved variable naming conflicts in download function, fixed document name display issues, and ensured proper file handling. Contract document upload and download now working correctly with real filenames and proper authentication

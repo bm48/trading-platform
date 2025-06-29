@@ -492,8 +492,13 @@ export default function AdminDashboard() {
                                 variant={user.subscriptionStatus === 'active' ? 'default' : 'secondary'}
                                 className={user.subscriptionStatus === 'active' ? 'bg-green-100 text-green-800' : ''}
                               >
-                                {user.subscriptionStatus || 'inactive'}
+                                {user.subscriptionStatus === 'active' ? 'Active' : 'Inactive'}
                               </Badge>
+                              {user.planType && user.planType !== 'none' && (
+                                <Badge variant="outline" className="text-xs">
+                                  {user.planType === 'monthly_subscription' ? 'Monthly Plan' : user.planType}
+                                </Badge>
+                              )}
                             </div>
                             <p className="text-sm text-gray-600 mb-1">{user.email}</p>
                             <div className="text-xs text-gray-500 space-y-1">
@@ -501,11 +506,14 @@ export default function AdminDashboard() {
                               {user.lastSignInAt && (
                                 <p>Last login: {formatDate(user.lastSignInAt)}</p>
                               )}
-                              {user.subscriptionStartDate && (
-                                <p>Subscribed: {formatDate(user.subscriptionStartDate)}</p>
+                              {user.subscriptionStatus === 'active' && user.subscriptionStartDate && (
+                                <p>Started: {formatDate(user.subscriptionStartDate)}</p>
                               )}
-                              {user.subscriptionEndDate && (
+                              {user.subscriptionStatus === 'active' && user.subscriptionEndDate && (
                                 <p>Expires: {formatDate(user.subscriptionEndDate)}</p>
+                              )}
+                              {user.stripeCustomerId && (
+                                <p className="text-blue-600">Stripe ID: {user.stripeCustomerId.slice(0, 20)}...</p>
                               )}
                             </div>
                           </div>
@@ -802,18 +810,32 @@ export default function AdminDashboard() {
                     onClick={async () => {
                       try {
                         const parsedContent = JSON.parse(editedContent);
-                        await apiRequest("PUT", `/api/admin/documents/${editingDocument.id}`, {
+                        
+                        console.log('Saving document changes:', {
+                          documentId: editingDocument.id,
                           content: parsedContent
                         });
+                        
+                        const response = await apiRequest("PUT", `/api/admin/documents/${editingDocument.id}`, {
+                          content: parsedContent
+                        });
+                        
+                        if (!response.ok) {
+                          throw new Error('Failed to save document');
+                        }
+                        
+                        // Force refresh the query data
+                        await queryClient.invalidateQueries({ queryKey: ['/api/admin/pending-documents'] });
+                        await queryClient.refetchQueries({ queryKey: ['/api/admin/pending-documents'] });
                         
                         toast({
                           title: "Document Updated",
                           description: "Changes saved successfully",
                         });
                         
-                        queryClient.invalidateQueries({ queryKey: ['/api/admin/pending-documents'] });
                         setEditingDocument(null);
                       } catch (error) {
+                        console.error('Failed to save document:', error);
                         toast({
                           title: "Error",
                           description: "Failed to save changes. Please check JSON format.",
