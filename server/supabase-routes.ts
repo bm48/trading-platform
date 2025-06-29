@@ -884,9 +884,20 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
         description
       });
 
+      // Automatically trigger AI analysis for the uploaded document
+      try {
+        console.log(`Triggering AI analysis for document ${document.id}`);
+        await aiTaggingService.analyzeDocument(document.id, document.fileName || document.originalName || 'uploaded-file');
+        console.log(`AI analysis completed for document ${document.id}`);
+      } catch (analysisError) {
+        console.error('Error during automatic AI analysis:', analysisError);
+        // Don't fail the upload if AI analysis fails
+      }
+
       res.status(201).json({
         message: "File uploaded successfully", 
-        document
+        document,
+        aiAnalysisTriggered: true
       });
     } catch (error) {
       console.error("Error uploading file:", error);
@@ -926,9 +937,20 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
         description
       });
 
+      // Automatically trigger AI analysis for the uploaded document
+      try {
+        console.log(`Triggering AI analysis for case document ${document.id}`);
+        await aiTaggingService.analyzeDocument(document.id, document.fileName || document.originalName || 'uploaded-file');
+        console.log(`AI analysis completed for case document ${document.id}`);
+      } catch (analysisError) {
+        console.error('Error during automatic AI analysis:', analysisError);
+        // Don't fail the upload if AI analysis fails
+      }
+
       res.status(201).json({
         message: "File uploaded successfully",
-        document
+        document,
+        aiAnalysisTriggered: true
       });
     } catch (error) {
       console.error("Error uploading file:", error);
