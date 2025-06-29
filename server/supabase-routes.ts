@@ -1676,39 +1676,48 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
         console.log(`Generating fallback PDF for document ${documentId}`);
         
         try {
-          const PDFKit = await import('pdfkit');
-          const doc = new PDFKit.default();
+          // Generate a comprehensive AI-powered PDF on-the-fly
+          console.log(`Generating comprehensive AI PDF for document ${documentId}`);
           
-          // Create PDF content
-          doc.fontSize(20).text('RESOLVE - FOR TRADIES', 50, 50);
-          doc.fontSize(16).text('AI-Generated Strategy Pack', 50, 100);
-          doc.fontSize(12).text(`Document ID: ${document.id}`, 50, 150);
-          doc.fontSize(12).text(`Case ID: ${document.case_id}`, 50, 170);
-          doc.fontSize(12).text(`Type: ${document.type}`, 50, 190);
-          doc.fontSize(12).text(`Status: ${document.status}`, 50, 210);
-          doc.fontSize(12).text(`Generated: ${new Date().toLocaleDateString()}`, 50, 230);
+          // Get case data for AI generation
+          const { data: caseData, error: caseError } = await supabaseAdmin
+            .from('cases')
+            .select('*')
+            .eq('id', document.case_id)
+            .single();
+
+          if (caseError || !caseData) {
+            throw new Error('Case data not found for PDF generation');
+          }
+
+          // Import the comprehensive PDF generator
+          const { comprehensivePDFGenerator } = await import('./comprehensive-pdf-generator');
           
-          doc.fontSize(14).text('Document Content:', 50, 270);
-          doc.fontSize(10).text('This is a temporary PDF while the full document is being processed.', 50, 300);
-          doc.fontSize(10).text('The complete AI-generated strategy pack will be available shortly.', 50, 320);
+          // Generate AI content and create professional PDF
+          const documentData = await comprehensivePDFGenerator.generateComprehensiveDocument(caseData);
+          const pdfFilename = await comprehensivePDFGenerator.generateProfessionalPDF(caseData, documentData);
           
-          // End the document
-          doc.end();
+          // Read the generated PDF file
+          const path = await import('path');
+          const fs = await import('fs');
+          const pdfPath = path.join(process.cwd(), 'templates', pdfFilename);
+          const pdfBuffer = fs.readFileSync(pdfPath);
           
-          // Create a buffer from the PDF
-          const chunks: Buffer[] = [];
-          doc.on('data', (chunk: Buffer) => chunks.push(chunk));
-          doc.on('end', () => {
-            const pdfBuffer = Buffer.concat(chunks);
-            const filename = `${document.type.replace('_', ' ')} - Case ${document.case_id}.pdf`;
-            
-            res.setHeader('Content-Type', 'application/pdf');
-            res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-            res.setHeader('Content-Length', pdfBuffer.length.toString());
-            res.send(pdfBuffer);
-          });
+          const filename = `RESOLVE Strategy Pack - Case ${document.case_id}.pdf`;
           
-          return; // Exit early since we're handling the response in the event handler
+          res.setHeader('Content-Type', 'application/pdf');
+          res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+          res.setHeader('Content-Length', pdfBuffer.length.toString());
+          res.send(pdfBuffer);
+          
+          // Clean up temporary file
+          try {
+            fs.unlinkSync(pdfPath);
+          } catch (cleanupError) {
+            console.warn('Could not clean up temporary PDF file:', cleanupError);
+          }
+          
+          return; // Exit early since we're handling the response
         } catch (pdfError) {
           console.error('Error generating fallback PDF:', pdfError);
           return res.status(404).json({ 
