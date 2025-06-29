@@ -2351,6 +2351,7 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
       const { data: user, error } = await supabaseAdmin.auth.admin.getUserById(userId);
       
       if (error || !user) {
+        console.log('Error fetching user or user not found:', error);
         return res.json({
           planType: 'none',
           status: 'inactive',
@@ -2359,10 +2360,27 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const metadata = (user as any).user_metadata || {};
+      console.log('User fetched for subscription check:', {
+        userId,
+        user_metadata: (user as any).user_metadata,
+        raw_user_meta_data: (user as any).raw_user_meta_data,
+        hasUser: !!user,
+        userObject: user
+      });
+
+      // Try both user_metadata and raw_user_meta_data
+      const metadata = (user as any).user_metadata || (user as any).raw_user_meta_data || {};
       const planType = metadata.planType || 'none';
       const status = metadata.status || 'inactive';
       const subscriptionExpiresAt = metadata.currentPeriodEnd;
+
+      console.log('Subscription status parsed:', {
+        planType,
+        status,
+        subscriptionExpiresAt,
+        metadata,
+        metadataKeys: Object.keys(metadata)
+      });
 
       // Check if subscription is active and not expired
       const isActive = status === 'active' && 
