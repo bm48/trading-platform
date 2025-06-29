@@ -1160,6 +1160,13 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
       const sessionId = await adminAuthService.authenticateAdmin(email, password);
       
       if (!sessionId) {
+        // Check if the email exists but is not authorized
+        if (email !== 'hello@projectresolveai.com') {
+          return res.status(403).json({ 
+            message: 'Access denied: Only authorized administrators can access this panel',
+            isUnauthorizedEmail: true
+          });
+        }
         return res.status(401).json({ message: 'Invalid credentials' });
       }
 

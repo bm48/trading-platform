@@ -24,8 +24,12 @@ export class AdminAuthService {
         return null;
       }
 
-      // For now, let's bypass the database query and trust the Supabase Auth
-      // We know the user exists with admin role from our previous tests
+      // Validate that this is the specific admin email we allow
+      if (authData.user.email !== 'hello@projectresolveai.com') {
+        console.log('User is not the known admin email:', authData.user.email);
+        return null;
+      }
+
       console.log('Admin authenticated successfully:', authData.user.email);
 
       // Return the session token from Supabase
@@ -35,7 +39,6 @@ export class AdminAuthService {
         return null;
       }
 
-      console.log('Admin authenticated successfully:', authData.user.email);
       return sessionToken;
 
     } catch (error) {

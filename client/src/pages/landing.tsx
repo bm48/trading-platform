@@ -120,9 +120,9 @@ export default function Landing() {
     setAdminLoading(true);
 
     try {
-      const success = await loginAdmin(adminEmail, adminPassword);
+      const result = await loginAdmin(adminEmail, adminPassword);
 
-      if (success) {
+      if (result.success) {
         toast({
           title: "Login Successful",
           description: "Welcome to the admin panel",
@@ -135,7 +135,7 @@ export default function Landing() {
       } else {
         toast({
           title: "Login Failed",
-          description: "Invalid credentials",
+          description: result.message || "Invalid credentials",
           variant: "destructive",
         });
       }

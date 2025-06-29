@@ -34,7 +34,7 @@ export function useAdminAuth() {
     }
   };
 
-  const loginAdmin = async (email: string, password: string): Promise<boolean> => {
+  const loginAdmin = async (email: string, password: string): Promise<{ success: boolean; message?: string }> => {
     try {
       setIsLoading(true);
       const response = await fetch('/api/admin/login', {
@@ -58,13 +58,30 @@ export function useAdminAuth() {
         setAdminSession(adminSession);
         setIsLoading(false);
         console.log('Admin session set:', adminSession);
-        return true;
+        return { success: true };
       }
+
+      // Handle error response
+      const errorData = await response.json().catch(() => ({}));
       setIsLoading(false);
-      return false;
+      
+      if (response.status === 403 && errorData.isUnauthorizedEmail) {
+        return { 
+          success: false, 
+          message: errorData.message || 'Access denied: Only authorized administrators can access this panel'
+        };
+      }
+      
+      return { 
+        success: false, 
+        message: errorData.message || 'Invalid credentials'
+      };
     } catch (error) {
       setIsLoading(false);
-      return false;
+      return { 
+        success: false, 
+        message: 'Unable to connect to server'
+      };
     }
   };
 

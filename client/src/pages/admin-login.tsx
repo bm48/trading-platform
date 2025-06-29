@@ -24,9 +24,9 @@ export default function AdminLogin() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const success = await loginAdmin(email, password);
+    const result = await loginAdmin(email, password);
 
-    if (success) {
+    if (result.success) {
       toast({
         title: "Login Successful",
         description: "Welcome to the admin panel",
@@ -36,7 +36,7 @@ export default function AdminLogin() {
     } else {
       toast({
         title: "Login Failed",
-        description: "Invalid credentials",
+        description: result.message || "Invalid credentials",
         variant: "destructive",
       });
     }
