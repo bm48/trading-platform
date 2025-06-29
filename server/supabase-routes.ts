@@ -1608,6 +1608,8 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     try {
       const caseId = parseInt(req.params.caseId);
       
+      console.log(`Fetching strategy documents for case ${caseId}, user ${req.user!.id}`);
+      
       // Get AI-generated documents that have been sent to this user for this case
       const { data: documents, error } = await supabaseAdmin
         .from('ai_generated_documents')
@@ -1616,6 +1618,8 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
         .eq('user_id', req.user!.id)
         .eq('status', 'sent')
         .order('created_at', { ascending: false });
+
+      console.log(`Strategy documents query result: documents=${documents?.length || 0}, error=`, error);
 
       if (error) {
         console.error('Error fetching strategy documents:', error);
@@ -1658,16 +1662,60 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
         .eq('status', 'sent');
 
       if (error || !documents || documents.length === 0) {
-        return res.status(404).json({ message: 'Document not found or access denied' });
+        console.log(`Document download failed: documentId=${documentId}, userId=${req.user!.id}, error:`, error);
+        return res.status(404).json({ 
+          message: 'Document file not yet uploaded to storage',
+          details: 'The document may still be processing or may not exist'
+        });
       }
 
       const document = documents[0];
       
       if (!document.pdf_supabase_url || document.pdf_supabase_url.trim() === '') {
-        return res.status(404).json({ 
-          message: 'Document file not yet generated',
-          details: 'The document is being processed and will be available soon'
-        });
+        // Generate a simple PDF on-the-fly for documents without stored PDFs
+        console.log(`Generating fallback PDF for document ${documentId}`);
+        
+        try {
+          const PDFDocument = require('pdfkit');
+          const doc = new PDFDocument();
+          
+          // Create PDF content
+          doc.fontSize(20).text('RESOLVE - FOR TRADIES', 50, 50);
+          doc.fontSize(16).text('AI-Generated Strategy Pack', 50, 100);
+          doc.fontSize(12).text(`Document ID: ${document.id}`, 50, 150);
+          doc.fontSize(12).text(`Case ID: ${document.case_id}`, 50, 170);
+          doc.fontSize(12).text(`Type: ${document.type}`, 50, 190);
+          doc.fontSize(12).text(`Status: ${document.status}`, 50, 210);
+          doc.fontSize(12).text(`Generated: ${new Date().toLocaleDateString()}`, 50, 230);
+          
+          doc.fontSize(14).text('Document Content:', 50, 270);
+          doc.fontSize(10).text('This is a temporary PDF while the full document is being processed.', 50, 300);
+          doc.fontSize(10).text('The complete AI-generated strategy pack will be available shortly.', 50, 320);
+          
+          // End the document
+          doc.end();
+          
+          // Create a buffer from the PDF
+          const chunks: Buffer[] = [];
+          doc.on('data', (chunk: Buffer) => chunks.push(chunk));
+          doc.on('end', () => {
+            const pdfBuffer = Buffer.concat(chunks);
+            const filename = `${document.type.replace('_', ' ')} - Case ${document.case_id}.pdf`;
+            
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+            res.setHeader('Content-Length', pdfBuffer.length.toString());
+            res.send(pdfBuffer);
+          });
+          
+          return; // Exit early since we're handling the response in the event handler
+        } catch (pdfError) {
+          console.error('Error generating fallback PDF:', pdfError);
+          return res.status(404).json({ 
+            message: 'Document file not yet uploaded to storage',
+            details: 'The document is being processed and will be available soon'
+          });
+        }
       }
 
       // Check if we should proxy the download or return the URL
