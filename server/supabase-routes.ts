@@ -14,6 +14,7 @@ import { adminAuthService, authenticateAdmin } from './admin-auth';
 import { legalInsightsService } from './legal-insights-service';
 import { notificationService } from './notification-service';
 import { aiPDFService } from './ai-pdf-service';
+import { aiTaggingService } from './ai-tagging-service';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -2683,6 +2684,178 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error fetching AI document:', error);
       res.status(500).json({ message: 'Failed to fetch document' });
+    }
+  });
+
+  // AI Document Tagging Routes
+  app.post('/api/documents/:documentId/analyze-tags', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      const { documentId } = req.params;
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+
+      // Get document to verify ownership
+      const { data: document, error: docError } = await supabaseAdmin
+        .from('document_storage')
+        .select('*')
+        .eq('id', parseInt(documentId))
+        .eq('user_id', userId)
+        .single();
+
+      if (docError || !document) {
+        return res.status(404).json({ message: 'Document not found' });
+      }
+
+      // Analyze document with AI
+      const analysis = await aiTaggingService.analyzeDocument(
+        parseInt(documentId), 
+        document.filename
+      );
+
+      res.json(analysis);
+    } catch (error) {
+      console.error('Error analyzing document tags:', error);
+      res.status(500).json({ message: 'Failed to analyze document' });
+    }
+  });
+
+  app.get('/api/documents/:documentId/tags', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      const { documentId } = req.params;
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+
+      // Verify document ownership
+      const { data: document, error: docError } = await supabaseAdmin
+        .from('document_storage')
+        .select('*')
+        .eq('id', parseInt(documentId))
+        .eq('user_id', userId)
+        .single();
+
+      if (docError || !document) {
+        return res.status(404).json({ message: 'Document not found' });
+      }
+
+      const tags = await aiTaggingService.getDocumentTags(parseInt(documentId));
+      res.json(tags);
+    } catch (error) {
+      console.error('Error fetching document tags:', error);
+      res.status(500).json({ message: 'Failed to fetch document tags' });
+    }
+  });
+
+  app.post('/api/documents/:documentId/tags', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      const { documentId } = req.params;
+      const { tagIds } = req.body;
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+
+      if (!Array.isArray(tagIds)) {
+        return res.status(400).json({ message: 'tagIds must be an array' });
+      }
+
+      // Verify document ownership
+      const { data: document, error: docError } = await supabaseAdmin
+        .from('document_storage')
+        .select('*')
+        .eq('id', parseInt(documentId))
+        .eq('user_id', userId)
+        .single();
+
+      if (docError || !document) {
+        return res.status(404).json({ message: 'Document not found' });
+      }
+
+      const success = await aiTaggingService.applyTagsToDocument(
+        parseInt(documentId), 
+        tagIds, 
+        userId
+      );
+
+      if (success) {
+        res.json({ message: 'Tags applied successfully' });
+      } else {
+        res.status(500).json({ message: 'Failed to apply tags' });
+      }
+    } catch (error) {
+      console.error('Error applying tags to document:', error);
+      res.status(500).json({ message: 'Failed to apply tags' });
+    }
+  });
+
+  app.get('/api/documents/:documentId/tag-suggestions', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      const { documentId } = req.params;
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+
+      // Verify document ownership
+      const { data: document, error: docError } = await supabaseAdmin
+        .from('document_storage')
+        .select('*')
+        .eq('id', parseInt(documentId))
+        .eq('user_id', userId)
+        .single();
+
+      if (docError || !document) {
+        return res.status(404).json({ message: 'Document not found' });
+      }
+
+      const suggestions = await aiTaggingService.getTagSuggestions(parseInt(documentId));
+      res.json(suggestions);
+    } catch (error) {
+      console.error('Error fetching tag suggestions:', error);
+      res.status(500).json({ message: 'Failed to fetch tag suggestions' });
+    }
+  });
+
+  app.get('/api/tags', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const tags = await aiTaggingService.getAllTags();
+      res.json(tags);
+    } catch (error) {
+      console.error('Error fetching all tags:', error);
+      res.status(500).json({ message: 'Failed to fetch tags' });
+    }
+  });
+
+  app.post('/api/tags', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      const { name, category, description } = req.body;
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+
+      if (!name || !category) {
+        return res.status(400).json({ message: 'Name and category are required' });
+      }
+
+      const tag = await aiTaggingService.createCustomTag(name, category, description, userId);
+      
+      if (tag) {
+        res.status(201).json(tag);
+      } else {
+        res.status(500).json({ message: 'Failed to create tag' });
+      }
+    } catch (error) {
+      console.error('Error creating custom tag:', error);
+      res.status(500).json({ message: 'Failed to create tag' });
     }
   });
 

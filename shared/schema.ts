@@ -276,6 +276,52 @@ export const notifications = pgTable("notifications", {
   createdAtIdx: index("notifications_created_at_idx").on(table.created_at),
 }));
 
+// Document tags system
+export const document_tags = pgTable("document_tags", {
+  id: serial("id").primaryKey(),
+  name: varchar("name").notNull().unique(),
+  category: varchar("category").notNull(), // legal, financial, evidence, communication, administrative
+  color: varchar("color").default("#3B82F6"), // Hex color for UI display
+  description: text("description"),
+  is_system: boolean("is_system").default(false), // AI-generated vs user-created
+  usage_count: integer("usage_count").default(0),
+  created_by: varchar("created_by"), // user_id who created this tag
+  created_at: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  nameIdx: index("document_tags_name_idx").on(table.name),
+  categoryIdx: index("document_tags_category_idx").on(table.category),
+}));
+
+// Junction table for document-tag relationships
+export const document_tag_assignments = pgTable("document_tag_assignments", {
+  id: serial("id").primaryKey(),
+  document_id: integer("document_id").notNull(),
+  tag_id: integer("tag_id").notNull(),
+  assigned_by: varchar("assigned_by"), // user_id or 'ai' for AI-suggested tags
+  confidence_score: decimal("confidence_score"), // AI confidence 0.0-1.0
+  is_ai_suggested: boolean("is_ai_suggested").default(false),
+  created_at: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  documentTagIdx: index("document_tag_assignments_document_tag_idx").on(table.document_id, table.tag_id),
+  documentIdx: index("document_tag_assignments_document_idx").on(table.document_id),
+  tagIdx: index("document_tag_assignments_tag_idx").on(table.tag_id),
+}));
+
+// AI tagging suggestions and analytics
+export const ai_tag_suggestions = pgTable("ai_tag_suggestions", {
+  id: serial("id").primaryKey(),
+  document_id: integer("document_id").notNull(),
+  suggested_tags: jsonb("suggested_tags").notNull(), // Array of {tag: string, confidence: number, reasoning: string}
+  document_analysis: text("document_analysis"), // AI analysis of document content
+  processing_status: varchar("processing_status").default("pending"), // pending, completed, failed
+  user_feedback: jsonb("user_feedback"), // User acceptance/rejection of suggestions
+  created_at: timestamp("created_at").defaultNow(),
+  processed_at: timestamp("processed_at"),
+}, (table) => ({
+  documentIdx: index("ai_tag_suggestions_document_idx").on(table.document_id),
+  statusIdx: index("ai_tag_suggestions_status_idx").on(table.processing_status),
+}));
+
 // Schema validation (moved to end of file to avoid duplicates)
 
 export const insertCaseSchema = createInsertSchema(cases).omit({
@@ -332,6 +378,23 @@ export const insertCalendarEventSchema = createInsertSchema(calendarEvents).omit
   end_time: z.string().transform((val) => new Date(val)),
 });
 
+export const insertDocumentTagSchema = createInsertSchema(document_tags).omit({
+  id: true,
+  created_at: true,
+  usage_count: true,
+});
+
+export const insertDocumentTagAssignmentSchema = createInsertSchema(document_tag_assignments).omit({
+  id: true,
+  created_at: true,
+});
+
+export const insertAiTagSuggestionSchema = createInsertSchema(ai_tag_suggestions).omit({
+  id: true,
+  created_at: true,
+  processed_at: true,
+});
+
 // Types
 export type InsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -351,6 +414,12 @@ export type InsertCalendarIntegration = z.infer<typeof insertCalendarIntegration
 export type CalendarIntegration = typeof calendarIntegrations.$inferSelect;
 export type InsertCalendarEvent = z.infer<typeof insertCalendarEventSchema>;
 export type CalendarEvent = typeof calendarEvents.$inferSelect;
+export type InsertDocumentTag = z.infer<typeof insertDocumentTagSchema>;
+export type DocumentTag = typeof document_tags.$inferSelect;
+export type InsertDocumentTagAssignment = z.infer<typeof insertDocumentTagAssignmentSchema>;
+export type DocumentTagAssignment = typeof document_tag_assignments.$inferSelect;
+export type InsertAiTagSuggestion = z.infer<typeof insertAiTagSuggestionSchema>;
+export type AiTagSuggestion = typeof ai_tag_suggestions.$inferSelect;
 
 // Application insert schema with proper validation
 export const insertApplicationSchema = createInsertSchema(applications).omit({
