@@ -199,6 +199,12 @@ Return your response as JSON with this exact structure based on the RESOLVE temp
       }
 
       const parsedContent = JSON.parse(content) as ResolveDocumentData;
+      
+      // If no manual timeline entries exist, save the AI-generated timeline to database
+      if (!timelineEntries || timelineEntries.length === 0) {
+        await this.saveAITimelineToDatabase(caseData.id, caseData.userId, parsedContent.timeline);
+      }
+      
       return parsedContent;
 
     } catch (error) {
@@ -533,6 +539,46 @@ Return your response as JSON with this exact structure based on the RESOLVE temp
     } catch (error) {
       console.error('Error in generateAndSaveResolveDocument:', error);
       throw error;
+    }
+  }
+
+  private async saveAITimelineToDatabase(caseId: number, userId: string, timeline: Array<{day: string, action: string, deadline?: string}>): Promise<void> {
+    try {
+      if (!timeline || timeline.length === 0) return;
+
+      const timelineEntries = timeline.map((entry, index) => {
+        // Calculate date based on "Day X" format
+        const dayMatch = entry.day.match(/Day (\d+)/i);
+        const dayNumber = dayMatch ? parseInt(dayMatch[1]) : index + 1;
+        
+        const date = new Date();
+        date.setDate(date.getDate() + dayNumber);
+
+        return {
+          case_id: caseId,
+          user_id: userId,
+          event_type: 'ai_generated',
+          title: entry.action,
+          description: entry.deadline || `AI-generated timeline entry for ${entry.action}`,
+          date: date.toISOString(),
+          is_completed: false,
+          type: 'milestone',
+          priority: 'medium',
+          status: 'pending'
+        };
+      });
+
+      const { error } = await supabaseAdmin
+        .from('timeline_events')
+        .insert(timelineEntries);
+
+      if (error) {
+        console.error('Error saving AI timeline to database:', error);
+      } else {
+        console.log(`Successfully saved ${timelineEntries.length} AI-generated timeline entries for case ${caseId}`);
+      }
+    } catch (error) {
+      console.error('Error in saveAITimelineToDatabase:', error);
     }
   }
 }
