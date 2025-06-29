@@ -383,27 +383,50 @@ export default function CaseDetail() {
       }
 
       const response = await fetch(`/api/documents/${documentId}/download`, {
+        method: 'GET',
         credentials: 'include',
         headers: {
           'Authorization': `Bearer ${session.access_token}`
         }
       });
       
-      if (!response.ok) throw new Error('Download failed');
+      if (!response.ok) {
+        throw new Error(`Download failed: ${response.status} ${response.statusText}`);
+      }
       
       const blob = await response.blob();
+      
+      // Verify we have a valid blob
+      if (blob.size === 0) {
+        throw new Error('Downloaded file is empty');
+      }
+
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
+      a.style.display = 'none';
       a.href = url;
       a.download = filename;
+      a.target = '_blank';
       document.body.appendChild(a);
       a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      
+      // Cleanup after a delay
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+        if (document.body.contains(a)) {
+          document.body.removeChild(a);
+        }
+      }, 100);
+
+      toast({
+        title: "Download Started",
+        description: `${filename} (${(blob.size / 1024).toFixed(1)} KB) is downloading`,
+      });
     } catch (error) {
+      console.error('Download error:', error);
       toast({
         title: "Download Failed",
-        description: "Could not download the document. Please try again.",
+        description: error instanceof Error ? error.message : "Could not download the document. Please try again.",
         variant: "destructive",
       });
     }

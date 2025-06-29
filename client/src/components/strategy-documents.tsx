@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Download, FileText, Calendar, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/lib/supabase";
 
 interface StrategyDocument {
   id: number;
@@ -40,11 +41,23 @@ export default function StrategyDocuments({ caseId }: StrategyDocumentsProps) {
 
   const handleDownload = async (doc: StrategyDocument) => {
     try {
-      // Use authenticated proxy download
-      const response = await apiRequest('GET', `/api/documents/download/${doc.id}?proxy=true`);
+      // Get auth headers for authenticated download
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error('No authentication token available');
+      }
+
+      // Use direct fetch for blob download with authentication
+      const response = await fetch(`/api/documents/download/${doc.id}?proxy=true`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        credentials: 'include',
+      });
       
       if (!response.ok) {
-        throw new Error('Failed to download file');
+        throw new Error(`Download failed: ${response.status} ${response.statusText}`);
       }
 
       // Get the file blob and filename from headers
@@ -54,9 +67,14 @@ export default function StrategyDocuments({ caseId }: StrategyDocumentsProps) {
       
       if (contentDisposition) {
         const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
-        if (filenameMatch) {
+        if (filenameMatch && filenameMatch[1]) {
           filename = filenameMatch[1].replace(/['"]/g, '');
         }
+      }
+
+      // Verify we have a valid blob
+      if (blob.size === 0) {
+        throw new Error('Downloaded file is empty');
       }
 
       // Create download link and trigger download
@@ -65,22 +83,29 @@ export default function StrategyDocuments({ caseId }: StrategyDocumentsProps) {
       a.style.display = 'none';
       a.href = url;
       a.download = filename;
+      a.target = '_blank'; // Ensure it opens in new tab if click doesn't trigger download
       document.body.appendChild(a);
+      
+      // Force the download
       a.click();
       
-      // Cleanup
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      // Cleanup after a delay to ensure download starts
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+        if (document.body.contains(a)) {
+          document.body.removeChild(a);
+        }
+      }, 100);
 
       toast({
         title: "Download Started",
-        description: `${filename} is downloading`,
+        description: `${filename} (${(blob.size / 1024).toFixed(1)} KB) is downloading`,
       });
     } catch (error) {
       console.error('Download error:', error);
       toast({
         title: "Download Failed",
-        description: "Failed to download document. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to download document. Please try again.",
         variant: "destructive",
       });
     }
