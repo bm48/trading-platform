@@ -1856,28 +1856,33 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
       const shouldProxy = req.query.proxy === 'true';
       
       if (shouldProxy) {
-        // Proxy the file download through our server
+        // Proxy the file download through our server using Supabase storage
         try {
-          console.log('Proxying download for URL:', document.pdf_supabase_url);
+          console.log('Proxying download for document:', document.id);
           
-          const fileResponse = await fetch(document.pdf_supabase_url, {
-            headers: {
-              'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
-              'Content-Type': 'application/json',
-            }
-          });
+          // Extract the path from the URL for direct storage access
+          const urlParts = document.pdf_supabase_url.split('/storage/v1/object/public/documents/');
+          if (urlParts.length < 2) {
+            throw new Error('Invalid storage URL format');
+          }
           
-          console.log('File response status:', fileResponse.status);
+          const storagePath = urlParts[1];
+          console.log('Storage path:', storagePath);
           
-          if (!fileResponse.ok) {
-            console.error('Failed to fetch file from storage:', fileResponse.statusText);
-            throw new Error(`Failed to fetch file from storage: ${fileResponse.statusText}`);
+          // Download directly from Supabase storage
+          const { data: fileData, error: downloadError } = await supabaseAdmin.storage
+            .from('documents')
+            .download(storagePath);
+
+          if (downloadError) {
+            console.error('Storage download error:', downloadError);
+            throw new Error(`Storage download failed: ${downloadError.message}`);
           }
 
-          const buffer = await fileResponse.arrayBuffer();
+          const buffer = await fileData.arrayBuffer();
           const filename = `${document.type.replace('_', ' ')} - Case ${document.case_id}.pdf`;
           
-          console.log('File fetched successfully, size:', buffer.byteLength);
+          console.log('File downloaded successfully, size:', buffer.byteLength);
           
           res.setHeader('Content-Type', 'application/pdf');
           res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
