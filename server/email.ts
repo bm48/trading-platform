@@ -1,5 +1,4 @@
 import nodemailer from 'nodemailer';
-import { supabaseAdmin } from './db.js';
 
 // Email configuration - optional for development
 const EMAIL_ENABLED = !!(process.env.SMTP_USER && process.env.SMTP_PASS);
@@ -13,97 +12,6 @@ const transporter = EMAIL_ENABLED ? nodemailer.createTransport({
     pass: process.env.SMTP_PASS,
   },
 }) : null;
-
-// Supabase email service for admin notifications
-export async function sendDocumentNotificationEmail(
-  userEmail: string,
-  firstName: string,
-  caseTitle: string,
-  documentType: string,
-  loginUrl: string = 'https://projectresolveai.com/login'
-): Promise<boolean> {
-  try {
-    const htmlContent = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
-        <!-- Header -->
-        <div style="background: linear-gradient(135deg, #1565C0, #0277BD); color: white; padding: 30px; text-align: center;">
-          <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">
-            <div style="background: rgba(255,255,255,0.2); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; font-size: 24px; font-weight: bold;">📄</div>
-            <h1 style="margin: 0; font-size: 28px;">Project Resolve AI</h1>
-          </div>
-          <p style="margin: 10px 0 0 0; font-size: 16px;">Your Legal Document is Ready</p>
-        </div>
-        
-        <!-- Main Content -->
-        <div style="padding: 30px; background: #f8f9fa;">
-          <h2 style="color: #1565C0; margin-top: 0;">Document Ready for Review</h2>
-          
-          <p>Dear ${firstName},</p>
-          
-          <p>Great news! Your legal document for case "<strong>${caseTitle}</strong>" has been reviewed and approved by our team.</p>
-          
-          <div style="background: white; padding: 25px; border-radius: 8px; border-left: 4px solid #4CAF50; margin: 25px 0;">
-            <h3 style="color: #1565C0; margin-top: 0;">Document Details</h3>
-            <ul style="color: #37474F; padding-left: 20px; margin-bottom: 0;">
-              <li><strong>Case:</strong> ${caseTitle}</li>
-              <li><strong>Document Type:</strong> ${documentType}</li>
-              <li><strong>Status:</strong> Approved and Ready</li>
-            </ul>
-          </div>
-          
-          <div style="background: white; padding: 25px; border-radius: 8px; text-align: center; margin: 25px 0;">
-            <h3 style="color: #1565C0; margin-top: 0;">Access Your Document</h3>
-            <p style="margin-bottom: 20px;">Log in to your dashboard to view and download your personalized legal strategy document.</p>
-            <a href="${loginUrl}" style="background: #FF8F00; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Login to Dashboard</a>
-          </div>
-          
-          <div style="background: #E3F2FD; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="color: #1565C0; margin-top: 0;">What's Next?</h3>
-            <ul style="color: #37474F; padding-left: 20px; margin-bottom: 0;">
-              <li>Review your personalized legal strategy document</li>
-              <li>Follow the step-by-step action plan provided</li>
-              <li>Use the timeline to track important deadlines</li>
-              <li>Contact us if you have any questions</li>
-            </ul>
-          </div>
-          
-          <p style="color: #37474F;">If you have any questions about your document or need assistance, please don't hesitate to contact our support team.</p>
-        </div>
-        
-        <!-- Footer -->
-        <div style="background: #37474F; color: white; padding: 20px; text-align: center; font-size: 14px;">
-          <p style="margin: 0;">© 2025 Project Resolve AI - Legal Support for Australian Tradespeople</p>
-          <p style="margin: 5px 0 0 0; opacity: 0.8;">This email was sent because a document was approved for your account.</p>
-        </div>
-      </div>
-    `;
-
-    // For development, use nodemailer if available, otherwise log
-    if (EMAIL_ENABLED && transporter) {
-      const mailOptions = {
-        from: process.env.FROM_EMAIL || 'hello@projectresolveai.com',
-        to: userEmail,
-        subject: `Your Legal Document is Ready - ${caseTitle}`,
-        html: htmlContent,
-      };
-
-      await transporter.sendMail(mailOptions);
-      console.log(`Document notification email sent to: ${userEmail}`);
-      return true;
-    } else {
-      // Log the email content for development
-      console.log('=== EMAIL NOTIFICATION (Development Mode) ===');
-      console.log(`To: ${userEmail}`);
-      console.log(`Subject: Your Legal Document is Ready - ${caseTitle}`);
-      console.log('Content: Document notification with login link');
-      console.log('=== END EMAIL ===');
-      return true;
-    }
-  } catch (error) {
-    console.error('Failed to send document notification email:', error);
-    return false;
-  }
-}
 
 export async function sendWelcomeEmail(email: string, fullName: string): Promise<void> {
   if (!EMAIL_ENABLED) {
