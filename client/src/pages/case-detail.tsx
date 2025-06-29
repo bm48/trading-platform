@@ -15,6 +15,7 @@ import DashboardLayout from '@/components/dashboard-layout';
 import EnhancedFileUpload from '@/components/enhanced-file-upload';
 import DocumentPreview from '@/components/document-preview';
 import StrategyDocuments from '@/components/strategy-documents';
+import { DocumentTagging } from '@/components/document-tagging';
 
 import { 
   formatCurrency, 
@@ -919,9 +920,23 @@ export default function CaseDetail() {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Smart Document Tagging Section */}
+            {documents.length > 0 && (
+              <div className="space-y-4">
+                <h4 className="text-md font-semibold text-neutral-dark">Smart Document Organization</h4>
+                <div className="grid gap-4">
+                  {documents.map((doc: any) => (
+                    <DocumentTagging
+                      key={doc.id}
+                      documentId={doc.id}
+                      documentName={doc.original_name || doc.originalName || 'Unknown File'}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </TabsContent>
-
-
 
           {/* Timeline Tab */}
           <TabsContent value="timeline" className="space-y-6">

@@ -52,23 +52,39 @@ export class AITaggingService {
 
   private async initializePredefinedTags() {
     try {
-      // Insert predefined tags if they don't exist
-      for (const tag of this.predefinedTags) {
+      // Check which tags already exist
+      const { data: existingTags, error: fetchError } = await supabaseAdmin
+        .from('document_tags')
+        .select('name')
+        .in('name', this.predefinedTags.map(t => t.name));
+
+      if (fetchError) {
+        console.error('Error fetching existing tags:', fetchError);
+        return;
+      }
+
+      const existingTagNames = new Set(existingTags?.map(t => t.name) || []);
+
+      // Insert only new tags
+      const newTags = this.predefinedTags
+        .filter(tag => !existingTagNames.has(tag.name))
+        .map(tag => ({
+          name: tag.name,
+          category: tag.category,
+          description: tag.description,
+          is_system: true,
+          color: this.getCategoryColor(tag.category)
+        }));
+
+      if (newTags.length > 0) {
         const { error } = await supabaseAdmin
           .from('document_tags')
-          .upsert({
-            name: tag.name,
-            category: tag.category,
-            description: tag.description,
-            is_system: true,
-            color: this.getCategoryColor(tag.category)
-          }, {
-            onConflict: 'name',
-            ignoreDuplicates: true
-          });
+          .insert(newTags);
 
         if (error) {
-          console.error(`Error inserting tag ${tag.name}:`, error);
+          console.error('Error inserting predefined tags:', error);
+        } else {
+          console.log(`Initialized ${newTags.length} predefined tags`);
         }
       }
     } catch (error) {
@@ -264,8 +280,19 @@ Focus on practical tags that help tradespeople organize and find their legal doc
 
       // Update usage count for tags
       for (const tagId of tagIds) {
-        await supabaseAdmin
-          .rpc('increment_tag_usage', { tag_id: tagId });
+        // Get current usage count and increment it
+        const { data: tag, error: fetchError } = await supabaseAdmin
+          .from('document_tags')
+          .select('usage_count')
+          .eq('id', tagId)
+          .single();
+
+        if (!fetchError && tag) {
+          await supabaseAdmin
+            .from('document_tags')
+            .update({ usage_count: (tag.usage_count || 0) + 1 })
+            .eq('id', tagId);
+        }
       }
 
       return true;
