@@ -72,11 +72,19 @@ export default function ValidatedCaseForm({ onClose, onSuccess }: ValidatedCaseF
       setCreatedCaseId(data.id);
       setShowFileUpload(true);
       queryClient.invalidateQueries({ queryKey: ['/api/cases'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/subscription/status'] });
     },
     onError: (error: any) => {
+      let errorMessage = error.message || "There was an error creating your case.";
+      
+      // Handle usage limit error specifically
+      if (error.type === 'usage_limit') {
+        errorMessage = error.message || "You have reached your free case limit. Subscribe for unlimited access.";
+      }
+      
       toast({
         title: "Failed to Create Case",
-        description: error.message || "There was an error creating your case.",
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -107,14 +115,27 @@ export default function ValidatedCaseForm({ onClose, onSuccess }: ValidatedCaseF
         </CardHeader>
         
         <CardContent>
-          {/* Subscription Gate */}
+          {/* Usage Limit Warning */}
           {!subscriptionLoading && subscriptionStatus && !subscriptionStatus.canCreateCases && (
             <Alert className="mb-6 border-amber-200 bg-amber-50">
               <Lock className="h-4 w-4 text-amber-600" />
               <AlertDescription className="text-amber-800">
-                <strong>To create, first you have to subscribe</strong>
+                <strong>Free trial limit reached</strong>
                 <br />
-                {subscriptionStatus.message || 'You need an active subscription to create new cases.'}
+                {subscriptionStatus.message || 'You have reached your free case limit. Subscribe for unlimited access.'}
+              </AlertDescription>
+            </Alert>
+          )}
+          
+          {/* Usage Limit Info for remaining cases */}
+          {!subscriptionLoading && subscriptionStatus && subscriptionStatus.canCreateCases && 
+           subscriptionStatus.remainingCases >= 0 && subscriptionStatus.remainingCases <= 1 && (
+            <Alert className="mb-6 border-blue-200 bg-blue-50">
+              <AlertTriangle className="h-4 w-4 text-blue-600" />
+              <AlertDescription className="text-blue-800">
+                <strong>Free trial: {subscriptionStatus.remainingCases} case{subscriptionStatus.remainingCases === 1 ? '' : 's'} remaining</strong>
+                <br />
+                Subscribe for unlimited cases and contracts.
               </AlertDescription>
             </Alert>
           )}

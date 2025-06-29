@@ -179,11 +179,15 @@ export default function Dashboard() {
             <Button 
               onClick={activeTab === 'contracts' ? () => setShowNewContractForm(true) : handleNewCaseClick}
               className="btn-hover-lift animate-pulse-hover"
+              disabled={activeTab === 'contracts' ? 
+                (subscriptionStatus && !subscriptionStatus.canCreateContracts) : 
+                (subscriptionStatus && !subscriptionStatus.canCreateCases)
+              }
             >
               <Plus className="h-4 w-4 mr-2" />
               {activeTab === 'contracts' ? 'New Contract' : 'New Case'}
             </Button>
-            {subscriptionStatus && !subscriptionStatus.canCreateCases && (
+            {subscriptionStatus && (
               <div className="text-sm text-neutral-medium">
                 {subscriptionStatus.message}
               </div>

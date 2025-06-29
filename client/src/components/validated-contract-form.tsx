@@ -12,7 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { FileText, X, Building, Lock } from 'lucide-react';
+import { FileText, X, Building, Lock, AlertTriangle } from 'lucide-react';
 import EnhancedFileUpload from '@/components/enhanced-file-upload';
 
 const contractFormSchema = z.object({
@@ -81,11 +81,19 @@ export default function ValidatedContractForm({ onClose, onSuccess }: ValidatedC
       setCreatedContractId(data.id);
       setShowFileUpload(true);
       queryClient.invalidateQueries({ queryKey: ['/api/contracts'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/subscription/status'] });
     },
     onError: (error: any) => {
+      let errorMessage = error.message || "There was an error creating your contract.";
+      
+      // Handle usage limit error specifically
+      if (error.type === 'usage_limit') {
+        errorMessage = error.message || "You have reached your free contract limit. Subscribe for unlimited access.";
+      }
+      
       toast({
         title: "Failed to Create Contract",
-        description: error.message || "There was an error creating your contract.",
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -116,14 +124,27 @@ export default function ValidatedContractForm({ onClose, onSuccess }: ValidatedC
         </CardHeader>
         
         <CardContent>
-          {/* Subscription Gate */}
-          {!subscriptionLoading && subscriptionStatus && !subscriptionStatus.canCreateCases && (
+          {/* Usage Limit Warning */}
+          {!subscriptionLoading && subscriptionStatus && !subscriptionStatus.canCreateContracts && (
             <Alert className="mb-6 border-amber-200 bg-amber-50">
               <Lock className="h-4 w-4 text-amber-600" />
               <AlertDescription className="text-amber-800">
-                <strong>To create, first you have to subscribe</strong>
+                <strong>Free trial limit reached</strong>
                 <br />
-                {subscriptionStatus.message || 'You need an active subscription to create new contracts.'}
+                {subscriptionStatus.message || 'You have reached your free contract limit. Subscribe for unlimited access.'}
+              </AlertDescription>
+            </Alert>
+          )}
+          
+          {/* Usage Limit Info for remaining contracts */}
+          {!subscriptionLoading && subscriptionStatus && subscriptionStatus.canCreateContracts && 
+           subscriptionStatus.remainingContracts >= 0 && subscriptionStatus.remainingContracts <= 1 && (
+            <Alert className="mb-6 border-blue-200 bg-blue-50">
+              <AlertTriangle className="h-4 w-4 text-blue-600" />
+              <AlertDescription className="text-blue-800">
+                <strong>Free trial: {subscriptionStatus.remainingContracts} contract{subscriptionStatus.remainingContracts === 1 ? '' : 's'} remaining</strong>
+                <br />
+                Subscribe for unlimited contracts and cases.
               </AlertDescription>
             </Alert>
           )}

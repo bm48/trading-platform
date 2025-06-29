@@ -423,9 +423,78 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Helper function to check usage limits for unsubscribed users
+  const checkUsageLimits = async (userId: string, type: 'case' | 'contract') => {
+    // First check if user has active subscription
+    const { data: user, error } = await supabaseAdmin.auth.admin.getUserById(userId);
+    
+    if (error || !user) {
+      return { canCreate: false, message: 'User authentication failed', remainingCreations: 0 };
+    }
+
+    const actualUser = (user as any).user || user;
+    const metadata = actualUser.user_metadata || actualUser.raw_user_meta_data || {};
+    const planType = metadata.planType || 'none';
+    const status = metadata.status || 'inactive';
+    const subscriptionExpiresAt = metadata.currentPeriodEnd;
+
+    // Check if subscription is active and not expired
+    const isActive = status === 'active' && 
+      (!subscriptionExpiresAt || new Date(subscriptionExpiresAt) > new Date());
+
+    // If subscribed, allow unlimited creation
+    if (isActive) {
+      return { canCreate: true, message: 'Unlimited with active subscription', remainingCreations: -1 };
+    }
+
+    // For unsubscribed users, check current usage count
+    const tableName = type === 'case' ? 'cases' : 'contracts';
+    const { data: existingItems, error: countError } = await supabaseAdmin
+      .from(tableName)
+      .select('id')
+      .eq('user_id', userId);
+
+    if (countError) {
+      console.error(`Error counting user ${type}s:`, countError);
+      return { canCreate: false, message: 'Unable to verify usage limits', remainingCreations: 0 };
+    }
+
+    const currentCount = existingItems?.length || 0;
+    const limit = 2;
+    const remaining = Math.max(0, limit - currentCount);
+
+    if (currentCount >= limit) {
+      return { 
+        canCreate: false, 
+        message: `Free trial limit reached (${limit} ${type}s). Subscribe for unlimited access.`,
+        remainingCreations: 0
+      };
+    }
+
+    return { 
+      canCreate: true, 
+      message: `Free trial: ${remaining} ${type}${remaining === 1 ? '' : 's'} remaining. Subscribe for unlimited access.`,
+      remainingCreations: remaining
+    };
+  };
+
   // Case management routes
   app.post('/api/cases', authenticateUser, async (req: Request, res: Response) => {
     try {
+      const userId = req.user!.id;
+      
+      // Check usage limits
+      const usageCheck = await checkUsageLimits(userId, 'case');
+      
+      if (!usageCheck.canCreate) {
+        return res.status(403).json({ 
+          message: usageCheck.message,
+          canCreate: false,
+          remainingCreations: usageCheck.remainingCreations,
+          type: 'usage_limit'
+        });
+      }
+
       // Generate case number
       const caseNumber = `CASE-${Date.now()}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
       
@@ -649,7 +718,20 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
 
   app.post('/api/contracts', authenticateUser, async (req: Request, res: Response) => {
     try {
+      const userId = req.user!.id;
       console.log('Contract creation request body:', JSON.stringify(req.body, null, 2));
+      
+      // Check usage limits
+      const usageCheck = await checkUsageLimits(userId, 'contract');
+      
+      if (!usageCheck.canCreate) {
+        return res.status(403).json({ 
+          message: usageCheck.message,
+          canCreate: false,
+          remainingCreations: usageCheck.remainingCreations,
+          type: 'usage_limit'
+        });
+      }
       
       // Generate contract number
       const contractNumber = `CONTRACT-${Date.now()}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
@@ -2510,14 +2592,34 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
       const isActive = status === 'active' && 
         (!subscriptionExpiresAt || new Date(subscriptionExpiresAt) > new Date());
 
+      let message = '';
+      let remainingCases = 0;
+      let remainingContracts = 0;
+
+      if (isActive) {
+        message = 'Active monthly subscription - unlimited access';
+      } else {
+        // Get usage counts for unsubscribed users
+        const [caseCheck, contractCheck] = await Promise.all([
+          checkUsageLimits(userId, 'case'),
+          checkUsageLimits(userId, 'contract')
+        ]);
+        
+        remainingCases = caseCheck.remainingCreations;
+        remainingContracts = contractCheck.remainingCreations;
+        
+        message = `Free trial: ${remainingCases} case${remainingCases === 1 ? '' : 's'}, ${remainingContracts} contract${remainingContracts === 1 ? '' : 's'} remaining`;
+      }
+
       res.json({
         planType,
         status: isActive ? 'active' : 'inactive',
-        canCreateCases: isActive,
+        canCreateCases: isActive || remainingCases > 0,
+        canCreateContracts: isActive || remainingContracts > 0,
         subscriptionExpiresAt,
-        message: isActive 
-          ? 'Active monthly subscription - unlimited cases'
-          : 'No active subscription'
+        remainingCases: isActive ? -1 : remainingCases,
+        remainingContracts: isActive ? -1 : remainingContracts,
+        message
       });
     } catch (error) {
       console.error('Error checking subscription status:', error);
