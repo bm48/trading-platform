@@ -1344,26 +1344,75 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Consolidated document update route with PDF regeneration
   app.put('/api/admin/documents/:id', authenticateAdmin, async (req: Request, res: Response) => {
     try {
-      const documentId = parseInt(req.params.id);
-      const { content, status } = req.body;
-
       if (!req.adminSession) {
         return res.status(401).json({ message: 'Admin session required' });
       }
 
+      const documentId = parseInt(req.params.id);
+      const { content, status } = req.body;
+
+      console.log('Document update request:', { documentId, hasContent: !!content, status });
+
+      // First get the document details for PDF regeneration if content is being updated
+      let document = null;
+      if (content) {
+        const { data: docData, error: docError } = await supabaseAdmin
+          .from('ai_generated_documents')
+          .select('*')
+          .eq('id', documentId)
+          .single();
+
+        if (docError || !docData) {
+          return res.status(404).json({ message: 'Document not found' });
+        }
+        document = docData;
+      }
+
+      // Update document content and status in database
       const success = await adminService.updateDocument(documentId, {
         content,
         status,
         reviewedBy: req.adminSession.email
       });
 
-      if (success) {
-        res.json({ message: 'Document updated successfully' });
-      } else {
-        res.status(500).json({ message: 'Failed to update document' });
+      if (!success) {
+        return res.status(500).json({ message: 'Failed to update document' });
       }
+
+      // If content was updated, regenerate PDF
+      if (content && document) {
+        try {
+          const aiPDFService = require('./ai-pdf-service').aiPDFService;
+          const newPdfPath = await aiPDFService.generateResolvePDF({
+            id: document.case_id,
+            title: document.ai_content?.caseTitle || 'Updated Case',
+            user_id: document.user_id
+          }, content);
+
+          // Update the PDF path in the document record
+          const { error: updateError } = await supabaseAdmin
+            .from('ai_generated_documents')
+            .update({
+              pdf_file_path: newPdfPath,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', documentId);
+
+          if (updateError) {
+            console.error('Error updating PDF path:', updateError);
+          } else {
+            console.log('Document and PDF updated successfully');
+          }
+        } catch (pdfError) {
+          console.error('Error regenerating PDF:', pdfError);
+          // Don't fail the request if PDF regeneration fails
+        }
+      }
+
+      res.json({ message: 'Document updated successfully' });
     } catch (error) {
       console.error('Error updating document:', error);
       res.status(500).json({ message: 'Failed to update document' });
@@ -1390,71 +1439,7 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Update document content and regenerate PDF in Storage
-  app.put('/api/admin/documents/:id', authenticateAdmin, async (req: Request, res: Response) => {
-    try {
-      if (!req.adminSession) {
-        return res.status(401).json({ message: 'Admin session required' });
-      }
 
-      const documentId = parseInt(req.params.id);
-      const { content } = req.body;
-
-      // First get the document details
-      const { data: document, error: docError } = await supabaseAdmin
-        .from('ai_generated_documents')
-        .select('*')
-        .eq('id', documentId)
-        .single();
-
-      if (docError || !document) {
-        return res.status(404).json({ message: 'Document not found' });
-      }
-
-      // Update document content in database
-      const success = await adminService.updateDocument(documentId, {
-        content: content,
-        reviewedBy: req.adminSession.email
-      });
-
-      if (success) {
-        // Regenerate PDF with updated content and save to Supabase Storage
-        try {
-          const aiPDFService = require('./ai-pdf-service').aiPDFService;
-          const newPdfPath = await aiPDFService.generateResolvePDF({
-            id: document.case_id,
-            title: document.ai_content.caseTitle || 'Updated Case',
-            user_id: document.user_id
-          }, JSON.parse(content));
-
-          // Update the PDF path in the document record
-          const { error: updateError } = await supabaseAdmin
-            .from('ai_generated_documents')
-            .update({
-              pdf_file_path: newPdfPath,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', documentId);
-
-          if (updateError) {
-            console.error('Error updating PDF path:', updateError);
-          }
-
-          console.log('Document and PDF updated successfully');
-        } catch (pdfError) {
-          console.error('Error regenerating PDF:', pdfError);
-          // Don't fail the request if PDF regeneration fails
-        }
-
-        res.json({ message: 'Document updated successfully' });
-      } else {
-        res.status(404).json({ message: 'Document not found or failed to update' });
-      }
-    } catch (error) {
-      console.error('Error updating document:', error);
-      res.status(500).json({ message: 'Failed to update document' });
-    }
-  });
 
   app.post('/api/admin/documents/:id/send', authenticateAdmin, async (req: Request, res: Response) => {
     try {
