@@ -459,6 +459,14 @@ Return your response as JSON with this exact structure based on the RESOLVE temp
         throw new Error(`Failed to upload PDF to storage: ${uploadError.message}`);
       }
 
+      // Get the public URL for the uploaded file
+      const { data: urlData } = supabaseStorage.supabase
+        .storage
+        .from('documents')
+        .getPublicUrl(storagePath);
+      
+      const publicUrl = urlData.publicUrl;
+
       // Create record in ai_generated_documents table
       const documentRecord = {
         case_id: caseId,
@@ -467,6 +475,7 @@ Return your response as JSON with this exact structure based on the RESOLVE temp
         document_type: 'strategy_pack',
         ai_content: documentData,
         pdf_file_path: storagePath,
+        pdf_supabase_url: publicUrl,
         status: 'pending_review' as any
       };
       

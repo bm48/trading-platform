@@ -374,6 +374,7 @@ export const aiGeneratedDocuments = pgTable("ai_generated_documents", {
   ai_content: jsonb("ai_content").notNull(), // OpenAI generated content structure
   template_used: varchar("template_used"), // Which template was used
   pdf_file_path: varchar("pdf_file_path"), // Path to generated PDF in Supabase Storage
+  pdf_supabase_url: varchar("pdf_supabase_url"), // Public URL for direct access to PDF
   word_file_path: varchar("word_file_path"), // Path to editable Word doc in Supabase Storage
   status: varchar("status").default("pending_review"), // pending_review, approved, rejected, sent
   admin_notes: text("admin_notes"), // Admin feedback/notes

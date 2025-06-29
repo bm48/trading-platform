@@ -1785,6 +1785,48 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
           const pdfPath = path.join(process.cwd(), 'templates', pdfFilename);
           const pdfBuffer = fs.readFileSync(pdfPath);
           
+          // Upload to Supabase Storage
+          const uploadPath = `ai-documents/${document.user_id}/${pdfFilename}`;
+          console.log(`Uploading PDF to Supabase Storage: ${uploadPath}`);
+          
+          const { data: uploadData, error: uploadError } = await supabaseAdmin
+            .storage
+            .from('documents')
+            .upload(uploadPath, pdfBuffer, {
+              contentType: 'application/pdf',
+              upsert: true
+            });
+
+          if (uploadError) {
+            console.error('Error uploading PDF to storage:', uploadError);
+          } else {
+            console.log('PDF uploaded successfully:', uploadData);
+            
+            // Get the public URL
+            const { data: urlData } = supabaseAdmin
+              .storage
+              .from('documents')
+              .getPublicUrl(uploadPath);
+            
+            const publicUrl = urlData.publicUrl;
+            console.log('PDF public URL:', publicUrl);
+            
+            // Update the document record with the Supabase URL
+            const { error: updateError } = await supabaseAdmin
+              .from('ai_generated_documents')
+              .update({ 
+                pdf_supabase_url: publicUrl,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', documentId);
+              
+            if (updateError) {
+              console.error('Error updating document with PDF URL:', updateError);
+            } else {
+              console.log('Document updated with PDF URL successfully');
+            }
+          }
+          
           const filename = `RESOLVE Strategy Pack - Case ${document.case_id}.pdf`;
           
           res.setHeader('Content-Type', 'application/pdf');

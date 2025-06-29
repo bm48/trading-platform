@@ -371,7 +371,8 @@ If your documents are clear and the builder doesn't respond, you'll likely win b
         // Add footer to all pages
         const pageCount = doc.bufferedPageRange().count;
         for (let i = 0; i < pageCount; i++) {
-          doc.switchToPage(i);
+          const pageIndex = doc.bufferedPageRange().start + i;
+          doc.switchToPage(pageIndex);
           doc.fontSize(9).fillColor('#666666').text(
             'Resolve for tradies— Empowering you to resolve legal issues without the legal fees.     RESOLVE',
             50, 770, { align: 'center' }
