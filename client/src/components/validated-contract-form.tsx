@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -9,9 +9,10 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { FileText, X, Building } from 'lucide-react';
+import { FileText, X, Building, Lock } from 'lucide-react';
 import EnhancedFileUpload from '@/components/enhanced-file-upload';
 
 const contractFormSchema = z.object({
@@ -40,6 +41,15 @@ export default function ValidatedContractForm({ onClose, onSuccess }: ValidatedC
   const queryClient = useQueryClient();
   const [showFileUpload, setShowFileUpload] = useState(false);
   const [createdContractId, setCreatedContractId] = useState<number | null>(null);
+
+  // Check subscription status
+  const { data: subscriptionStatus, isLoading: subscriptionLoading } = useQuery({
+    queryKey: ['/api/subscription/status'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/subscription/status');
+      return response.json();
+    },
+  });
 
   const form = useForm<ContractFormData>({
     resolver: zodResolver(contractFormSchema),
@@ -106,6 +116,18 @@ export default function ValidatedContractForm({ onClose, onSuccess }: ValidatedC
         </CardHeader>
         
         <CardContent>
+          {/* Subscription Gate */}
+          {!subscriptionLoading && subscriptionStatus && !subscriptionStatus.canCreateCases && (
+            <Alert className="mb-6 border-amber-200 bg-amber-50">
+              <Lock className="h-4 w-4 text-amber-600" />
+              <AlertDescription className="text-amber-800">
+                <strong>To create, first you have to subscribe</strong>
+                <br />
+                {subscriptionStatus.message || 'You need an active subscription to create new contracts.'}
+              </AlertDescription>
+            </Alert>
+          )}
+
           {!showFileUpload ? (
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -347,7 +369,7 @@ export default function ValidatedContractForm({ onClose, onSuccess }: ValidatedC
                   </Button>
                   <Button
                     type="submit"
-                    disabled={createContractMutation.isPending}
+                    disabled={createContractMutation.isPending || (!subscriptionLoading && subscriptionStatus && !subscriptionStatus.canCreateCases)}
                   >
                     {createContractMutation.isPending ? 'Creating Contract...' : 'Create Contract'}
                   </Button>

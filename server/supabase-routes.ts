@@ -1504,13 +1504,31 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
         try {
           console.log('Sending email to user:', user.email);
           const { sendStrategyPackEmail } = await import('./email');
-          await sendStrategyPackEmail(
-            user.email!,
-            user.user_metadata?.first_name || user.email?.split('@')[0] || 'Customer',
-            document.cases.title,
-            [documentId]
-          );
-          console.log('Email sent successfully');
+          
+          const firstName = user.user_metadata?.first_name || user.email?.split('@')[0] || 'Customer';
+          const subject = `Your Legal Document is Ready - ${document.cases.title}`;
+          const body = `Dear ${firstName},
+
+Your legal document for case "${document.cases.title}" has been reviewed and approved by our team.
+
+Document Type: ${document.type || 'Strategy Pack'}
+
+You can now access your document through your dashboard at: ${process.env.BASE_URL || 'http://localhost:5000'}/dashboard
+
+This document contains important legal analysis and recommendations for your case. Please review it carefully and follow the suggested next steps.
+
+If you have any questions about your document, please don't hesitate to contact our support team.
+
+Best regards,
+Project Resolve AI Team`;
+
+          const emailSent = await sendStrategyPackEmail(user.email!, subject, body, [documentId]);
+          
+          if (emailSent) {
+            console.log('Email sent successfully to:', user.email);
+          } else {
+            console.log('Email sending failed, but continuing with notification creation');
+          }
         } catch (emailError) {
           console.error('Email sending error:', emailError);
           // Continue with other notifications even if email fails

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {useParams} from 'wouter';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -10,10 +10,11 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { CalendarPicker } from '@/components/ui/calendar-picker';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { FileText, X, Scale } from 'lucide-react';
+import { FileText, X, Scale, AlertTriangle, Lock } from 'lucide-react';
 import EnhancedFileUpload from '@/components/enhanced-file-upload';
 
 const caseFormSchema = z.object({
@@ -37,6 +38,15 @@ export default function ValidatedCaseForm({ onClose, onSuccess }: ValidatedCaseF
   const queryClient = useQueryClient();
   const [showFileUpload, setShowFileUpload] = useState(false);
   const [createdCaseId, setCreatedCaseId] = useState<number | null>(null);
+
+  // Check subscription status
+  const { data: subscriptionStatus, isLoading: subscriptionLoading } = useQuery({
+    queryKey: ['/api/subscription/status'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/subscription/status');
+      return response.json();
+    },
+  });
 
   const form = useForm<CaseFormData>({
     resolver: zodResolver(caseFormSchema),
@@ -97,6 +107,18 @@ export default function ValidatedCaseForm({ onClose, onSuccess }: ValidatedCaseF
         </CardHeader>
         
         <CardContent>
+          {/* Subscription Gate */}
+          {!subscriptionLoading && subscriptionStatus && !subscriptionStatus.canCreateCases && (
+            <Alert className="mb-6 border-amber-200 bg-amber-50">
+              <Lock className="h-4 w-4 text-amber-600" />
+              <AlertDescription className="text-amber-800">
+                <strong>To create, first you have to subscribe</strong>
+                <br />
+                {subscriptionStatus.message || 'You need an active subscription to create new cases.'}
+              </AlertDescription>
+            </Alert>
+          )}
+
           {!showFileUpload ? (
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -201,7 +223,7 @@ export default function ValidatedCaseForm({ onClose, onSuccess }: ValidatedCaseF
                   </Button>
                   <Button
                     type="submit"
-                    disabled={createCaseMutation.isPending}
+                    disabled={createCaseMutation.isPending || (!subscriptionLoading && subscriptionStatus && !subscriptionStatus.canCreateCases)}
                   >
                     {createCaseMutation.isPending ? 'Creating Case...' : 'Create Case'}
                   </Button>

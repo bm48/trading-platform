@@ -297,7 +297,7 @@ export default function Landing() {
                 </span>
               </div>
               <h1 className="text-4xl lg:text-5xl font-bold mb-6 leading-tight">
-                Project Resolve AI: Get Paid What You're Owed
+                Resolve AI: Get Paid What You're Owed
               </h1>
               <p className="text-xl mb-8 text-blue-100">
                 Stop letting payment disputes drain your business. Our AI platform helps you resolve unpaid work, variations, and contract disputes with confidence — no lawyers required.

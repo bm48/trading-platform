@@ -119,6 +119,7 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+- June 29, 2025: SUBSCRIPTION GATE & EMAIL NOTIFICATIONS IMPLEMENTED - Added subscription requirement check for case/contract creation with warning message "To create, first you have to subscribe" displayed when users without active subscriptions try to create content. Enhanced admin email notifications to send proper email templates via Supabase when admin clicks "Send notification" button, including detailed case information and dashboard access links.
 - June 29, 2025: ADMIN DOCUMENT EDITING & USER SUBSCRIPTION STATUS FIXED - Resolved duplicate route conflict causing document edits to fail after first save by consolidating two PUT routes into single comprehensive endpoint with PDF regeneration. Enhanced admin users tab to display subscription status with plan type, dates, and Stripe customer IDs from Supabase Auth metadata
 - June 29, 2025: ADMIN SECURITY AUTHENTICATION IMPROVED - Fixed admin login to show proper warning "Access denied: Only authorized administrators can access this panel" when non-admin emails attempt login, preventing unauthorized access attempts with clear error messaging
 - June 29, 2025: SUBSCRIPTION DATA RETRIEVAL FIXED - Resolved issue where subscription status showed "No Active Plan" despite successful payment by fixing nested object access in Supabase user metadata from `user.user_metadata` to `user.user?.user_metadata`
