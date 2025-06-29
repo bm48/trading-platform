@@ -2363,13 +2363,15 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
       console.log('User fetched for subscription check:', {
         userId,
         user_metadata: (user as any).user_metadata,
+        nested_user_metadata: (user as any).user?.user_metadata,
         raw_user_meta_data: (user as any).raw_user_meta_data,
         hasUser: !!user,
-        userObject: user
+        userStructure: Object.keys(user as any)
       });
 
-      // Try both user_metadata and raw_user_meta_data
-      const metadata = (user as any).user_metadata || (user as any).raw_user_meta_data || {};
+      // Fix: Access nested user metadata correctly
+      const actualUser = (user as any).user || user;
+      const metadata = actualUser.user_metadata || actualUser.raw_user_meta_data || {};
       const planType = metadata.planType || 'none';
       const status = metadata.status || 'inactive';
       const subscriptionExpiresAt = metadata.currentPeriodEnd;
