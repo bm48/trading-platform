@@ -15,6 +15,7 @@ import { legalInsightsService } from './legal-insights-service';
 import { notificationService } from './notification-service';
 import { aiPDFService } from './ai-pdf-service';
 import { aiTaggingService } from './ai-tagging-service';
+import { achievementService } from './achievement-service';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -3032,6 +3033,104 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error checking subscription status:', error);
       res.status(500).json({ message: 'Failed to check subscription status' });
+    }
+  });
+
+  // Achievement System API Routes
+  
+  // Get user progress overview
+  app.get('/api/achievements/progress', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const progress = await achievementService.getUserProgress(userId);
+      res.json(progress);
+    } catch (error) {
+      console.error('Error fetching user progress:', error);
+      res.status(500).json({ message: 'Failed to fetch user progress' });
+    }
+  });
+
+  // Get all achievements with user progress
+  app.get('/api/achievements', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      
+      // Get all achievements
+      const allAchievements = await achievementService.getAllAchievements();
+      
+      // Get user's achievement progress
+      const userAchievements = await achievementService.getUserAchievements(userId);
+      
+      // Combine data
+      const achievementsWithProgress = allAchievements.map(achievement => {
+        const userProgress = userAchievements.find(ua => ua.achievement_id === achievement.id);
+        return {
+          ...achievement,
+          user_progress: userProgress ? {
+            current_progress: userProgress.current_progress,
+            is_completed: userProgress.is_completed,
+            earned_at: userProgress.earned_at
+          } : {
+            current_progress: 0,
+            is_completed: false,
+            earned_at: null
+          }
+        };
+      });
+      
+      res.json(achievementsWithProgress);
+    } catch (error) {
+      console.error('Error fetching achievements:', error);
+      res.status(500).json({ message: 'Failed to fetch achievements' });
+    }
+  });
+
+  // Get user's earned achievements
+  app.get('/api/achievements/earned', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const achievements = await achievementService.getUserAchievements(userId);
+      const earnedAchievements = achievements.filter(ua => ua.is_completed);
+      res.json(earnedAchievements);
+    } catch (error) {
+      console.error('Error fetching earned achievements:', error);
+      res.status(500).json({ message: 'Failed to fetch earned achievements' });
+    }
+  });
+
+  // Get user stats
+  app.get('/api/achievements/stats', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const progress = await achievementService.getUserProgress(userId);
+      res.json({
+        level: progress.level,
+        total_points: progress.total_points,
+        experience_points: progress.experience_points,
+        next_level_points: progress.next_level_points,
+        achievements_earned: progress.achievements_earned,
+        stats: progress.stats
+      });
+    } catch (error) {
+      console.error('Error fetching user stats:', error);
+      res.status(500).json({ message: 'Failed to fetch user stats' });
+    }
+  });
+
+  // Manual achievement tracking (for testing)
+  app.post('/api/achievements/track', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const { action, metadata } = req.body;
+      
+      const notifications = await achievementService.trackAction(userId, action, metadata);
+      res.json({ 
+        message: `Action ${action} tracked successfully`,
+        notifications 
+      });
+    } catch (error) {
+      console.error('Error tracking achievement action:', error);
+      res.status(500).json({ message: 'Failed to track achievement action' });
     }
   });
 
