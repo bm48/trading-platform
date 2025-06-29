@@ -1502,30 +1502,22 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
       if (success) {
         // 1. Send email notification
         try {
-          console.log('Sending email to user:', user.email);
-          const { sendStrategyPackEmail } = await import('./email');
+          console.log('Sending document notification email to user:', user.email);
+          const { sendDocumentNotificationEmail } = await import('./email');
           
           const firstName = user.user_metadata?.first_name || user.email?.split('@')[0] || 'Customer';
-          const subject = `Your Legal Document is Ready - ${document.cases.title}`;
-          const body = `Dear ${firstName},
-
-Your legal document for case "${document.cases.title}" has been reviewed and approved by our team.
-
-Document Type: ${document.type || 'Strategy Pack'}
-
-You can now access your document through your dashboard at: ${process.env.BASE_URL || 'http://localhost:5000'}/dashboard
-
-This document contains important legal analysis and recommendations for your case. Please review it carefully and follow the suggested next steps.
-
-If you have any questions about your document, please don't hesitate to contact our support team.
-
-Best regards,
-Project Resolve AI Team`;
-
-          const emailSent = await sendStrategyPackEmail(user.email!, subject, body, [documentId]);
+          const loginUrl = `${process.env.BASE_URL || 'http://localhost:5000'}/dashboard`;
+          
+          const emailSent = await sendDocumentNotificationEmail(
+            user.email!,
+            firstName,
+            document.cases.title,
+            document.type || 'Strategy Pack',
+            loginUrl
+          );
           
           if (emailSent) {
-            console.log('Email sent successfully to:', user.email);
+            console.log('Document notification email sent successfully to:', user.email);
           } else {
             console.log('Email sending failed, but continuing with notification creation');
           }
