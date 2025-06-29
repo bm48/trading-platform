@@ -102,24 +102,24 @@ export async function sendApprovalEmail(email: string, fullName: string, applica
             <p>Your case has been reviewed and approved by our team. We believe we can help you resolve your situation effectively.</p>
             
             <div style="background: white; padding: 25px; border-radius: 8px; text-align: center; margin: 25px 0;">
-              <h3 style="color: #1565C0; margin-top: 0;">Ready to proceed?</h3>
-              <p style="margin-bottom: 20px;">Complete your detailed application and make payment to get your custom strategy pack.</p>
-              <a href="${approvalLink}" style="background: #FF8F00; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Complete Application - $299</a>
+              <h3 style="color: #1565C0; margin-top: 0;">Ready to get started?</h3>
+              <p style="margin-bottom: 20px;">Create your account and subscribe to access unlimited legal support tools.</p>
+              <a href="${approvalLink}" style="background: #FF8F00; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Get Started - $49/month</a>
             </div>
             
             <div style="background: #E3F2FD; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <h3 style="color: #1565C0; margin-top: 0;">What's included in your $299 Strategy Pack:</h3>
+              <h3 style="color: #1565C0; margin-top: 0;">What's included with your subscription:</h3>
               <ul style="color: #37474F; padding-left: 20px; margin-bottom: 0;">
-                <li>AI-powered legal analysis of your case</li>
-                <li>Custom strategy plan with step-by-step actions</li>
-                <li>All required legal documents and letters</li>
-                <li>Timeline with deadlines and next steps</li>
-                <li>Access to your personal case portal</li>
-                <li>Document storage and management tools</li>
+                <li>Unlimited AI-powered case analysis and guidance</li>
+                <li>Custom legal documents and letter templates</li>
+                <li>Timeline management and deadline tracking</li>
+                <li>Document storage and smart tagging system</li>
+                <li>Access to your personal legal dashboard</li>
+                <li>Calendar integration for case management</li>
               </ul>
             </div>
             
-            <p style="color: #37474F;">This link will expire in 7 days, so please complete your application soon to secure your strategy pack.</p>
+            <p style="color: #37474F;">Your monthly subscription gives you unlimited access to all legal support tools and AI-powered guidance.</p>
           </div>
           
           <div style="background: #37474F; color: white; padding: 20px; text-align: center; font-size: 14px;">

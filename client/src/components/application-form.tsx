@@ -318,10 +318,10 @@ export default function ApplicationForm() {
                     <div>
                       <h4 className="font-semibold text-neutral-dark mb-2">What happens next?</h4>
                       <ul className="text-sm text-neutral-medium space-y-1">
-                        <li>• You'll receive an instant confirmation email</li>
-                        <li>• Case approval notification within 2 hours</li>
-                        <li>• Complete your detailed application and payment ($299)</li>
-                        <li>• Receive your custom strategy pack in 24-48 hours</li>
+                        <li>• Create your account with email confirmation</li>
+                        <li>• Subscribe to monthly plan ($49/month) for unlimited access</li>
+                        <li>• Access your personal dashboard and case management tools</li>
+                        <li>• Get AI-powered legal documents and strategy guidance</li>
                       </ul>
                     </div>
                   </div>
@@ -346,7 +346,7 @@ export default function ApplicationForm() {
                 </Button>
 
                 <p className="text-center text-sm text-neutral-medium mt-4">
-                  No payment required at this stage. You'll only pay after case approval and when proceeding to the detailed application.
+                  No payment required at this stage. You'll set up your account and subscription after submitting this free assessment.
                 </p>
               </div>
             </form>
