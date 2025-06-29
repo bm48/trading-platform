@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import { supabaseStorage } from './supabase-storage';
 import { cases, type Case } from '../shared/schema';
+import { supabaseAdmin } from './supabase';
 
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 const openai = new OpenAI({
@@ -66,6 +67,21 @@ export class AIPDFService {
 
       // Extract client name from case data or use a generic name
       const clientName = caseData.title.split(' ')[0] || 'Valued Client';
+
+      // Get user-created timeline entries for this case
+      const { data: timelineEntries, error: timelineError } = await supabaseAdmin
+        .from('timeline_events')
+        .select('*')
+        .eq('case_id', caseData.id)
+        .order('date', { ascending: true });
+
+      let userTimeline = '';
+      if (timelineEntries && timelineEntries.length > 0) {
+        userTimeline = '\n\nUser-Created Timeline:\n' + 
+          timelineEntries.map(entry => 
+            `- ${entry.title} (${new Date(entry.date).toLocaleDateString()}) - ${entry.description || 'No description'} [${entry.status}]`
+          ).join('\n');
+      }
       
       const prompt = `
 You are a specialized legal AI assistant for Australian construction law and the Security of Payment Act. 
@@ -79,15 +95,16 @@ Case Details:
 - Case Description: ${caseData.description}
 - Case Number: ${(caseData as any).case_number || caseData.caseNumber || 'N/A'}
 - Current Status: ${caseData.status || 'Active'}
-- Priority Level: ${caseData.priority || 'Medium'}
+- Priority Level: ${caseData.priority || 'Medium'}${userTimeline}
 
 Instructions:
 1. Follow the exact template structure from the RESOLVE document (sections 01-07)
 2. Personalize all content based on the specific case details provided
-3. Provide practical, actionable legal guidance for Australian construction disputes
-4. Focus on Security of Payment Act 2002 applications where relevant to this case
-5. Include specific timelines and cost estimates relevant to this situation
-6. Use professional but accessible language suitable for tradespeople
+3. If user-created timeline entries are provided, incorporate them into the timeline section along with the SOPA process
+4. Provide practical, actionable legal guidance for Australian construction disputes
+5. Focus on Security of Payment Act 2002 applications where relevant to this case
+6. Include specific timelines and cost estimates relevant to this situation
+7. Use professional but accessible language suitable for tradespeople
 
 Return your response as JSON with this exact structure based on the RESOLVE template:
 {

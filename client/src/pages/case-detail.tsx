@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
@@ -37,7 +38,11 @@ import {
   Briefcase,
   MessageSquare,
   Upload,
-  Eye
+  Eye,
+  Edit,
+  Trash2,
+  Save,
+  X
 } from 'lucide-react';
 
 export default function CaseDetail() {
@@ -47,6 +52,16 @@ export default function CaseDetail() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState('overview');
   const [newNote, setNewNote] = useState('');
+  const [showTimelineForm, setShowTimelineForm] = useState(false);
+  const [editingTimelineEntry, setEditingTimelineEntry] = useState<any>(null);
+  const [timelineForm, setTimelineForm] = useState({
+    title: '',
+    description: '',
+    date: '',
+    type: 'milestone',
+    priority: 'medium',
+    status: 'pending'
+  });
   
   // Remove mood tracking states and data
 
@@ -70,8 +85,18 @@ export default function CaseDetail() {
     enabled: !!id,
   });
 
-  const { data: timeline = [] } = useQuery({
+  const { data: timeline = [], refetch: refetchTimeline } = useQuery({
     queryKey: ['/api/timeline/case', id],
+    queryFn: async () => {
+      const response = await fetch(`/api/timeline/case/${id}`, {
+        credentials: 'include',
+        headers: {
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+        }
+      });
+      if (!response.ok) throw new Error('Failed to fetch timeline');
+      return response.json();
+    },
     enabled: !!id,
   });
 
@@ -151,12 +176,197 @@ export default function CaseDetail() {
     },
   });
 
+  // Timeline mutations
+  const createTimelineEntry = useMutation({
+    mutationFn: async (entryData: any) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error('Authentication required');
+      }
+
+      const response = await fetch(`/api/timeline/case/${id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        credentials: 'include',
+        body: JSON.stringify(entryData)
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to create timeline entry');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      refetchTimeline();
+      setShowTimelineForm(false);
+      setTimelineForm({
+        title: '',
+        description: '',
+        date: '',
+        type: 'milestone',
+        priority: 'medium',
+        status: 'pending'
+      });
+      toast({
+        title: "Timeline entry added",
+        description: "Your timeline entry has been created successfully.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create timeline entry. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const updateTimelineEntry = useMutation({
+    mutationFn: async ({ entryId, entryData }: { entryId: number, entryData: any }) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error('Authentication required');
+      }
+
+      const response = await fetch(`/api/timeline/${entryId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        credentials: 'include',
+        body: JSON.stringify(entryData)
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update timeline entry');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      refetchTimeline();
+      setEditingTimelineEntry(null);
+      setShowTimelineForm(false);
+      toast({
+        title: "Timeline entry updated",
+        description: "Your timeline entry has been updated successfully.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update timeline entry. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const deleteTimelineEntry = useMutation({
+    mutationFn: async (entryId: number) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error('Authentication required');
+      }
+
+      const response = await fetch(`/api/timeline/${entryId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete timeline entry');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      refetchTimeline();
+      toast({
+        title: "Timeline entry deleted",
+        description: "Your timeline entry has been removed successfully.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete timeline entry. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
   const handleFileUpload = () => {
     queryClient.invalidateQueries({ queryKey: ['/api/documents/case', id] });
     toast({
       title: "File Uploaded",
       description: "Your document has been added to the case.",
     });
+  };
+
+  // Timeline helper functions
+  const handleCreateTimeline = () => {
+    if (!timelineForm.title.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a title for the timeline entry.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    createTimelineEntry.mutate({
+      ...timelineForm,
+      date: timelineForm.date || new Date().toISOString()
+    });
+  };
+
+  const handleEditTimeline = (entry: any) => {
+    setEditingTimelineEntry(entry);
+    setTimelineForm({
+      title: entry.title,
+      description: entry.description || '',
+      date: entry.date,
+      type: entry.type,
+      priority: entry.priority,
+      status: entry.status
+    });
+    setShowTimelineForm(true);
+  };
+
+  const handleUpdateTimeline = () => {
+    if (!editingTimelineEntry) return;
+
+    updateTimelineEntry.mutate({
+      entryId: editingTimelineEntry.id,
+      entryData: timelineForm
+    });
+  };
+
+  const handleDeleteTimeline = (entryId: number) => {
+    if (confirm('Are you sure you want to delete this timeline entry?')) {
+      deleteTimelineEntry.mutate(entryId);
+    }
+  };
+
+  const resetTimelineForm = () => {
+    setTimelineForm({
+      title: '',
+      description: '',
+      date: '',
+      type: 'milestone',
+      priority: 'medium',
+      status: 'pending'
+    });
+    setEditingTimelineEntry(null);
+    setShowTimelineForm(false);
   };
 
   const downloadDocument = async (documentId: number, filename: string) => {
@@ -715,67 +925,235 @@ export default function CaseDetail() {
 
           {/* Timeline Tab */}
           <TabsContent value="timeline" className="space-y-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-neutral-dark">Case Timeline Management</h3>
+              <Button 
+                onClick={() => setShowTimelineForm(true)}
+                className="bg-primary hover:bg-primary/90"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Timeline Entry
+              </Button>
+            </div>
+
             <div className="grid lg:grid-cols-2 gap-6">
               {/* Timeline */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <Calendar className="h-5 w-5 mr-2" />
-                    Case Timeline
+                    Timeline Entries
                   </CardTitle>
+                  <p className="text-sm text-neutral-medium">Manage your case milestones and deadlines</p>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4 max-h-96 overflow-y-auto">
-                    {(timeline || []).map((event: any) => (
-                      <div key={event.id} className="flex items-start space-x-3">
-                        <div className={`w-3 h-3 rounded-full mt-2 flex-shrink-0 ${
-                          event.isCompleted ? 'bg-success' : 'bg-warning'
-                        }`} />
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between">
-                            <h5 className="font-medium text-neutral-dark">{event.title}</h5>
-                            <span className="text-xs text-neutral-medium">{formatDate(event.eventDate)}</span>
+                  {timeline && Array.isArray(timeline) && timeline.length > 0 ? (
+                    <div className="space-y-4 max-h-96 overflow-y-auto">
+                      {timeline.map((entry: any) => (
+                        <div key={entry.id} className="flex items-start space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50">
+                          <div className={`w-3 h-3 rounded-full mt-2 flex-shrink-0 ${
+                            entry.status === 'completed' ? 'bg-green-500' : 
+                            entry.status === 'pending' ? 'bg-yellow-500' : 'bg-red-500'
+                          }`} />
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between">
+                              <h5 className="font-medium text-neutral-dark">{entry.title}</h5>
+                              <div className="flex items-center gap-2">
+                                <span className={`text-xs px-2 py-1 rounded-full ${
+                                  entry.priority === 'high' ? 'bg-red-100 text-red-700' :
+                                  entry.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                                  'bg-blue-100 text-blue-700'
+                                }`}>
+                                  {entry.priority}
+                                </span>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleEditTimeline(entry)}
+                                >
+                                  <Edit className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleDeleteTimeline(entry.id)}
+                                  className="text-red-600 hover:text-red-700"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </div>
+                            <p className="text-sm text-neutral-medium mb-1">{entry.description}</p>
+                            <div className="flex items-center gap-4 text-xs text-neutral-medium">
+                              <span>{formatDate(entry.date)}</span>
+                              <span className="capitalize">{entry.type}</span>
+                              <span className="capitalize">{entry.status}</span>
+                            </div>
                           </div>
-                          <p className="text-sm text-neutral-medium">{event.description}</p>
                         </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <Calendar className="h-8 w-8 text-neutral-medium mx-auto mb-2" />
+                      <p className="text-neutral-medium">No timeline entries yet</p>
+                      <p className="text-sm text-neutral-light">Create your first timeline entry to track case progress</p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
-              {/* Add Note */}
+              {/* Timeline Form or Add Note */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center">
-                    <MessageSquare className="h-5 w-5 mr-2" />
-                    Add Note
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <Textarea
-                    placeholder="Add a note to your case timeline..."
-                    value={newNote}
-                    onChange={(e) => setNewNote(e.target.value)}
-                    rows={4}
-                  />
-                  <Button 
-                    onClick={() => addNote.mutate(newNote)}
-                    disabled={!newNote.trim() || addNote.isPending}
-                    className="w-full"
-                  >
-                    {addNote.isPending ? (
+                    {showTimelineForm ? (
                       <>
-                        <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
-                        Adding Note...
+                        <Calendar className="h-5 w-5 mr-2" />
+                        {editingTimelineEntry ? 'Edit Timeline Entry' : 'Create Timeline Entry'}
                       </>
                     ) : (
                       <>
-                        <Plus className="h-4 w-4 mr-2" />
+                        <MessageSquare className="h-5 w-5 mr-2" />
                         Add Note
                       </>
                     )}
-                  </Button>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {showTimelineForm ? (
+                    <>
+                      <div>
+                        <label className="text-sm font-medium text-neutral-dark mb-2 block">Title *</label>
+                        <Input
+                          placeholder="Timeline entry title..."
+                          value={timelineForm.title}
+                          onChange={(e) => setTimelineForm({...timelineForm, title: e.target.value})}
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="text-sm font-medium text-neutral-dark mb-2 block">Description</label>
+                        <Textarea
+                          placeholder="Additional details..."
+                          value={timelineForm.description}
+                          onChange={(e) => setTimelineForm({...timelineForm, description: e.target.value})}
+                          rows={3}
+                        />
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-sm font-medium text-neutral-dark mb-2 block">Date</label>
+                          <Input
+                            type="datetime-local"
+                            value={timelineForm.date ? new Date(timelineForm.date).toISOString().slice(0, 16) : ''}
+                            onChange={(e) => setTimelineForm({...timelineForm, date: e.target.value ? new Date(e.target.value).toISOString() : ''})}
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="text-sm font-medium text-neutral-dark mb-2 block">Type</label>
+                          <select
+                            className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                            value={timelineForm.type}
+                            onChange={(e) => setTimelineForm({...timelineForm, type: e.target.value})}
+                          >
+                            <option value="milestone">Milestone</option>
+                            <option value="deadline">Deadline</option>
+                            <option value="action">Action</option>
+                            <option value="note">Note</option>
+                            <option value="document">Document</option>
+                            <option value="email">Email</option>
+                          </select>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-sm font-medium text-neutral-dark mb-2 block">Priority</label>
+                          <select
+                            className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                            value={timelineForm.priority}
+                            onChange={(e) => setTimelineForm({...timelineForm, priority: e.target.value})}
+                          >
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                            <option value="critical">Critical</option>
+                          </select>
+                        </div>
+                        
+                        <div>
+                          <label className="text-sm font-medium text-neutral-dark mb-2 block">Status</label>
+                          <select
+                            className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                            value={timelineForm.status}
+                            onChange={(e) => setTimelineForm({...timelineForm, status: e.target.value})}
+                          >
+                            <option value="pending">Pending</option>
+                            <option value="completed">Completed</option>
+                            <option value="overdue">Overdue</option>
+                          </select>
+                        </div>
+                      </div>
+                      
+                      <div className="flex gap-2">
+                        <Button 
+                          onClick={editingTimelineEntry ? handleUpdateTimeline : handleCreateTimeline}
+                          disabled={createTimelineEntry.isPending || updateTimelineEntry.isPending}
+                          className="flex-1"
+                        >
+                          {(createTimelineEntry.isPending || updateTimelineEntry.isPending) ? (
+                            <>
+                              <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
+                              {editingTimelineEntry ? 'Updating...' : 'Creating...'}
+                            </>
+                          ) : (
+                            <>
+                              <Save className="h-4 w-4 mr-2" />
+                              {editingTimelineEntry ? 'Update Entry' : 'Create Entry'}
+                            </>
+                          )}
+                        </Button>
+                        
+                        <Button 
+                          variant="outline"
+                          onClick={resetTimelineForm}
+                          className="flex-1"
+                        >
+                          <X className="h-4 w-4 mr-2" />
+                          Cancel
+                        </Button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <Textarea
+                        placeholder="Add a note to your case timeline..."
+                        value={newNote}
+                        onChange={(e) => setNewNote(e.target.value)}
+                        rows={4}
+                      />
+                      <Button 
+                        onClick={() => addNote.mutate(newNote)}
+                        disabled={!newNote.trim() || addNote.isPending}
+                        className="w-full"
+                      >
+                        {addNote.isPending ? (
+                          <>
+                            <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
+                            Adding Note...
+                          </>
+                        ) : (
+                          <>
+                            <Plus className="h-4 w-4 mr-2" />
+                            Add Note
+                          </>
+                        )}
+                      </Button>
+                    </>
+                  )}
                 </CardContent>
               </Card>
             </div>

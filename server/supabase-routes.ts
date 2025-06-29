@@ -2373,6 +2373,172 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Timeline Management Routes
+  app.get('/api/timeline/case/:caseId', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      const { caseId } = req.params;
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+
+      // Get the case to verify ownership
+      const caseData = await supabaseStorage.getCase(parseInt(caseId));
+      if (!caseData) {
+        return res.status(404).json({ message: 'Case not found' });
+      }
+
+      const caseUserId = (caseData as any).user_id || caseData.userId;
+      if (caseUserId !== userId) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+
+      // Get timeline entries for this case
+      const { data: timeline, error } = await supabaseAdmin
+        .from('timeline_events')
+        .select('*')
+        .eq('case_id', caseId)
+        .order('date', { ascending: true });
+
+      if (error) throw error;
+      res.json(timeline || []);
+    } catch (error) {
+      console.error('Error fetching case timeline:', error);
+      res.status(500).json({ message: 'Failed to fetch case timeline' });
+    }
+  });
+
+  app.get('/api/timeline/case', authenticateUser, async (req: Request, res: Response) => {
+    // Return empty array for general timeline endpoint
+    res.json([]);
+  });
+
+  app.post('/api/timeline/case/:caseId', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      const { caseId } = req.params;
+      const { title, description, date, type, priority, status } = req.body;
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+
+      // Get the case to verify ownership
+      const caseData = await supabaseStorage.getCase(parseInt(caseId));
+      if (!caseData) {
+        return res.status(404).json({ message: 'Case not found' });
+      }
+
+      const caseUserId = (caseData as any).user_id || caseData.userId;
+      if (caseUserId !== userId) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+
+      // Create timeline entry
+      const { data: timelineEntry, error } = await supabaseAdmin
+        .from('timeline_events')
+        .insert({
+          case_id: parseInt(caseId),
+          user_id: userId,
+          title: title || 'New Timeline Entry',
+          description: description || '',
+          date: date || new Date().toISOString(),
+          type: type || 'milestone',
+          priority: priority || 'medium',
+          status: status || 'pending'
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      res.json(timelineEntry);
+    } catch (error) {
+      console.error('Error creating timeline entry:', error);
+      res.status(500).json({ message: 'Failed to create timeline entry' });
+    }
+  });
+
+  app.put('/api/timeline/:entryId', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      const { entryId } = req.params;
+      const { title, description, date, type, priority, status } = req.body;
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+
+      // Check if entry belongs to user
+      const { data: existingEntry, error: fetchError } = await supabaseAdmin
+        .from('timeline_events')
+        .select('*')
+        .eq('id', entryId)
+        .eq('user_id', userId)
+        .single();
+
+      if (fetchError || !existingEntry) {
+        return res.status(404).json({ message: 'Timeline entry not found' });
+      }
+
+      // Update timeline entry
+      const { data: updatedEntry, error } = await supabaseAdmin
+        .from('timeline_events')
+        .update({
+          title: title || existingEntry.title,
+          description: description || existingEntry.description,
+          date: date || existingEntry.date,
+          type: type || existingEntry.type,
+          priority: priority || existingEntry.priority,
+          status: status || existingEntry.status,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', entryId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      res.json(updatedEntry);
+    } catch (error) {
+      console.error('Error updating timeline entry:', error);
+      res.status(500).json({ message: 'Failed to update timeline entry' });
+    }
+  });
+
+  app.delete('/api/timeline/:entryId', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      const { entryId } = req.params;
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+
+      // Check if entry belongs to user
+      const { data: existingEntry, error: fetchError } = await supabaseAdmin
+        .from('timeline_events')
+        .select('user_id')
+        .eq('id', entryId)
+        .single();
+
+      if (fetchError || !existingEntry || existingEntry.user_id !== userId) {
+        return res.status(404).json({ message: 'Timeline entry not found' });
+      }
+
+      // Delete timeline entry
+      const { error } = await supabaseAdmin
+        .from('timeline_events')
+        .delete()
+        .eq('id', entryId);
+
+      if (error) throw error;
+      res.json({ message: 'Timeline entry deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting timeline entry:', error);
+      res.status(500).json({ message: 'Failed to delete timeline entry' });
+    }
+  });
+
   // Legal Insights routes
   app.get('/api/legal-insights', authenticateUser, async (req: Request, res: Response) => {
     try {
