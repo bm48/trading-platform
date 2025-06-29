@@ -1500,34 +1500,36 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
       console.log('Document update success:', success);
 
       if (success) {
-        // 1. Send email notification
+        // 1. Send email notification via Supabase Auth
         try {
-          console.log('Sending email to user:', user.email);
-          const { sendStrategyPackEmail } = await import('./email');
+          console.log('Sending email notification via Supabase to:', user.email);
           
           const firstName = user.user_metadata?.first_name || user.email?.split('@')[0] || 'Customer';
-          const subject = `Your Legal Document is Ready - ${document.cases.title}`;
-          const body = `Dear ${firstName},
-
-Your legal document for case "${document.cases.title}" has been reviewed and approved by our team.
-
-Document Type: ${document.type || 'Strategy Pack'}
-
-You can now access your document through your dashboard at: ${process.env.BASE_URL || 'http://localhost:5000'}/dashboard
-
-This document contains important legal analysis and recommendations for your case. Please review it carefully and follow the suggested next steps.
-
-If you have any questions about your document, please don't hesitate to contact our support team.
-
-Best regards,
-Project Resolve AI Team`;
-
-          const emailSent = await sendStrategyPackEmail(user.email!, subject, body, [documentId]);
+          const dashboardUrl = `${process.env.BASE_URL || 'http://localhost:5000'}/dashboard`;
           
-          if (emailSent) {
-            console.log('Email sent successfully to:', user.email);
+          // Send email using Supabase Auth's built-in email system
+          const { error: emailError } = await supabaseAdmin.auth.admin.generateLink({
+            type: 'magiclink',
+            email: user.email!,
+            options: {
+              redirectTo: dashboardUrl,
+              data: {
+                type: 'document_ready',
+                documentId: documentId,
+                caseTitle: document.cases.title,
+                documentType: document.type || 'Strategy Pack',
+                firstName: firstName,
+                message: `Your legal document for case "${document.cases.title}" has been reviewed and approved by our team.`,
+                loginUrl: dashboardUrl
+              }
+            }
+          });
+
+          if (emailError) {
+            console.error('Supabase email error:', emailError);
+            throw new Error(`Failed to send email: ${emailError.message}`);
           } else {
-            console.log('Email sending failed, but continuing with notification creation');
+            console.log('Supabase email sent successfully to:', user.email);
           }
         } catch (emailError) {
           console.error('Email sending error:', emailError);
