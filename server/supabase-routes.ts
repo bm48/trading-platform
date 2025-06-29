@@ -1676,8 +1676,8 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
         console.log(`Generating fallback PDF for document ${documentId}`);
         
         try {
-          const PDFDocument = require('pdfkit');
-          const doc = new PDFDocument();
+          const PDFKit = await import('pdfkit');
+          const doc = new PDFKit.default();
           
           // Create PDF content
           doc.fontSize(20).text('RESOLVE - FOR TRADIES', 50, 50);
