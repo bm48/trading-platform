@@ -460,6 +460,24 @@ export const aiGeneratedDocuments = pgTable("ai_generated_documents", {
   documentTypeIdx: index("ai_documents_type_idx").on(table.document_type),
 }));
 
+// Contact form submissions table
+export const contactSubmissions = pgTable("contact_submissions", {
+  id: serial("id").primaryKey(),
+  name: varchar("name").notNull(),
+  email: varchar("email").notNull(),
+  subject: varchar("subject").notNull(),
+  message: text("message").notNull(),
+  status: varchar("status").default("unread"), // unread, read, responded
+  admin_response: text("admin_response"),
+  responded_at: timestamp("responded_at"),
+  responded_by: varchar("responded_by"), // Admin user ID
+  created_at: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  emailIdx: index("contact_submissions_email_idx").on(table.email),
+  statusIdx: index("contact_submissions_status_idx").on(table.status),
+  createdAtIdx: index("contact_submissions_created_at_idx").on(table.created_at),
+}));
+
 // Notification schemas and types
 export const insertNotificationSchema = createInsertSchema(notifications).omit({
   id: true,
@@ -480,3 +498,15 @@ export const insertAiDocumentSchema = createInsertSchema(aiGeneratedDocuments).o
 });
 export type InsertAiDocument = z.infer<typeof insertAiDocumentSchema>;
 export type AiDocument = typeof aiGeneratedDocuments.$inferSelect;
+
+// Contact form schemas and types
+export const insertContactSubmissionSchema = createInsertSchema(contactSubmissions).omit({
+  id: true,
+  created_at: true,
+  status: true,
+  admin_response: true,
+  responded_at: true,
+  responded_by: true,
+});
+export type InsertContactSubmission = z.infer<typeof insertContactSubmissionSchema>;
+export type ContactSubmission = typeof contactSubmissions.$inferSelect;

@@ -10,12 +10,14 @@ import {
   LogOut,
   Home,
   User,
-  Calendar
+  Calendar,
+  Mail
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Link, useLocation } from 'wouter';
 import { cn } from '@/lib/utils';
 import { NotificationCenter } from './notification-center';
+import { ContactForm } from './contact-form';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -93,6 +95,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             </div>
             
             <div className="flex items-center space-x-4">
+              <ContactForm 
+                trigger={
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Mail className="w-4 h-4" />
+                    Contact Us
+                  </Button>
+                }
+              />
               <NotificationCenter />
               <Button
                 variant="ghost"

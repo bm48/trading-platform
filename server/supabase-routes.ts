@@ -3035,6 +3035,104 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Contact form submission endpoint
+  app.post('/api/contact', async (req: Request, res: Response) => {
+    try {
+      const { name, email, subject, message } = req.body;
+
+      if (!name || !email || !subject || !message) {
+        return res.status(400).json({ message: 'All fields are required' });
+      }
+
+      // Insert contact submission into database
+      const { data: submission, error } = await supabaseAdmin
+        .from('contact_submissions')
+        .insert({
+          name,
+          email,
+          subject,
+          message,
+          status: 'unread'
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error saving contact submission:', error);
+        return res.status(500).json({ message: 'Failed to save contact submission' });
+      }
+
+      // Optional: Send notification to admin email (if configured)
+      try {
+        // You can implement email notification to admin here if needed
+        console.log(`New contact submission from ${email}: ${subject}`);
+      } catch (emailError) {
+        console.error('Error sending admin notification:', emailError);
+        // Don't fail the request if email fails
+      }
+
+      res.json({ 
+        message: 'Contact submission received successfully',
+        submissionId: submission.id 
+      });
+    } catch (error) {
+      console.error('Error processing contact submission:', error);
+      res.status(500).json({ message: 'Failed to process contact submission' });
+    }
+  });
+
+  // Admin: Get all contact submissions
+  app.get('/api/admin/contact-submissions', authenticateAdmin, async (req: Request, res: Response) => {
+    try {
+      const { data: submissions, error } = await supabaseAdmin
+        .from('contact_submissions')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching contact submissions:', error);
+        return res.status(500).json({ message: 'Failed to fetch contact submissions' });
+      }
+
+      res.json(submissions);
+    } catch (error) {
+      console.error('Error fetching contact submissions:', error);
+      res.status(500).json({ message: 'Failed to fetch contact submissions' });
+    }
+  });
+
+  // Admin: Update contact submission status
+  app.put('/api/admin/contact-submissions/:id', authenticateAdmin, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { status, admin_response } = req.body;
+
+      const updateData: any = { status };
+      if (admin_response) {
+        updateData.admin_response = admin_response;
+        updateData.responded_at = new Date().toISOString();
+        updateData.responded_by = 'admin'; // You can get this from the authenticated admin
+      }
+
+      const { data: updatedSubmission, error } = await supabaseAdmin
+        .from('contact_submissions')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating contact submission:', error);
+        return res.status(500).json({ message: 'Failed to update contact submission' });
+      }
+
+      res.json(updatedSubmission);
+    } catch (error) {
+      console.error('Error updating contact submission:', error);
+      res.status(500).json({ message: 'Failed to update contact submission' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

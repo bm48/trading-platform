@@ -7,6 +7,7 @@ import { Shield, Check, Clock, Users, DollarSign, FileText, Calendar, Download, 
 
 import LoginModal from '@/components/login-modal';
 import ApplicationForm from '@/components/application-form';
+import { ContactForm } from '@/components/contact-form';
 import { scrollToElement } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
@@ -736,6 +737,72 @@ export default function Landing() {
             Start Your Subscription
             <ChevronRight className="h-5 w-5 ml-2" />
           </Button>
+        </div>
+      </section>
+
+      {/* Contact Section */}
+      <section id="contact" className="py-20 bg-gray-50 animate-fade-in">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Get In Touch</h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Have questions about your legal matter? Our team is here to help you navigate your payment disputes and get the support you need.
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+            {/* Contact Information */}
+            <div className="space-y-8">
+              <div>
+                <h3 className="text-2xl font-semibold text-gray-900 mb-6">Why Contact Us?</h3>
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mt-1">
+                      <Check className="w-4 h-4 text-blue-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-gray-900">Free Initial Consultation</h4>
+                      <p className="text-gray-600">Get expert advice on your specific situation</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mt-1">
+                      <Clock className="w-4 h-4 text-blue-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-gray-900">Quick Response</h4>
+                      <p className="text-gray-600">We respond to all inquiries within 24 hours</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mt-1">
+                      <Shield className="w-4 h-4 text-blue-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-gray-900">Confidential & Secure</h4>
+                      <p className="text-gray-600">Your information is always protected</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white p-6 rounded-lg border">
+                <div className="flex items-center gap-3 mb-4">
+                  <Mail className="w-5 h-5 text-blue-600" />
+                  <h4 className="font-medium text-gray-900">Direct Contact</h4>
+                </div>
+                <p className="text-gray-600 mb-2">Email us directly at:</p>
+                <a href="mailto:admin@resolve.com" className="text-blue-600 hover:text-blue-700 font-medium">
+                  admin@resolve.com
+                </a>
+              </div>
+            </div>
+            
+            {/* Contact Form */}
+            <div>
+              <ContactForm variant="page" />
+            </div>
+          </div>
         </div>
       </section>
 

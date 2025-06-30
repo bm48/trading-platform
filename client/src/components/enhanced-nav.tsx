@@ -18,9 +18,11 @@ import {
   User, 
   LogOut,
   Shield,
-  PlusCircle
+  PlusCircle,
+  Mail
 } from "lucide-react";
 import NotificationBar from "./notification-bar";
+import { ContactForm } from "./contact-form";
 
 interface NavItem {
   path: string;
@@ -104,6 +106,16 @@ export default function EnhancedNav() {
 
           {/* Right Side Actions */}
           <div className="flex items-center gap-3">
+            {/* Contact Form */}
+            <ContactForm 
+              trigger={
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Mail className="w-4 h-4" />
+                  Contact Us
+                </Button>
+              }
+            />
+            
             {/* Notification Bar */}
             <NotificationBar />
 
