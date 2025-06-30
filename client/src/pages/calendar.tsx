@@ -11,6 +11,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import CalendarIntegration from '@/components/calendar-integration';
 import CalendarEventForm from '@/components/calendar-event-form';
 import CalendarSyncDashboard from '@/components/calendar-sync-dashboard';
+import ComingSoonOverlay from '@/components/coming-soon-overlay';
 
 interface CalendarEvent {
   id: number;
@@ -152,13 +153,17 @@ export default function CalendarPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Calendar</h1>
-          <p className="text-gray-600">Manage your legal calendar and sync with external calendars</p>
-        </div>
-        <CalendarEventForm 
+    <ComingSoonOverlay 
+      feature="Calendar Integration"
+      reason="Google Calendar integration requires app verification which is currently in progress. This feature will be available soon."
+    >
+      <div className="container mx-auto px-4 py-8 space-y-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Calendar</h1>
+            <p className="text-gray-600">Manage your legal calendar and sync with external calendars</p>
+          </div>
+          <CalendarEventForm 
           trigger={
             <Button className="gap-2">
               <Calendar className="w-4 h-4" />
@@ -166,7 +171,7 @@ export default function CalendarPage() {
             </Button>
           }
         />
-      </div>
+        </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main Calendar Content */}
@@ -369,6 +374,7 @@ export default function CalendarPage() {
           </Card>
         </div>
       </div>
-    </div>
+      </div>
+    </ComingSoonOverlay>
   );
 }

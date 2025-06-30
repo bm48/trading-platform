@@ -13,6 +13,7 @@ import ValidatedCaseForm from '@/components/validated-case-form';
 import ValidatedContractForm from '@/components/validated-contract-form';
 import { LegalInsightsWidget } from '@/components/legal-insights-widget';
 import { NotificationWidget } from '@/components/notification-center';
+import ComingSoonOverlay from '@/components/coming-soon-overlay';
 import { formatCurrency, formatDate, getStatusColor, calculateProgress } from '@/lib/utils';
 import { MoodIndicator } from '@/components/mood-visualization';
 import { MoodData } from '@/lib/mood-utils';
@@ -617,48 +618,53 @@ export default function Dashboard() {
             </div>
 
             {/* Calendar Integration Status */}
-            <Card className="border-l-4 border-l-primary bg-blue-50 animate-fade-in">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <Calendar className="h-8 w-8 text-primary" />
-                    <div>
-                      <h3 className="text-lg font-semibold text-neutral-dark">Calendar Integration</h3>
-                      <p className="text-sm text-neutral-medium">Connect your Google or Outlook calendar to sync legal deadlines</p>
+            <ComingSoonOverlay 
+              feature="Calendar Integration"
+              reason="Google Calendar integration requires app verification which is currently in progress."
+            >
+              <Card className="border-l-4 border-l-primary bg-blue-50 animate-fade-in">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <Calendar className="h-8 w-8 text-primary" />
+                      <div>
+                        <h3 className="text-lg font-semibold text-neutral-dark">Calendar Integration</h3>
+                        <p className="text-sm text-neutral-medium">Connect your Google or Outlook calendar to sync legal deadlines</p>
+                      </div>
+                    </div>
+                    <Link href="/calendar">
+                      <Button className="btn-hover-lift">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Connect Calendar
+                      </Button>
+                    </Link>
+                  </div>
+                  
+                  {/* Quick Calendar Stats */}
+                  <div className="grid grid-cols-3 gap-4 mt-4">
+                    <div className="text-center p-3 bg-white rounded-lg">
+                      <div className="text-2xl font-bold text-neutral-dark">{timelineEvents.length}</div>
+                      <div className="text-sm text-neutral-medium">Upcoming Deadlines</div>
+                    </div>
+                    <div className="text-center p-3 bg-white rounded-lg">
+                      <div className="text-2xl font-bold text-neutral-dark">
+                        {timelineEvents.filter(event => {
+                          const eventDate = new Date(event.date);
+                          const weekFromNow = new Date();
+                          weekFromNow.setDate(weekFromNow.getDate() + 7);
+                          return eventDate <= weekFromNow;
+                        }).length}
+                      </div>
+                      <div className="text-sm text-neutral-medium">This Week</div>
+                    </div>
+                    <div className="text-center p-3 bg-white rounded-lg">
+                      <div className="text-2xl font-bold text-neutral-dark">0</div>
+                      <div className="text-sm text-neutral-medium">Connected Calendars</div>
                     </div>
                   </div>
-                  <Link href="/calendar">
-                    <Button className="btn-hover-lift">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Connect Calendar
-                    </Button>
-                  </Link>
-                </div>
-                
-                {/* Quick Calendar Stats */}
-                <div className="grid grid-cols-3 gap-4 mt-4">
-                  <div className="text-center p-3 bg-white rounded-lg">
-                    <div className="text-2xl font-bold text-neutral-dark">{timelineEvents.length}</div>
-                    <div className="text-sm text-neutral-medium">Upcoming Deadlines</div>
-                  </div>
-                  <div className="text-center p-3 bg-white rounded-lg">
-                    <div className="text-2xl font-bold text-neutral-dark">
-                      {timelineEvents.filter(event => {
-                        const eventDate = new Date(event.date);
-                        const weekFromNow = new Date();
-                        weekFromNow.setDate(weekFromNow.getDate() + 7);
-                        return eventDate <= weekFromNow;
-                      }).length}
-                    </div>
-                    <div className="text-sm text-neutral-medium">This Week</div>
-                  </div>
-                  <div className="text-center p-3 bg-white rounded-lg">
-                    <div className="text-2xl font-bold text-neutral-dark">0</div>
-                    <div className="text-sm text-neutral-medium">Connected Calendars</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </ComingSoonOverlay>
 
             {/* Upcoming Legal Events */}
             <Card className="animate-fade-in">
@@ -736,33 +742,38 @@ export default function Dashboard() {
             </Card>
 
             {/* Calendar Quick Actions */}
-            <Card className="animate-fade-in">
-              <CardHeader>
-                <CardTitle>Quick Calendar Actions</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Link href="/calendar">
-                    <div className="p-4 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
-                      <div className="flex items-center gap-3 mb-2">
-                        <Calendar className="h-5 w-5 text-primary" />
-                        <h4 className="font-medium">Manage Calendar Integrations</h4>
+            <ComingSoonOverlay 
+              feature="Calendar Integration"
+              reason="Google Calendar integration requires app verification which is currently in progress."
+            >
+              <Card className="animate-fade-in">
+                <CardHeader>
+                  <CardTitle>Quick Calendar Actions</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Link href="/calendar">
+                      <div className="p-4 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
+                        <div className="flex items-center gap-3 mb-2">
+                          <Calendar className="h-5 w-5 text-primary" />
+                          <h4 className="font-medium">Manage Calendar Integrations</h4>
+                        </div>
+                        <p className="text-sm text-neutral-medium">Connect Google Calendar, Outlook, or other calendar apps</p>
                       </div>
-                      <p className="text-sm text-neutral-medium">Connect Google Calendar, Outlook, or other calendar apps</p>
-                    </div>
-                  </Link>
-                  <Link href="/calendar">
-                    <div className="p-4 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
-                      <div className="flex items-center gap-3 mb-2">
-                        <Plus className="h-5 w-5 text-primary" />
-                        <h4 className="font-medium">Create Calendar Event</h4>
+                    </Link>
+                    <Link href="/calendar">
+                      <div className="p-4 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
+                        <div className="flex items-center gap-3 mb-2">
+                          <Plus className="h-5 w-5 text-primary" />
+                          <h4 className="font-medium">Create Calendar Event</h4>
+                        </div>
+                        <p className="text-sm text-neutral-medium">Schedule meetings, court dates, and deadlines</p>
                       </div>
-                      <p className="text-sm text-neutral-medium">Schedule meetings, court dates, and deadlines</p>
-                    </div>
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            </ComingSoonOverlay>
           </TabsContent>
         </Tabs>
       </div>
