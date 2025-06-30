@@ -8,10 +8,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
-import { Mail, MessageSquare, Phone } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { Mail, MessageSquare, Phone, LogIn } from "lucide-react";
 import { insertContactSubmissionSchema, type InsertContactSubmission } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
+import { Link } from "wouter";
 
 interface ContactFormProps {
   variant?: "dialog" | "page";
@@ -20,6 +23,7 @@ interface ContactFormProps {
 
 export function ContactForm({ variant = "dialog", trigger }: ContactFormProps) {
   const { toast } = useToast();
+  const { user, isAuthenticated } = useAuth();
   const [open, setOpen] = useState(false);
 
   const form = useForm<InsertContactSubmission>({
@@ -63,7 +67,20 @@ export function ContactForm({ variant = "dialog", trigger }: ContactFormProps) {
     contactMutation.mutate(data);
   };
 
-  const formContent = (
+  const formContent = !isAuthenticated ? (
+    <div className="space-y-4">
+      <Alert>
+        <LogIn className="h-4 w-4" />
+        <AlertDescription>
+          You need to log in to contact us. Please{" "}
+          <Link href="/auth" className="text-blue-600 hover:text-blue-800 underline">
+            sign in to your account
+          </Link>{" "}
+          to send us a message.
+        </AlertDescription>
+      </Alert>
+    </div>
+  ) : (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
