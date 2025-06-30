@@ -738,20 +738,27 @@ export default function Dashboard() {
             {/* Calendar Quick Actions */}
             <Card className="animate-fade-in">
               <CardHeader>
-                <CardTitle>Calendar Integration</CardTitle>
+                <CardTitle>Quick Calendar Actions</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-6">
-                  <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Coming Soon</h3>
-                  <p className="text-gray-600 mb-4">
-                    Calendar integration with Google and Outlook is coming soon to help you manage legal deadlines.
-                  </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Link href="/calendar">
-                    <Button variant="outline" className="btn-hover-lift">
-                      <Calendar className="h-4 w-4 mr-2" />
-                      Learn More
-                    </Button>
+                    <div className="p-4 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
+                      <div className="flex items-center gap-3 mb-2">
+                        <Calendar className="h-5 w-5 text-primary" />
+                        <h4 className="font-medium">Manage Calendar Integrations</h4>
+                      </div>
+                      <p className="text-sm text-neutral-medium">Connect Google Calendar, Outlook, or other calendar apps</p>
+                    </div>
+                  </Link>
+                  <Link href="/calendar">
+                    <div className="p-4 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
+                      <div className="flex items-center gap-3 mb-2">
+                        <Plus className="h-5 w-5 text-primary" />
+                        <h4 className="font-medium">Create Calendar Event</h4>
+                      </div>
+                      <p className="text-sm text-neutral-medium">Schedule meetings, court dates, and deadlines</p>
+                    </div>
                   </Link>
                 </div>
               </CardContent>
