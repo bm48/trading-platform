@@ -19,7 +19,8 @@ export function AdminContactManagement() {
 
   const { data: submissions, isLoading } = useQuery<ContactSubmission[]>({
     queryKey: ["/api/admin/contact-submissions"],
-    staleTime: 30000,
+    staleTime: 0, // Always fetch fresh data
+    refetchOnMount: true,
   });
 
   const updateSubmissionMutation = useMutation({
@@ -79,6 +80,34 @@ export function AdminContactManagement() {
       updateSubmissionMutation.mutate({
         id: submission.id,
         status: "read",
+      });
+    }
+  };
+
+  const handleSendEmail = async (submission: ContactSubmission | null, message: string) => {
+    if (!submission || !message.trim()) return;
+    
+    try {
+      const response = await apiRequest("POST", "/api/admin/send-email", {
+        to: submission.email,
+        subject: `Re: ${submission.subject}`,
+        message: message,
+        contactSubmissionId: submission.id
+      });
+      
+      if (response.ok) {
+        toast({
+          title: "Email Sent",
+          description: `Email sent successfully to ${submission.email}`,
+        });
+      } else {
+        throw new Error("Failed to send email");
+      }
+    } catch (error: any) {
+      toast({
+        title: "Email Failed",
+        description: error.message || "Failed to send email",
+        variant: "destructive",
       });
     }
   };
@@ -205,10 +234,18 @@ export function AdminContactManagement() {
                     Cancel
                   </Button>
                   <Button 
+                    variant="outline"
+                    onClick={() => handleSendEmail(selectedSubmission, responseText)}
+                    disabled={!responseText.trim() || updateSubmissionMutation.isPending}
+                  >
+                    <Mail className="h-4 w-4 mr-2" />
+                    Send Email Only
+                  </Button>
+                  <Button 
                     onClick={handleRespond}
                     disabled={!responseText.trim() || updateSubmissionMutation.isPending}
                   >
-                    {updateSubmissionMutation.isPending ? "Sending..." : "Send Response"}
+                    {updateSubmissionMutation.isPending ? "Saving..." : "Save Response & Notify"}
                   </Button>
                 </div>
               </div>

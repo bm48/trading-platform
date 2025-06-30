@@ -3171,17 +3171,24 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
   // Admin: Get all contact submissions
   app.get('/api/admin/contact-submissions', authenticateAdmin, async (req: Request, res: Response) => {
     try {
+      console.log('Fetching contact submissions from Supabase...');
+      
       const { data: submissions, error } = await supabaseAdmin
         .from('contact_submissions')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching contact submissions:', error);
-        return res.status(500).json({ message: 'Failed to fetch contact submissions' });
+        console.error('Supabase error fetching contact submissions:', error);
+        return res.status(500).json({ message: 'Failed to fetch contact submissions', error: error.message });
       }
 
-      res.json(submissions);
+      console.log(`Found ${submissions?.length || 0} contact submissions`);
+      if (submissions && submissions.length > 0) {
+        console.log('Latest submission:', submissions[0]);
+      }
+
+      res.json(submissions || []);
     } catch (error) {
       console.error('Error fetching contact submissions:', error);
       res.status(500).json({ message: 'Failed to fetch contact submissions' });
@@ -3213,10 +3220,117 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ message: 'Failed to update contact submission' });
       }
 
+      // Create notification for user when admin responds
+      if (admin_response && updatedSubmission) {
+        try {
+          // Get user ID by email to send notification
+          const { data: userData, error: userError } = await supabaseAdmin
+            .from('auth.users')
+            .select('id')
+            .eq('email', updatedSubmission.email)
+            .single();
+
+          if (userData && !userError) {
+            const { error: notificationError } = await supabaseAdmin
+              .from('notifications')
+              .insert({
+                user_id: userData.id,
+                title: 'Response to Your Contact Inquiry',
+                message: `Our team has responded to your inquiry "${updatedSubmission.subject}". Check the response in your contact submissions.`,
+                type: 'system',
+                priority: 'medium',
+                category: 'general',
+                related_id: updatedSubmission.id,
+                related_type: 'contact_submission'
+              });
+
+            if (notificationError) {
+              console.error('Error creating user notification:', notificationError);
+            } else {
+              console.log('User notification created for contact response');
+            }
+          }
+        } catch (notificationError) {
+          console.error('Error creating notification:', notificationError);
+          // Don't fail the main request if notification fails
+        }
+      }
+
       res.json(updatedSubmission);
     } catch (error) {
       console.error('Error updating contact submission:', error);
       res.status(500).json({ message: 'Failed to update contact submission' });
+    }
+  });
+
+  // Admin: Send email to contact submission user
+  app.post('/api/admin/send-email', authenticateAdmin, async (req: Request, res: Response) => {
+    try {
+      const { to, subject, message, contactSubmissionId } = req.body;
+
+      if (!to || !subject || !message) {
+        return res.status(400).json({ message: 'Email recipient, subject, and message are required' });
+      }
+
+      // Use Supabase Auth's email functionality to send emails
+      const { error } = await supabaseAdmin.auth.admin.inviteUserByEmail(to, {
+        data: {
+          contact_response: true,
+          subject: subject,
+          message: message,
+          contactSubmissionId: contactSubmissionId
+        }
+      });
+
+      if (error) {
+        console.error('Error sending email:', error);
+        return res.status(500).json({ message: 'Failed to send email', error: error.message });
+      }
+
+      console.log(`Email sent successfully to ${to} regarding contact submission ${contactSubmissionId}`);
+
+      res.json({ 
+        message: 'Email sent successfully',
+        recipient: to,
+        subject: subject
+      });
+    } catch (error) {
+      console.error('Error sending email:', error);
+      res.status(500).json({ message: 'Failed to send email' });
+    }
+  });
+
+  // User: Get their contact submissions and responses
+  app.get('/api/user/contact-submissions', async (req: Request, res: Response) => {
+    try {
+      // Get user from Supabase session
+      const authHeader = req.headers.authorization;
+      if (!authHeader) {
+        return res.status(401).json({ message: 'No authorization header' });
+      }
+
+      const token = authHeader.replace('Bearer ', '');
+      const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+
+      if (authError || !user) {
+        return res.status(401).json({ message: 'Invalid session' });
+      }
+
+      const { data: submissions, error } = await supabaseAdmin
+        .from('contact_submissions')
+        .select('*')
+        .eq('email', user.email)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching user contact submissions:', error);
+        return res.status(500).json({ message: 'Failed to fetch contact submissions' });
+      }
+
+      res.json(submissions || []);
+    } catch (error) {
+      console.error('Error fetching user contact submissions:', error);
+      res.status(500).json({ message: 'Failed to fetch contact submissions' });
     }
   });
 
