@@ -150,7 +150,7 @@ export function ContactForm({ variant = "dialog", trigger }: ContactFormProps) {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 p-4 bg-gray-50 rounded-lg">
               <div className="flex items-center gap-2 text-sm">
                 <Mail className="w-4 h-4 text-blue-600" />
-                <span>admin@resolve.com</span>
+                <span>hello@resolveai.com</span>
               </div>
               <div className="flex items-center gap-2 text-sm">
                 <Phone className="w-4 h-4 text-blue-600" />

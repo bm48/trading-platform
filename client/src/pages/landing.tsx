@@ -170,6 +170,9 @@ export default function Landing() {
               <Button variant="ghost" onClick={() => scrollToElement('pricing')}>
                 Pricing
               </Button>
+              <Button variant="ghost" onClick={() => scrollToElement('contact')}>
+                Contact
+              </Button>
               {isAuthenticated ? (
                 <div className="flex items-center space-x-3">
                   <Avatar 
@@ -792,8 +795,8 @@ export default function Landing() {
                   <h4 className="font-medium text-gray-900">Direct Contact</h4>
                 </div>
                 <p className="text-gray-600 mb-2">Email us directly at:</p>
-                <a href="mailto:admin@resolve.com" className="text-blue-600 hover:text-blue-700 font-medium">
-                  admin@resolve.com
+                <a href="mailto:hello@resolveai.com" className="text-blue-600 hover:text-blue-700 font-medium">
+                  hello@resolveai.com
                 </a>
               </div>
             </div>
