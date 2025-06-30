@@ -3035,7 +3035,57 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Contact form submission endpoint
+  // Contact form submission endpoint - using direct PostgreSQL
+  app.post('/api/contact-direct', async (req: Request, res: Response) => {
+    try {
+      const { name, email, subject, message } = req.body;
+
+      if (!name || !email || !subject || !message) {
+        return res.status(400).json({ message: 'All fields are required' });
+      }
+
+      console.log('Direct contact submission:', { name, email, subject });
+
+      // Use pg client directly to bypass Supabase issues
+      const { Client } = await import('pg');
+      
+      const client = new Client({
+        connectionString: process.env.DATABASE_URL
+      });
+
+      await client.connect();
+      
+      try {
+        const insertQuery = `
+          INSERT INTO contact_submissions (name, email, subject, message, status, created_at)
+          VALUES ($1, $2, $3, $4, 'unread', NOW())
+          RETURNING id, name, email, subject, message, status, created_at
+        `;
+        
+        const result = await client.query(insertQuery, [name, email, subject, message]);
+        
+        if (result && result.rows && result.rows.length > 0) {
+          const submission = result.rows[0];
+          console.log('Contact submission saved successfully:', submission);
+
+          res.json({ 
+            message: 'Contact submission received successfully',
+            submissionId: submission.id 
+          });
+        } else {
+          res.status(500).json({ message: 'Failed to save contact submission' });
+        }
+      } finally {
+        await client.end();
+      }
+
+    } catch (error) {
+      console.error('Error in direct contact submission:', error);
+      res.status(500).json({ message: 'Failed to process contact submission' });
+    }
+  });
+
+  // Contact form submission endpoint - original Supabase version
   app.post('/api/contact', async (req: Request, res: Response) => {
     try {
       const { name, email, subject, message } = req.body;
@@ -3044,23 +3094,65 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'All fields are required' });
       }
 
-      // Insert contact submission into database
-      const { data: submission, error } = await supabaseAdmin
-        .from('contact_submissions')
-        .insert({
-          name,
-          email,
-          subject,
-          message,
-          status: 'unread'
-        })
-        .select()
-        .single();
+      console.log('Attempting to insert contact submission:', { name, email, subject });
 
-      if (error) {
-        console.error('Error saving contact submission:', error);
-        return res.status(500).json({ message: 'Failed to save contact submission' });
+      // Try using raw SQL insert to bypass potential RLS issues
+      const { data: submission, error } = await supabase
+        .rpc('exec_sql', {
+          sql_query: `
+            INSERT INTO contact_submissions (name, email, subject, message, status, created_at)
+            VALUES ($1, $2, $3, $4, 'unread', NOW())
+            RETURNING id, name, email, subject, message, status, created_at
+          `,
+          params: [name, email, subject, message]
+        });
+
+      if (error || !submission) {
+        console.error('SQL RPC error, trying simple insert:', error);
+        
+        // Use direct PostgreSQL connection if Supabase client fails
+        const { createClient } = await import('@supabase/supabase-js');
+        
+        // Create a fresh client instance
+        const directClient = createClient(
+          process.env.VITE_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!,
+          {
+            auth: { persistSession: false },
+            db: { schema: 'public' }
+          }
+        );
+
+        const { data: directSubmission, error: directError } = await directClient
+          .from('contact_submissions')
+          .insert({
+            name,
+            email,  
+            subject,
+            message,
+            status: 'unread'
+          })
+          .select()
+          .single();
+
+        if (directError) {
+          console.error('Direct client error:', directError);
+          return res.status(500).json({ 
+            message: 'Failed to save contact submission',
+            error: directError.message || 'Database error'
+          });
+        }
+
+        console.log('Contact submission saved via direct client:', directSubmission);
+        
+        res.json({ 
+          message: 'Contact submission received successfully',
+          submissionId: directSubmission.id
+        });
+        return;
       }
+
+      console.log('Contact submission saved via SQL RPC:', submission);
 
       // Optional: Send notification to admin email (if configured)
       try {

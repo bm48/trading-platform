@@ -34,7 +34,7 @@ export function ContactForm({ variant = "dialog", trigger }: ContactFormProps) {
 
   const contactMutation = useMutation({
     mutationFn: async (data: InsertContactSubmission) => {
-      const response = await apiRequest("POST", "/api/contact", data);
+      const response = await apiRequest("POST", "/api/contact-direct", data);
       if (!response.ok) {
         throw new Error("Failed to send message");
       }
