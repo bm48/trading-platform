@@ -3173,52 +3173,82 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Admin: Get all contact submissions
+  // Admin: Get all contact submissions - using direct PostgreSQL
   app.get('/api/admin/contact-submissions', authenticateAdmin, async (req: Request, res: Response) => {
     try {
-      const { data: submissions, error } = await supabaseAdmin
-        .from('contact_submissions')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const { Client } = await import('pg');
+      
+      const client = new Client({
+        connectionString: process.env.DATABASE_URL
+      });
 
-      if (error) {
-        console.error('Error fetching contact submissions:', error);
-        return res.status(500).json({ message: 'Failed to fetch contact submissions' });
+      await client.connect();
+      
+      try {
+        const query = `
+          SELECT id, name, email, subject, message, status, admin_response, responded_at, responded_by, created_at
+          FROM contact_submissions 
+          ORDER BY created_at DESC
+        `;
+        
+        const result = await client.query(query);
+        
+        res.json(result.rows);
+      } finally {
+        await client.end();
       }
-
-      res.json(submissions);
     } catch (error) {
       console.error('Error fetching contact submissions:', error);
       res.status(500).json({ message: 'Failed to fetch contact submissions' });
     }
   });
 
-  // Admin: Update contact submission status
+  // Admin: Update contact submission status - using direct PostgreSQL
   app.put('/api/admin/contact-submissions/:id', authenticateAdmin, async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
       const { status, admin_response } = req.body;
 
-      const updateData: any = { status };
-      if (admin_response) {
-        updateData.admin_response = admin_response;
-        updateData.responded_at = new Date().toISOString();
-        updateData.responded_by = 'admin'; // You can get this from the authenticated admin
+      const { Client } = await import('pg');
+      
+      const client = new Client({
+        connectionString: process.env.DATABASE_URL
+      });
+
+      await client.connect();
+      
+      try {
+        let query: string;
+        let params: any[];
+
+        if (admin_response) {
+          query = `
+            UPDATE contact_submissions 
+            SET status = $1, admin_response = $2, responded_at = NOW(), responded_by = 'admin'
+            WHERE id = $3
+            RETURNING id, name, email, subject, message, status, admin_response, responded_at, responded_by, created_at
+          `;
+          params = [status, admin_response, id];
+        } else {
+          query = `
+            UPDATE contact_submissions 
+            SET status = $1
+            WHERE id = $2
+            RETURNING id, name, email, subject, message, status, admin_response, responded_at, responded_by, created_at
+          `;
+          params = [status, id];
+        }
+        
+        const result = await client.query(query, params);
+        
+        if (result.rows.length > 0) {
+          res.json(result.rows[0]);
+        } else {
+          res.status(404).json({ message: 'Contact submission not found' });
+        }
+      } finally {
+        await client.end();
       }
-
-      const { data: updatedSubmission, error } = await supabaseAdmin
-        .from('contact_submissions')
-        .update(updateData)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error updating contact submission:', error);
-        return res.status(500).json({ message: 'Failed to update contact submission' });
-      }
-
-      res.json(updatedSubmission);
     } catch (error) {
       console.error('Error updating contact submission:', error);
       res.status(500).json({ message: 'Failed to update contact submission' });

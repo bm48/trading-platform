@@ -194,9 +194,6 @@ export default function Landing() {
                 </div>
               ) : (
                 <div className="flex items-center space-x-3">
-                  <Button variant="outline" onClick={() => setShowAdminLogin(true)}>
-                    Admin
-                  </Button>
                   <Button variant="outline" onClick={openLoginModal}>
                     Login
                   </Button>
