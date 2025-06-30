@@ -3044,40 +3044,35 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'All fields are required' });
       }
 
-      console.log('Direct contact submission:', { name, email, subject });
+      console.log('Supabase contact submission:', { name, email, subject });
 
-      // Use pg client directly to bypass Supabase issues
-      const { Client } = await import('pg');
-      
-      const client = new Client({
-        connectionString: process.env.DATABASE_URL
-      });
+      // Use Supabase client to save to proper database
+      const { data: submission, error } = await supabaseAdmin
+        .from('contact_submissions')
+        .insert({
+          name,
+          email,
+          subject,
+          message,
+          status: 'unread'
+        })
+        .select()
+        .single();
 
-      await client.connect();
-      
-      try {
-        const insertQuery = `
-          INSERT INTO contact_submissions (name, email, subject, message, status, created_at)
-          VALUES ($1, $2, $3, $4, 'unread', NOW())
-          RETURNING id, name, email, subject, message, status, created_at
-        `;
-        
-        const result = await client.query(insertQuery, [name, email, subject, message]);
-        
-        if (result && result.rows && result.rows.length > 0) {
-          const submission = result.rows[0];
-          console.log('Contact submission saved successfully:', submission);
-
-          res.json({ 
-            message: 'Contact submission received successfully',
-            submissionId: submission.id 
-          });
-        } else {
-          res.status(500).json({ message: 'Failed to save contact submission' });
-        }
-      } finally {
-        await client.end();
+      if (error) {
+        console.error('Error saving contact submission to Supabase:', error);
+        return res.status(500).json({ 
+          message: 'Failed to save contact submission',
+          error: error.message 
+        });
       }
+
+      console.log('Contact submission saved successfully to Supabase:', submission);
+
+      res.json({ 
+        message: 'Contact submission received successfully',
+        submissionId: submission.id 
+      });
 
     } catch (error) {
       console.error('Error in direct contact submission:', error);
@@ -3173,82 +3168,52 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Admin: Get all contact submissions - using direct PostgreSQL
+  // Admin: Get all contact submissions
   app.get('/api/admin/contact-submissions', authenticateAdmin, async (req: Request, res: Response) => {
     try {
-      const { Client } = await import('pg');
-      
-      const client = new Client({
-        connectionString: process.env.DATABASE_URL
-      });
+      const { data: submissions, error } = await supabaseAdmin
+        .from('contact_submissions')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-      await client.connect();
-      
-      try {
-        const query = `
-          SELECT id, name, email, subject, message, status, admin_response, responded_at, responded_by, created_at
-          FROM contact_submissions 
-          ORDER BY created_at DESC
-        `;
-        
-        const result = await client.query(query);
-        
-        res.json(result.rows);
-      } finally {
-        await client.end();
+      if (error) {
+        console.error('Error fetching contact submissions:', error);
+        return res.status(500).json({ message: 'Failed to fetch contact submissions' });
       }
+
+      res.json(submissions);
     } catch (error) {
       console.error('Error fetching contact submissions:', error);
       res.status(500).json({ message: 'Failed to fetch contact submissions' });
     }
   });
 
-  // Admin: Update contact submission status - using direct PostgreSQL
+  // Admin: Update contact submission status
   app.put('/api/admin/contact-submissions/:id', authenticateAdmin, async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
       const { status, admin_response } = req.body;
 
-      const { Client } = await import('pg');
-      
-      const client = new Client({
-        connectionString: process.env.DATABASE_URL
-      });
-
-      await client.connect();
-      
-      try {
-        let query: string;
-        let params: any[];
-
-        if (admin_response) {
-          query = `
-            UPDATE contact_submissions 
-            SET status = $1, admin_response = $2, responded_at = NOW(), responded_by = 'admin'
-            WHERE id = $3
-            RETURNING id, name, email, subject, message, status, admin_response, responded_at, responded_by, created_at
-          `;
-          params = [status, admin_response, id];
-        } else {
-          query = `
-            UPDATE contact_submissions 
-            SET status = $1
-            WHERE id = $2
-            RETURNING id, name, email, subject, message, status, admin_response, responded_at, responded_by, created_at
-          `;
-          params = [status, id];
-        }
-        
-        const result = await client.query(query, params);
-        
-        if (result.rows.length > 0) {
-          res.json(result.rows[0]);
-        } else {
-          res.status(404).json({ message: 'Contact submission not found' });
-        }
-      } finally {
-        await client.end();
+      const updateData: any = { status };
+      if (admin_response) {
+        updateData.admin_response = admin_response;
+        updateData.responded_at = new Date().toISOString();
+        updateData.responded_by = 'admin';
       }
+
+      const { data: updatedSubmission, error } = await supabaseAdmin
+        .from('contact_submissions')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating contact submission:', error);
+        return res.status(500).json({ message: 'Failed to update contact submission' });
+      }
+
+      res.json(updatedSubmission);
     } catch (error) {
       console.error('Error updating contact submission:', error);
       res.status(500).json({ message: 'Failed to update contact submission' });
