@@ -22,11 +22,13 @@ import {
   Calendar,
   DollarSign,
   Check,
-  X
+  X,
+  LogOut
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { formatDate } from "@/lib/date-utils";
+import { useLocation } from "wouter";
 
 interface AdminStats {
   totalUsers: number;
@@ -76,9 +78,10 @@ interface UserActivity {
 }
 
 export default function AdminDashboard() {
-  const {isAuthenticated, isLoading, adminSession}=useAdminAuth();
+  const {isAuthenticated, isLoading, adminSession, logoutAdmin}=useAdminAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
   const [selectedDocument, setSelectedDocument] = useState<PendingDocument | null>(null);
   const [editingDocument, setEditingDocument] = useState<PendingDocument | null>(null);
   const [editedContent, setEditedContent] = useState<string>("");
@@ -192,6 +195,23 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await logoutAdmin();
+      toast({
+        title: "Logged Out",
+        description: "You have been successfully logged out",
+      });
+      setLocation('/');
+    } catch (error) {
+      toast({
+        title: "Logout Error",
+        description: "There was an issue logging out",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-8 space-y-8">
       <div className="flex items-center justify-between">
@@ -199,10 +219,26 @@ export default function AdminDashboard() {
           <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
           <p className="text-gray-600">Monitor and manage platform activity</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="bg-blue-50 text-blue-700">
-            Admin Access
-          </Badge>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="bg-blue-50 text-blue-700">
+              Admin Access
+            </Badge>
+            {adminSession?.email && (
+              <span className="text-sm text-gray-600">
+                {adminSession.email}
+              </span>
+            )}
+          </div>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={handleLogout}
+            className="flex items-center gap-2 text-red-600 hover:bg-red-50 hover:border-red-200"
+          >
+            <LogOut className="h-4 w-4" />
+            Logout
+          </Button>
         </div>
       </div>
 
