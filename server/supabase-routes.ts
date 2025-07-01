@@ -3334,62 +3334,6 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Admin: Send documentation via email
-  app.post('/api/admin/send-documentation', authenticateAdmin, async (req: Request, res: Response) => {
-    try {
-      const { emailDocumentationService } = await import('./email-documentation-service');
-      const { recipientEmail, recipientName, documentTitle, documentUrl, customMessage, caseId } = req.body;
-
-      if (!recipientEmail || !recipientName || !documentTitle) {
-        return res.status(400).json({ 
-          message: 'Recipient email, name, and document title are required' 
-        });
-      }
-
-      const result = await emailDocumentationService.sendDocumentationEmail({
-        recipientEmail,
-        recipientName,
-        documentTitle,
-        documentUrl,
-        customMessage,
-        caseId
-      });
-
-      if (result.success) {
-        res.json({ message: result.message });
-      } else {
-        res.status(500).json({ message: result.message });
-      }
-    } catch (error: any) {
-      console.error('Error sending documentation email:', error);
-      res.status(500).json({ message: 'Failed to send documentation email' });
-    }
-  });
-
-  // Admin: Send bulk documentation emails
-  app.post('/api/admin/send-bulk-documentation', authenticateAdmin, async (req: Request, res: Response) => {
-    try {
-      const { emailDocumentationService } = await import('./email-documentation-service');
-      const { emails } = req.body;
-
-      if (!emails || !Array.isArray(emails)) {
-        return res.status(400).json({ message: 'Emails array is required' });
-      }
-
-      const result = await emailDocumentationService.sendBulkDocumentation(emails);
-      
-      res.json({
-        message: `Bulk email completed: ${result.sent} sent, ${result.failed} failed`,
-        sent: result.sent,
-        failed: result.failed,
-        errors: result.errors
-      });
-    } catch (error: any) {
-      console.error('Error sending bulk documentation emails:', error);
-      res.status(500).json({ message: 'Failed to send bulk documentation emails' });
-    }
-  });
-
   const httpServer = createServer(app);
   return httpServer;
 }

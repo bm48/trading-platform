@@ -31,7 +31,6 @@ import { format } from "date-fns";
 import { formatDate } from "@/lib/date-utils";
 import { useLocation } from "wouter";
 import { AdminContactManagement } from "@/components/admin-contact-management";
-import { AdminEmailDocumentation } from "@/components/admin-email-documentation";
 
 interface AdminStats {
   totalUsers: number;
@@ -359,7 +358,7 @@ export default function AdminDashboard() {
 
       {/* Main Content Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="documents">
             <FileText className="w-4 h-4 mr-2" />
             Documents ({pendingDocuments.length})
@@ -371,10 +370,6 @@ export default function AdminDashboard() {
           <TabsTrigger value="contact">
             <Mail className="w-4 h-4 mr-2" />
             Contact
-          </TabsTrigger>
-          <TabsTrigger value="email-docs">
-            <Send className="w-4 h-4 mr-2" />
-            Email Docs
           </TabsTrigger>
           <TabsTrigger value="notifications">
             <AlertCircle className="w-4 h-4 mr-2" />
@@ -638,11 +633,6 @@ export default function AdminDashboard() {
         {/* Contact Tab */}
         <TabsContent value="contact" className="space-y-6">
           <AdminContactManagement />
-        </TabsContent>
-
-        {/* Email Documentation Tab */}
-        <TabsContent value="email-docs" className="space-y-6">
-          <AdminEmailDocumentation />
         </TabsContent>
 
         {/* Activity Tab */}
